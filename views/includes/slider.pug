@@ -1,0 +1,16 @@
+#mySlider.carousel.slide(data-bs-ride="carousel")
+    ol.carousel-indicators
+        li.active(data-target="#mySlider" data-slide-to="0")
+        li.active(data-target="#mySlider" data-slide-to="1")
+        li.active(data-target="#mySlider" data-slide-to="3")
+    .carousel-inner
+        .carousel-item.active
+            img(src="img/reklam1.jpeg" alt="").d-block.img-fluid
+        .carousel-item
+            img(src="img/reklam2.jpeg" alt="").d-block.img-fluid
+        .carousel-item
+            img(src="img/reklam3.jpeg" alt="").d-block.img-fluid
+        a(href="#mySlider" data-bs-slide="prev").carousel-control-prev
+            span.carousel-control-prev-icon
+        a(href="#mySlider" data-bs-slide="next").carousel-control-next
+            span.carousel-control-next-icon
