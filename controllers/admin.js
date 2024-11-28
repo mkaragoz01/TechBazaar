@@ -18,12 +18,17 @@ exports.getProducts = (req,res,next) => {
 }
 
 exports.getAddProducts = (req,res,next)=>{
-    res.render("admin/add-product",
-        {
-            title: "New Product",
-            path: "/admin/add-product",
-        }
-    )
+
+    Category.findAll()
+                .then((categories) => {
+                    res.render("admin/add-product",
+                        {
+                            title: "New Product",
+                            path: "/admin/add-product",
+                            categories: categories
+                        }
+                    )
+                })
 }
 
 exports.postAddProducts = (req,res,next)=>{ 
@@ -32,12 +37,14 @@ exports.postAddProducts = (req,res,next)=>{
     const price = req.body.price;
     const imgUrl = req.body.imgUrl;
     const description = req.body.description;
+    const categoryid = req.body.categoryid;
 
     Product.create({
         name: name,
         price: price,
         imgUrl: imgUrl,
-        description: description
+        description: description,
+        categoryId: categoryid
     })
     .then(result => {
         console.log(result)
@@ -60,8 +67,8 @@ exports.getEditProducts = (req,res,next)=>{
                 .then((categories) => {
                     res.render('admin/edit-product',{
                         title: 'Edit Product',
-                        product: product,
                         path: '/admin/products',
+                        product: product,
                         categories: categories
                     })
                 }).catch((err) => {
@@ -87,6 +94,7 @@ exports.postEditProducts = (req,res,next)=>{
             product.price = price,
             product.imgUrl = imgUrl,
             product.description = description,
+            product.categoryId = categoryid,
             product.save();
         })
         .then((result) => {

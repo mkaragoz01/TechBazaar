@@ -20,14 +20,27 @@ app.use(errorController.get404Page)
 app.set('view engine', 'pug');
 app.set('views', './views');
 
-Product.belogsTo(Category);
+Product.belongsTo(Category,{
+    foreignKey: {
+        allowNull: false
+    }
+});
 Category.hasMany(Product);
 
 sequelize
-    .sync({ force: true })
-    .then(result => {
-        console.log(result);
-    })
+    .sync()
+    .then(() => {
+        Category.count()
+            .then(count =>{
+                if(count === 0){
+                    Category.bulkCreate([
+                        {name: 'Telefon',description: 'Akıllı Telefonlar'},
+                        {name: 'Bilgisayar',description: 'Dizüstü Bilgisayarlar'},
+                        {name: 'Elektronik',description: 'Beyaz Eşyalar'}
+                    ]);
+                }
+            });
+        })
     .catch(err => {
         console.log(err);
 });
