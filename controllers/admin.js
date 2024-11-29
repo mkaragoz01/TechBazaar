@@ -38,13 +38,14 @@ exports.postAddProducts = (req,res,next)=>{
     const imgUrl = req.body.imgUrl;
     const description = req.body.description;
     const categoryid = req.body.categoryid;
+    const user = req.user;
 
-    Product.create({
+    user.createProduct({
         name: name,
         price: price,
         imgUrl: imgUrl,
         description: description,
-        categoryId: categoryid
+        categoryId: categoryid,
     })
     .then(result => {
         console.log(result)
