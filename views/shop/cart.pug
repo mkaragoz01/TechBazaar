@@ -1,3 +1,43 @@
 extends ../layouts/main-layout.pug
 
 block content
+    if (action !== 'undefined' && action === 'edit')
+        div.alert.alert-success The product has been update!
+
+    if (action !== 'undefined' && action === 'delete')
+        div.alert.alert-danger The product has been delete!
+    if products.length > 0
+        table.table.table-bordered
+            thead 
+                tr 
+                    th(style="width:200px;") Image 
+                    th(style="width:600px;") Product Name 
+                    th(style="width:200px;") Price 
+                    th Quantity
+                    th
+            tbody 
+                each product in products
+                    tr
+                        td 
+                            img(src='/img/'+product.imgUrl, width='80')
+                        td #{product.name}
+                        td #{product.price} TL 
+                        td #{product.cartItem.quantity}
+                        td                           
+                            form(action='/delete-cartitem' method='POST')
+                                input(type='hidden' name='productid'
+                                value=`${product.id}`)
+                                button(type='submit').btn.btn-danger.btn-sm Delete
+
+            tfoot 
+                td(colspan= "4")
+                    - var total = 0;
+                    each product in products 
+                        - total += (product.price * product.cartItem.quantity)
+                td #{total} TL
+        .text-center 
+            a(href="/").btn.btn-primary Alışverişe Devam Et
+            span(style="margin-left: 30px")
+            a(href="/checkout").btn.btn-primary Alışverişi Tamamla
+    else 
+        h1 No Product

@@ -14,4 +14,7 @@ mixin createProduct(product)
                 
                 a(href="/products/"+product.id).btn.btn-primary.btn-sm Details
                 span(style="margin-left: 10px")
-                a(href="#").btn.btn-primary.btn-sm.ml-3 Add to Cart
+
+                form(action='/cart' method='POST')
+                    input(type='hidden' name='productId' value=`${product.id}`)
+                    button(type='submit').btn.btn-primary.btn-sm.ml-3 Add to Cart
