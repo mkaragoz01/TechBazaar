@@ -4,7 +4,7 @@ mixin createProduct(product)
             img(src=`/img/${product.imgUrl}` alt=``).card-img-top
             .card-body
                 h4.card-title
-                    a(href="/products/"+product.id) #{product.name}
+                    a(href="/products/"+product._id) #{product.name}
                 .card-text.pt-2
                 
                 small.text-muted
@@ -12,9 +12,9 @@ mixin createProduct(product)
 
             .card-footer.text-center
                 
-                a(href="/products/"+product.id).btn.btn-primary.btn-sm Details
+                a(href="/products/"+product._id).btn.btn-primary.btn-sm Details
                 span(style="margin-left: 10px")
 
                 form(action='/cart' method='POST')
-                    input(type='hidden' name='productId' value=`${product.id}`)
+                    input(type='hidden' name='productId' value=`${product._id}`)
                     button(type='submit').btn.btn-primary.btn-sm.ml-3 Add to Cart
