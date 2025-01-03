@@ -2,22 +2,27 @@ const getDb = require("../utility/database").getdb;
 const mongodb = require("mongodb");
 
 class Product{
-    constructor(name,price,description,imgUrl){
+    constructor(name,price,description,imgUrl,id){
         this.name = name,
         this.price = price,
         this.description = description,
-        this.imgUrl = imgUrl
+        this.imgUrl = imgUrl,
+        this._id = id ? new mongodb.ObjectId(id) : null;
     }
 
     save(){
-        const db = getDb();
+        let db = getDb();
         
-        db.collection('products')
-            .insertOne(this)
-            .then(result => {
-                console.log(result);
-            })
-            .catch(err => {console.log(err)});
+        if(this._id){
+            db = db.collection('products').updateOne({_id: this._id}, {$set: this})
+        }else{
+            db = db.collection('products').insertOne(this)
+        }
+
+        return db.then(result => {
+            console.log(result);
+        })
+        .catch(err => {console.log(err)});
     }
 
     static findAll(){
@@ -41,6 +46,19 @@ class Product{
                 return products;
             })
             .catch(err => {console.log(err)});
+    }
+
+    static deleteById(productid){
+        const db = getDb()
+
+        return db.collection('products')
+            .deleteOne({_id : new mongodb.ObjectId(productid)})
+            .then(() => {
+                console.log("Deleted");
+            })
+            .catch(err => {
+                console.log(err);
+            })
     }
 }
 

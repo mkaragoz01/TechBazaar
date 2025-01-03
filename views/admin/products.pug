@@ -28,7 +28,7 @@ block content
                             
                             form(action='/admin/delete-product' method='POST')
                                 input(type='hidden' name='productid'
-                                value=`${product.id}`)
+                                value=`${product._id}`)
                                 button(type='submit').btn.btn-danger.btn-sm Delete
     else 
         h1 No Product
