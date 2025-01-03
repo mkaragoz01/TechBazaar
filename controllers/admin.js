@@ -78,19 +78,12 @@ exports.postEditProducts = (req,res,next)=>{
     const price = req.body.price;
     const imgUrl = req.body.imgUrl;
     const description = req.body.description;
-    const categoryid = req.body.categoryid;
+    //const categoryid = req.body.categoryid;
 
-    Product.findByPk(id)
-        .then(product =>{
-            product.name = name,
-            product.price = price,
-            product.imgUrl = imgUrl,
-            product.description = description,
-            product.categoryId = categoryid,
-            product.save();
-        })
+    const product = new Product(name,price,description,imgUrl,id)
+
+    product.save()
         .then((result) => {
-            console.log('Updated');
             res.redirect("/admin/products?action=edit&success=true");
         })
         .catch(err => {
@@ -103,7 +96,7 @@ exports.postDeleteProduct = (req,res,next) => {
 
     const id = req.body.productid
 
-    Product.destroy({where:{id:id}})
+    Product.deleteById(id)
         .then(() => {
             res.redirect("/admin/products?action=delete");
         })
