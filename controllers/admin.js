@@ -1,4 +1,4 @@
-// <const Category = require("../models/category");
+const Category = require("../models/category");
 const Product = require("../models/product")
 
 exports.getProducts = (req,res,next) => {
@@ -35,7 +35,7 @@ exports.postAddProducts = (req,res,next)=>{
     const imgUrl = req.body.imgUrl;
     const description = req.body.description;
 
-    const product = new Product(name , price, description, imgUrl)
+    const product = new Product(name , price, description, imgUrl, null, req.user._id)
     // const categoryid = req.body.categoryid;
     // const user = req.user;
 
@@ -80,7 +80,7 @@ exports.postEditProducts = (req,res,next)=>{
     const description = req.body.description;
     //const categoryid = req.body.categoryid;
 
-    const product = new Product(name,price,description,imgUrl,id)
+    const product = new Product(name,price,description,imgUrl,id,req.user._id)
 
     product.save()
         .then((result) => {
@@ -103,4 +103,36 @@ exports.postDeleteProduct = (req,res,next) => {
         .catch((err) => {
             console.log(err);
         })
+}
+
+exports.getAddCategory = (req,res,next) => {
+    res.render("admin/add-category",{
+        title: "New Category",
+        path: "/admin/add-category"
+    })
+}
+
+exports.postAddCategory = (req,res,next) => {
+    const name = req.body.name;
+    const description = req.body.description;
+
+    const category = new Category(name,description)
+    category.save()
+        .then(result => {
+            console.log(result)
+            res.redirect("/admin/add-category?action:create");
+        })
+        .catch(err => console.log(err))
+}
+
+exports.getCategories = (req,res,next) => {
+    Category.findAll()
+        .then(categories => {
+            res.render("admin/categories",{
+                title: "Categories",
+                path: "/admin/categories",
+                categories: categories,
+                action: req.query.action
+            })
+        }).catch(err => console.log(err))
 }
