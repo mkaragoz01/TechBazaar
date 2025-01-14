@@ -60,12 +60,30 @@ exports.getEditProducts = (req,res,next)=>{
 
     Product.findById(req.params.productid)
         .then(product => {
-            console.log(product)
-            res.render('admin/edit-product',{
-                title: 'Edit Product',
-                path: '/admin/products',
-                product: product,
-                // categories: categories
+            Category.findAll()
+            .then(categories => {
+
+                categories = categories.map(category =>{
+                    if(product.categories){
+                        product.categories.find(item => {
+                            if(item==category._id){
+                                category.selected = true
+                            }
+                        }) 
+                    }
+
+                    return category
+                })
+
+                res.render('admin/edit-product',{
+                    title: 'Edit Product',
+                    path: '/admin/products',
+                    product: product,
+                    categories: categories
+                })
+            })
+            .catch(err => {
+                console.log(err)
             })
         })
         .catch(err => {console.log(err)})
@@ -78,9 +96,9 @@ exports.postEditProducts = (req,res,next)=>{
     const price = req.body.price;
     const imgUrl = req.body.imgUrl;
     const description = req.body.description;
-    //const categoryid = req.body.categoryid;
+    const categories = req.body.categoryids;
 
-    const product = new Product(name,price,description,imgUrl,id,req.user._id)
+    const product = new Product(name,price,description,imgUrl,categories,id,req.user._id)
 
     product.save()
         .then((result) => {
@@ -135,4 +153,33 @@ exports.getCategories = (req,res,next) => {
                 action: req.query.action
             })
         }).catch(err => console.log(err))
+}
+
+exports.getEditCategory = (req,res,next)=>{
+
+    Category.findById(req.params.categoryid)
+        .then(category => {
+            res.render('admin/edit-category',{
+                title: 'Edit Categories',
+                path: '/admin/categories',
+                category: category
+            })
+        })
+}
+
+exports.postEditCategory = (req,res,next)=>{
+
+    const id = req.body.id;
+    const name = req.body.name;
+    const description = req.body.description;
+
+    const category = new Category(name,description,id)
+
+    category.save()
+        .then((result) => {
+            res.redirect("/admin/categories?action=edit");
+        })
+        .catch(err => {
+            console.log(err);
+        })
 }
