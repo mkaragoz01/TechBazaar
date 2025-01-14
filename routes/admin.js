@@ -18,5 +18,8 @@ router.post('/add-category',adminController.postAddCategory)
 
 router.get('/categories',adminController.getCategories)
 
+router.get('/categories/:categoryid',adminController.getEditCategory)
+router.post('/categories',adminController.postEditCategory)
+
 
 module.exports = router;
