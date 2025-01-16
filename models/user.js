@@ -22,8 +22,37 @@ class User{
 
     }
 
-    addToCart(){
+    addToCart(product){
+        const index = this.cart.items.findIndex(cp => {
+            return cp.productId.toString() === product._id.toString()
+        })
 
+        const updatedCartItems = [...this.cart.items]
+
+        let itemQuantity = 1;
+        
+        
+        if(index >= 0){
+            itemQuantity = this.items[index].quantity + 1;
+            updatedCartItems[index].quantity = itemQuantity;
+        }
+        else{
+            updatedCartItems.push({
+                productId: new mongodb.ObjectId(product._id),
+                quantity: itemQuantity
+            })
+        }
+
+        const db = getDb();
+        return db.collection('user')
+        .updateOne(
+            {_id: new mongodb.ObjectId(this._id)},
+            {$set: {
+                cart:{
+                    items: updatedCartItems
+                }
+            }}
+        )
     }
 
     static findById(userid){
