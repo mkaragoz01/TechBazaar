@@ -88,8 +88,8 @@ exports.getCart = (req,res,next) => {
         .then(products =>{
             res.render('shop/cart',
                 {
-                    title: 'Carts',
-                    path: "/carts",
+                    title: 'Cart',
+                    path: "/cart",
                     products: products
                 }
             )
@@ -114,15 +114,9 @@ exports.postCart = (req,res,next) => {
 exports.postCartItemDelete = (req,res,next) => {
     const productid = req.body.productid;
 
-    req.user.getCart()
-        .then(cart => {
-            return cart.getProducts({where:{id: productid}});
-        })
-        .then(products => {
-            product = products[0];
-            return product.cartItem.destroy();
-        })
-        .then(result => {
+    req.user
+        .deleteCartItem(productid)
+        .then(() => {
             res.redirect("/cart");
         })
 }
