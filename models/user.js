@@ -1,5 +1,6 @@
 const getDb = require("../utility/database").getdb;
 const mongodb = require("mongodb");
+const { get } = require("../routes/shop");
 
 class User{
 
@@ -19,7 +20,29 @@ class User{
     }
 
     getCart(){
+        const ids = this.cart.items.map(i => {
+            return i.productId
+        });
 
+        const db = getDb()
+
+        return db.collection('products')
+            .find({
+                _id: {
+                    $in: ids
+                }
+            })
+            .toArray()
+            .then(products => {
+                return products.map(p => {
+                    return {
+                        ...p,
+                        quantity:  this.cart.items.find(i => {
+                            return i.productId.toString() === p._id.toString()
+                        }).quantity
+                    }
+                })
+            })
     }
 
     addToCart(product){
@@ -33,7 +56,7 @@ class User{
         
         
         if(index >= 0){
-            itemQuantity = this.items[index].quantity + 1;
+            itemQuantity = this.cart.items[index].quantity + 1;
             updatedCartItems[index].quantity = itemQuantity;
         }
         else{
@@ -47,12 +70,36 @@ class User{
         return db.collection('user')
         .updateOne(
             {_id: new mongodb.ObjectId(this._id)},
-            {$set: {
-                cart:{
-                    items: updatedCartItems
-                }
-            }}
+            {
+                $set: {
+                    cart:{
+                        items: updatedCartItems
+                        }
+                    }
+            }
         )
+    }
+
+    deleteCartItem(productid){
+        const cartItems = this.cart.items.filter(item => {
+            return item.productId.toString() !== productid.toString()
+        })
+
+        const db = getDb();
+        return db
+            .collection('user')
+            .updateOne(
+                {_id: new mongodb.ObjectId(this._id)},
+                {
+                    $set: 
+                        {
+                            cart: 
+                                {
+                                    items: cartItems
+                                }
+                        }
+                }
+            )
     }
 
     static findById(userid){
