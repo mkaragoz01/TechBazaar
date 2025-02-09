@@ -106,7 +106,7 @@ exports.postCart = (req,res,next) => {
         return req.user.addToCart(product)
     })
     .then(()=>{
-        res.redirect('/carts')
+        res.redirect('/cart')
     })
     .catch(err => console.log(err))
 }
@@ -123,7 +123,7 @@ exports.postCartItemDelete = (req,res,next) => {
 
 exports.getOrders = (req,res,next) => {
 
-    req.user.getOrders({include: ['products']})
+    req.user.getOrders()
     .then(orders =>{
         res.render('shop/orders',
             {
@@ -139,33 +139,10 @@ exports.getOrders = (req,res,next) => {
 }
 
 exports.postOrder = (req,res,next) => {
-    let userCart;
-
-    req.user.getCart()
-    .then(cart => {
-        userCart = cart;
-        return cart.getProducts();
-    })
-    .then(products => {
-        return req.user.createOrder()
-            .then(order => {
-                order.addProducts(products.map(product => {
-                    product.orderItem = {
-                        quantity: product.cartItem.quantity,
-                        price: product.price
-                    }
-                    return product;
-                }));
-            })
-            .then(()=>{
-                userCart.setProducts(null);
-            })
-            .then(()=>{
-                res.redirect("/orders")
-            })
-            .catch(err => {console.log(err);})
-    })
-    .catch(()=>{
-
-    })
+    req.user
+        .addOrder()
+        .then(()=>{
+            res.redirect('/cart')
+        })
+        .catch(err => console.log(err))
 }
