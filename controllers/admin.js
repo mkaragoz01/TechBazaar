@@ -35,19 +35,17 @@ exports.postAddProducts = (req,res,next)=>{
     const imgUrl = req.body.imgUrl;
     const description = req.body.description;
 
-    const product = new Product(name , price, description, imgUrl, null, req.user._id)
-    // const categoryid = req.body.categoryid;
-    // const user = req.user;
-
-    // user.createProduct({
-    //     name: name,
-    //     price: price,
-    //     imgUrl: imgUrl,
-    //     description: description,
-    //     categoryId: categoryid,
-    // })
+    const product = new Product(
+        {
+            name: name,
+            price: price,
+            imgUrl: imgUrl,
+            description: description
+        }
+    )
+  
     product.save()
-        .then(result => {
+        .then(() => {
             res.redirect('/admin/products')
         })
         .catch(err => {
