@@ -1,8 +1,9 @@
+const category = require("../models/category");
 const Category = require("../models/category");
 const Product = require("../models/product")
 
 exports.getProducts = (req,res,next) => {
-    Product.findAll()
+    Product.find()
     .then((products) => {
         res.render('admin/products',
             {
@@ -40,7 +41,8 @@ exports.postAddProducts = (req,res,next)=>{
             name: name,
             price: price,
             imgUrl: imgUrl,
-            description: description
+            description: description,
+            userId: req.user._id
         }
     )
   
@@ -58,31 +60,13 @@ exports.getEditProducts = (req,res,next)=>{
 
     Product.findById(req.params.productid)
         .then(product => {
-            Category.findAll()
-            .then(categories => {
 
-                categories = categories.map(category =>{
-                    if(product.categories){
-                        product.categories.find(item => {
-                            if(item==category._id){
-                                category.selected = true
-                            }
-                        }) 
-                    }
-
-                    return category
-                })
-
-                res.render('admin/edit-product',{
-                    title: 'Edit Product',
-                    path: '/admin/products',
-                    product: product,
-                    categories: categories
-                })
+            res.render('admin/edit-product',{
+                title: 'Edit Product',
+                path: '/admin/products',
+                product: product
             })
-            .catch(err => {
-                console.log(err)
-            })
+        
         })
         .catch(err => {console.log(err)})
 }
@@ -96,15 +80,18 @@ exports.postEditProducts = (req,res,next)=>{
     const description = req.body.description;
     const categories = req.body.categoryids;
 
-    const product = new Product(name,price,description,imgUrl,categories,id,req.user._id)
-
-    product.save()
-        .then((result) => {
-            res.redirect("/admin/products?action=edit&success=true");
-        })
-        .catch(err => {
-            console.log(err);
-        })
+    Product.updateOne({_id:id},{
+        $set: {
+            name: name,
+            price: price,
+            imgUrl: imgUrl,
+            description: description
+        }
+    })
+    .then(()=>{
+        res.redirect("/admin/products?action=edit&success=true");
+    })
+    .catch(err => {console.log(err)})
 }
     
 
@@ -112,7 +99,7 @@ exports.postDeleteProduct = (req,res,next) => {
 
     const id = req.body.productid
 
-    Product.deleteById(id)
+    Product.findByIdAndRemove(id)
         .then(() => {
             res.redirect("/admin/products?action=delete");
         })
@@ -132,17 +119,20 @@ exports.postAddCategory = (req,res,next) => {
     const name = req.body.name;
     const description = req.body.description;
 
-    const category = new Category(name,description)
+    const category = new Category({
+        name: name,
+        description: description
+    })
+
     category.save()
         .then(result => {
-            console.log(result)
             res.redirect("/admin/add-category?action:create");
         })
         .catch(err => console.log(err))
 }
 
 exports.getCategories = (req,res,next) => {
-    Category.findAll()
+    Category.find()
         .then(categories => {
             res.render("admin/categories",{
                 title: "Categories",
@@ -171,13 +161,28 @@ exports.postEditCategory = (req,res,next)=>{
     const name = req.body.name;
     const description = req.body.description;
 
-    const category = new Category(name,description,id)
+    Category.updateOne({_id: id},{
+        $set: {
+            name: name,
+            description: description
+        }
+    })
+    .then((result) => {
+        res.redirect("/admin/categories?action=edit");
+    })
+    .catch(err => {
+        console.log(err);
+    })
+}
 
-    category.save()
-        .then((result) => {
-            res.redirect("/admin/categories?action=edit");
-        })
-        .catch(err => {
-            console.log(err);
-        })
+exports.postDeleteCategory = (req,res,next)=> {
+    const id = req.body.id;
+
+    Category.deleteOne({_id: id})
+    .then((result) => {
+        res.redirect("/admin/categories?action=delete");
+    })
+    .catch(err => {
+        console.log(err);
+    })
 }
