@@ -9,11 +9,16 @@ const productSchema = mongoose.Schema({
         type: String,
         required: true
     },
-    describe: String,
+    description: String,
     imgUrl: String,
     date: {
         type: Date,
         default: Date.now
+    },
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true
     }
 })
 
