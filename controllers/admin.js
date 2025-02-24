@@ -1,9 +1,11 @@
-const category = require("../models/category");
+const { Mongoose } = require("mongoose");
 const Category = require("../models/category");
 const Product = require("../models/product")
 
 exports.getProducts = (req,res,next) => {
     Product.find()
+    .populate('userId','name -_id')
+    .select('name price imgUrl userId')
     .then((products) => {
         res.render('admin/products',
             {
@@ -24,7 +26,7 @@ exports.getAddProducts = (req,res,next)=>{
         {
             title: "New Product",
             path: "/admin/add-product",
-            // categories: categories
+            categories: categories
         }
     )
 }
@@ -60,13 +62,31 @@ exports.getEditProducts = (req,res,next)=>{
 
     Product.findById(req.params.productid)
         .then(product => {
+            return product;
+        })
+        .then(product => {
 
-            res.render('admin/edit-product',{
-                title: 'Edit Product',
-                path: '/admin/products',
-                product: product
-            })
-        
+            Category.find()
+                .then(categories=> {
+                    console.log(categories)
+                    categories = categories.map(category => {
+                        if(product.categories){
+                            product.categories.find(item => {
+                                if(item.toString() === category._id.toString()){
+                                    category.selected = true
+                                }
+                            })
+                        }
+                        
+                        return category;
+                    })
+                    res.render('admin/edit-product',{
+                        title: 'Edit Product',
+                        path: '/admin/products',
+                        product: product,
+                        categories: categories
+                    })
+                })
         })
         .catch(err => {console.log(err)})
 }
@@ -78,14 +98,15 @@ exports.postEditProducts = (req,res,next)=>{
     const price = req.body.price;
     const imgUrl = req.body.imgUrl;
     const description = req.body.description;
-    const categories = req.body.categoryids;
+    const ids = req.body.categoryids;
 
     Product.updateOne({_id:id},{
         $set: {
             name: name,
             price: price,
             imgUrl: imgUrl,
-            description: description
+            description: description,
+            categories: ids
         }
     })
     .then(()=>{
@@ -167,7 +188,7 @@ exports.postEditCategory = (req,res,next)=>{
             description: description
         }
     })
-    .then((result) => {
+    .then(() => {
         res.redirect("/admin/categories?action=edit");
     })
     .catch(err => {
@@ -176,9 +197,8 @@ exports.postEditCategory = (req,res,next)=>{
 }
 
 exports.postDeleteCategory = (req,res,next)=> {
-    const id = req.body.id;
-
-    Category.deleteOne({_id: id})
+    const id = req.body.categoryid;
+    Category.deleteOne({ _id: id})
     .then((result) => {
         res.redirect("/admin/categories?action=delete");
     })
