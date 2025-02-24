@@ -17,13 +17,13 @@ block content
                 label(for="imgUrl").col-sm-2.col-form-label Image
                 .col-sm-10
                     input.form-control#image(type="text" name="imgUrl" value=`${product.imgUrl}`)
-            //- .form-group.row
-            //-     label(for="categoryid").col-sm-2.col-form-label Category
-            //-     .col-sm-10
-            //-         each category in categories 
-            //-             input(type="checkbox" name="categoryids" value=`${category._id}` checked=category.selected)
-            //-             | #{category.name}
-            //-             br
+            .form-group.row
+                label(for="categoryid").col-sm-2.col-form-label Category
+                .col-sm-10
+                    each category in categories 
+                        input(type="checkbox" name="categoryids" value=`${category._id}` checked=category.selected)
+                        | #{category.name}
+                        br
             .form-group.row
                 label(for="description").col-sm-2.col-form-label Description
                 .col-sm-10
