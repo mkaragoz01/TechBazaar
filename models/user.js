@@ -81,6 +81,15 @@ userSchema.methods.getCart = function( ){
             })
         })
 }
+
+userSchema.methods.deleteCartItem = function(productid){
+    const cartItems = this.cart.items.filter(item => {
+        return item.productId.toString() !== productid.toString()
+    })
+    
+    this.cart.items = cartItems;
+    return this.save();
+}
 module.exports = mongoose.model('User',userSchema);
 
 
@@ -107,30 +116,6 @@ class User{
 
     getCart(){
         
-    }
-
-    
-
-    deleteCartItem(productid){
-        const cartItems = this.cart.items.filter(item => {
-            return item.productId.toString() !== productid.toString()
-        })
-
-        const db = getDb();
-        return db
-            .collection('user')
-            .updateOne(
-                {_id: new mongodb.ObjectId(this._id)},
-                {
-                    $set: 
-                        {
-                            cart: 
-                                {
-                                    items: cartItems
-                                }
-                        }
-                }
-            )
     }
 
     addOrder(){
