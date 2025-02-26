@@ -106,7 +106,6 @@ exports.postCart = (req,res,next) => {
 
 exports.postCartItemDelete = (req,res,next) => {
     const productid = req.body.productid;
-
     req.user
         .deleteCartItem(productid)
         .then(() => {
