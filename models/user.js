@@ -71,6 +71,7 @@ userSchema.methods.getCart = function( ){
         .then(products => {
             return products.map(p => {
                 return {
+                    _id: p._id,
                     imgUrl: p.imgUrl,
                     name: p.name,
                     price: p.price,
@@ -86,7 +87,6 @@ userSchema.methods.deleteCartItem = function(productid){
     const cartItems = this.cart.items.filter(item => {
         return item.productId.toString() !== productid.toString()
     })
-    
     this.cart.items = cartItems;
     return this.save();
 }
