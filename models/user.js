@@ -90,6 +90,11 @@ userSchema.methods.deleteCartItem = function(productid){
     this.cart.items = cartItems;
     return this.save();
 }
+
+userSchema.methods.clearCart = function(){
+    this.cart = { items: [] };
+    return this.save()
+}
 module.exports = mongoose.model('User',userSchema);
 
 

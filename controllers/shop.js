@@ -1,5 +1,6 @@
 const Product = require("../models/product")
 const Category = require("../models/category")
+const Order = require("../models/order")
 
 exports.getIndex = (req,res,next) => {
 
@@ -114,8 +115,8 @@ exports.postCartItemDelete = (req,res,next) => {
 }
 
 exports.getOrders = (req,res,next) => {
-
-    req.user.getOrders()
+    Order
+    .find({ "user.userId": req.user._id })
     .then(orders =>{
         res.render('shop/orders',
             {
@@ -131,10 +132,37 @@ exports.getOrders = (req,res,next) => {
 }
 
 exports.postOrder = (req,res,next) => {
+
     req.user
-        .addOrder()
-        .then(()=>{
-            res.redirect('/cart')
+        .populate('cart.items.productId')
+        .execPopulate()
+        .then(user => {
+            const order = new Order({
+                user: {
+                    userId: req.user._id,
+                    name: req.user.name,
+                    email: req.user.email
+                },
+                items: user.cart.items.map( p=> {
+                    return{
+                        product: {
+                        _id: p.productId._id,
+                        name: p.productId.name,
+                        price: p.productId.price,
+                        imgUrl: p.productId.imgUrl
+                    },
+                    quantity: p.quantity}
+                })
+            })
+            return order.save()
         })
-        .catch(err => console.log(err))
+        .then(()=> {
+            return req.user.clearCart();
+        })
+        .then(()=> {
+            res.redirect('/orders')
+        })
+        .catch(err => {
+            console.log(err);
+        })
 }
