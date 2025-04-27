@@ -10,7 +10,8 @@ exports.getIndex = (req,res,next) => {
             title: 'Shopping',
             products: products,
             path: "/",
-            categories: categories
+            categories: categories,
+            isAuthenticated: req.isAuthenticated
         });
     })
     .catch(err => console.log(err));

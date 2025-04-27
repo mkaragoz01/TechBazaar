@@ -1,0 +1,17 @@
+extends ../layouts/main-layout.pug
+
+block content
+    .col-lg-9
+        form(action="/login" method="POST")
+            .form-group.row
+                label(for="email").col-sm-2.col-form-label Email
+                .col-sm-10
+                    input.form-control#email(type="text" name="email")
+            .form-group.row
+                label(for="password").col-sm-2.col-form-label Password
+                .col-sm-10
+                    input.form-control#password(type="password" name="password")
+            .form-group.row
+                .col-sm-10.offset-sm-2
+                    input(type="submit" value="Login").btn.btn-primary
+
