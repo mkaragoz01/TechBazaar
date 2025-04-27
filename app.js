@@ -6,6 +6,7 @@ const mongoose = require('mongoose')
 
 const adminRoutes = require("./routes/admin")
 const userRoutes = require('./routes/shop')
+const accountRoutes = require('./routes/account')
 
 const User = require("./models/user")
 
@@ -23,6 +24,7 @@ app.use((req,res,next) => {
 
 app.use('/admin',adminRoutes);
 app.use(userRoutes);
+app.use(accountRoutes);
 //app.use(errorController.get404Page)
 
 app.set('view engine', 'pug');
