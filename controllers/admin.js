@@ -12,7 +12,8 @@ exports.getProducts = (req,res,next) => {
                 title: 'Admin Products',
                 products: products,
                 path: "/admin/products",
-                action: req.query.action
+                action: req.query.action,
+                isAuthenticated: req.session.isAuthenticated
             }
         )
     }).catch((err) => {
@@ -26,7 +27,8 @@ exports.getAddProducts = (req,res,next)=>{
         {
             title: "New Product",
             path: "/admin/add-product",
-            categories: categories
+            categories: categories,
+            isAuthenticated: req.session.isAuthenticated
         }
     )
 }
@@ -84,7 +86,8 @@ exports.getEditProducts = (req,res,next)=>{
                         title: 'Edit Product',
                         path: '/admin/products',
                         product: product,
-                        categories: categories
+                        categories: categories,
+                        isAuthenticated: req.session.isAuthenticated
                     })
                 })
         })
@@ -106,7 +109,8 @@ exports.postEditProducts = (req,res,next)=>{
             price: price,
             imgUrl: imgUrl,
             description: description,
-            categories: ids
+            categories: ids,
+            isAuthenticated: req.session.isAuthenticated
         }
     })
     .then(()=>{
@@ -159,7 +163,8 @@ exports.getCategories = (req,res,next) => {
                 title: "Categories",
                 path: "/admin/categories",
                 categories: categories,
-                action: req.query.action
+                action: req.query.action,
+                isAuthenticated: req.session.isAuthenticated
             })
         }).catch(err => console.log(err))
 }
@@ -171,7 +176,8 @@ exports.getEditCategory = (req,res,next)=>{
             res.render('admin/edit-category',{
                 title: 'Edit Categories',
                 path: '/admin/categories',
-                category: category
+                category: category,
+                isAuthenticated: req.session.isAuthenticated
             })
         })
 }
