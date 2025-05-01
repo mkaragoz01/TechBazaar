@@ -11,7 +11,7 @@ exports.getIndex = (req,res,next) => {
             products: products,
             path: "/",
             categories: categories,
-            isAuthenticated: req.isAuthenticated
+            isAuthenticated: req.session.isAuthenticated
         });
     })
     .catch(err => console.log(err));
@@ -27,7 +27,8 @@ exports.getProducts = (req,res,next) => {
                 title: 'Products',
                 products: products,
                 path: req.path,
-                categories: categories
+                categories: categories,
+                isAuthenticated: req.session.isAuthenticated
             }
         )
     })
@@ -54,6 +55,7 @@ exports.getProductsByCategoryId = (req,res,next) => {
                     products: products,
                     categories: model.categories,
                     selectedCategory: categoryid,
+                    isAuthenticated: req.session.isAuthenticated,
                     path: "/products"
                 }
             )
@@ -70,7 +72,8 @@ exports.getProduct = (req,res,next) => {
             res.render('shop/product-detail',{
                 title: products.name,
                 product: products,
-                path: '/products'
+                path: '/products',
+                isAuthenticated: req.session.isAuthenticated
             })
         }).catch((err) => {
             console.log(err);
@@ -85,7 +88,8 @@ exports.getCart = (req,res,next) => {
                 {
                     title: 'Cart',
                     path: "/cart",
-                    products: products
+                    products: products,
+                    isAuthenticated: req.session.isAuthenticated
                 }
             )
         })
@@ -123,7 +127,8 @@ exports.getOrders = (req,res,next) => {
             {
                 title: 'Orders',
                 path: "/orders",
-                orders: orders
+                orders: orders,
+                isAuthenticated: req.session.isAuthenticated
             }
         )
     })
