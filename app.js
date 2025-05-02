@@ -6,6 +6,7 @@ const mongoose = require('mongoose')
 const cookieParser = require('cookie-parser')
 const session = require('express-session')
 const mongoDbStore = require('connect-mongodb-session')(session)
+const csurf = require('csurf')
 
 const adminRoutes = require("./routes/admin")
 const userRoutes = require('./routes/shop')
@@ -49,7 +50,7 @@ app.use((req, res, next) => {
         });
 });
 
-
+app.use(csurf())
 app.use('/admin',adminRoutes);
 app.use(userRoutes);
 app.use(accountRoutes);

@@ -10,8 +10,7 @@ exports.getIndex = (req,res,next) => {
             title: 'Shopping',
             products: products,
             path: "/",
-            categories: categories,
-            isAuthenticated: req.session.isAuthenticated
+            categories: categories
         });
     })
     .catch(err => console.log(err));
@@ -27,8 +26,7 @@ exports.getProducts = (req,res,next) => {
                 title: 'Products',
                 products: products,
                 path: req.path,
-                categories: categories,
-                isAuthenticated: req.session.isAuthenticated
+                categories: categories
             }
         )
     })
@@ -55,7 +53,6 @@ exports.getProductsByCategoryId = (req,res,next) => {
                     products: products,
                     categories: model.categories,
                     selectedCategory: categoryid,
-                    isAuthenticated: req.session.isAuthenticated,
                     path: "/products"
                 }
             )
@@ -72,8 +69,7 @@ exports.getProduct = (req,res,next) => {
             res.render('shop/product-detail',{
                 title: products.name,
                 product: products,
-                path: '/products',
-                isAuthenticated: req.session.isAuthenticated
+                path: '/products'
             })
         }).catch((err) => {
             console.log(err);
@@ -89,7 +85,6 @@ exports.getCart = (req,res,next) => {
                     title: 'Cart',
                     path: "/cart",
                     products: products,
-                    isAuthenticated: req.session.isAuthenticated
                 }
             )
         })
@@ -128,7 +123,7 @@ exports.getOrders = (req,res,next) => {
                 title: 'Orders',
                 path: "/orders",
                 orders: orders,
-                isAuthenticated: req.session.isAuthenticated
+                
             }
         )
     })
