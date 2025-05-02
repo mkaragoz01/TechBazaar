@@ -13,7 +13,7 @@ exports.getProducts = (req,res,next) => {
                 products: products,
                 path: "/admin/products",
                 action: req.query.action,
-                isAuthenticated: req.session.isAuthenticated
+                
             }
         )
     }).catch((err) => {
@@ -28,7 +28,6 @@ exports.getAddProducts = (req,res,next)=>{
             title: "New Product",
             path: "/admin/add-product",
             categories: categories,
-            isAuthenticated: req.session.isAuthenticated
         }
     )
 }
@@ -87,7 +86,7 @@ exports.getEditProducts = (req,res,next)=>{
                         path: '/admin/products',
                         product: product,
                         categories: categories,
-                        isAuthenticated: req.session.isAuthenticated
+                        
                     })
                 })
         })
@@ -110,7 +109,7 @@ exports.postEditProducts = (req,res,next)=>{
             imgUrl: imgUrl,
             description: description,
             categories: ids,
-            isAuthenticated: req.session.isAuthenticated
+            
         }
     })
     .then(()=>{
@@ -136,7 +135,9 @@ exports.postDeleteProduct = (req,res,next) => {
 exports.getAddCategory = (req,res,next) => {
     res.render("admin/add-category",{
         title: "New Category",
-        path: "/admin/add-category"
+        path: "/admin/add-category",
+        
+
     })
 }
 
@@ -164,7 +165,6 @@ exports.getCategories = (req,res,next) => {
                 path: "/admin/categories",
                 categories: categories,
                 action: req.query.action,
-                isAuthenticated: req.session.isAuthenticated
             })
         }).catch(err => console.log(err))
 }
@@ -177,7 +177,6 @@ exports.getEditCategory = (req,res,next)=>{
                 title: 'Edit Categories',
                 path: '/admin/categories',
                 category: category,
-                isAuthenticated: req.session.isAuthenticated
             })
         })
 }
