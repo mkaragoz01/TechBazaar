@@ -16,6 +16,7 @@ nav.navbar.navbar-expand-lg.navbar-dark.bg-primary.fixed-top
                         li.nav-item
                             a(href="/orders", class=(path === '/orders'?'nav-link active':'nav-link')) Orders 
 
+                    if isAdmin
                         li.nav-item
                             a(href='/admin/add-product', class=(path === '/admin/add-product'?'nav-link active':'nav-link')) Add Product
 
