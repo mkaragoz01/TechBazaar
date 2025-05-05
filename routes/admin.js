@@ -1,23 +1,23 @@
 const express = require("express")
 const router = express.Router()
 
-const isAuthenticated = require("../middleware/authentication")
-const csrf = require("../middleware/csrf")
+const isAdmin = require("../middleware/isAdmin")
+const locals = require("../middleware/locals")
 const adminController = require("../controllers/admin")
 
-router.get('/add-product', csrf, isAuthenticated, adminController.getAddProducts)
-router.post('/add-product',isAuthenticated, csrf, adminController.postAddProducts)
-router.get('/products/:productid',isAuthenticated, csrf, adminController.getEditProducts)
-router.post('/products',isAuthenticated, csrf, adminController.postEditProducts)
-router.post('/delete-product',isAuthenticated, csrf, adminController.postDeleteProduct)
-router.get('/products',isAuthenticated, csrf, adminController.getProducts)
+router.get('/add-product', locals, isAdmin, adminController.getAddProducts)
+router.post('/add-product',isAdmin, locals, adminController.postAddProducts)
+router.get('/products/:productid',isAdmin, locals, adminController.getEditProducts)
+router.post('/products',isAdmin, locals, adminController.postEditProducts)
+router.post('/delete-product',isAdmin, locals, adminController.postDeleteProduct)
+router.get('/products',isAdmin, locals, adminController.getProducts)
 
-router.get('/add-category',isAuthenticated, csrf, adminController.getAddCategory)
-router.post('/add-category',isAuthenticated, csrf, adminController.postAddCategory)
-router.get('/categories',isAuthenticated, csrf, adminController.getCategories)
-router.get('/categories/:categoryid',isAuthenticated, csrf, adminController.getEditCategory)
-router.post('/categories',isAuthenticated, csrf, adminController.postEditCategory)
-router.post('/delete-category',isAuthenticated, csrf, adminController.postDeleteCategory)
+router.get('/add-category',isAdmin, locals, adminController.getAddCategory)
+router.post('/add-category',isAdmin, locals, adminController.postAddCategory)
+router.get('/categories',isAdmin, locals, adminController.getCategories)
+router.get('/categories/:categoryid',isAdmin, locals, adminController.getEditCategory)
+router.post('/categories',isAdmin, locals, adminController.postEditCategory)
+router.post('/delete-category',isAdmin, locals, adminController.postDeleteCategory)
 
 
 module.exports = router;
