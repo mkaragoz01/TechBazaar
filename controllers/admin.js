@@ -43,10 +43,11 @@ exports.postAddProducts = (req,res,next)=>{
     const product = new Product(
         {
             name: name,
-            price: price,
+            //price: price,
             imgUrl: imgUrl,
             description: description,
-            userId: req.user._id
+            userId: req.user._id,
+            isActive: true
         }
     )
   
