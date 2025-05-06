@@ -42,6 +42,7 @@ exports.postLogin = (req, res) => {
                     if (isSuccess) {                        
                         req.session.user = user;
                         req.session.isAuthenticated = true;
+                        req.session.isAdmin = user.isAdmin;
                         return req.session.save(function (err) {
                             var url = req.session.redirectTo || '/';
                             delete req.session.redirectTo;

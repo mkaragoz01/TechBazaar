@@ -28,7 +28,7 @@ exports.getAddProducts = (req,res,next)=>{
         {
             title: "New Product",
             path: "/admin/add-product",
-            categories: categories,
+            //categories: categories,
         }
     )
 }
@@ -43,7 +43,7 @@ exports.postAddProducts = (req,res,next)=>{
     const product = new Product(
         {
             name: name,
-            //price: price,
+            price: price,
             imgUrl: imgUrl,
             description: description,
             userId: req.user._id,
@@ -56,7 +56,43 @@ exports.postAddProducts = (req,res,next)=>{
             res.redirect('/admin/products')
         })
         .catch(err => {
-            console.log(err);
+            
+            if(err.name === "ValidationError"){
+                let message = '';
+                for(const key in err.errors){
+                    message += err.errors[key].message + '<br>'
+                }
+
+                res.render("admin/add-product",
+                    {
+                        title: "New Product",
+                        path: "/admin/add-product",
+                        errorMessage: message,
+                        inputs: {
+                            name: name,
+                            price: price,
+                            imgUrl: imgUrl,
+                            description: description
+                        }
+                    }
+                )
+            }else{
+                res.status(500).render("admin/add-product",
+                    {
+                        title: "New Product",
+                        path: "/admin/add-product",
+                        errorMessage: 'Beklenmedik bir hata oluştu. Lütfen tekrar deneyiniz.',
+                        inputs: {
+                            name: name,
+                            price: price,
+                            imgUrl: imgUrl,
+                            description: description
+                        }
+                    }
+                )
+            }
+
+            
         })
 }
 
