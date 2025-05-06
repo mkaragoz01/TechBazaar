@@ -1,3 +1,3 @@
 exports.get404Page = (req,res)=>{
-    res.status(404).render("../views/error/404",{title: "Page Not Found"})
+    res.status(404).render("error/404",{title: "Page Not Found"})
 }
