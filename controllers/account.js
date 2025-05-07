@@ -1,4 +1,5 @@
 const User = require('../models/user');
+const Login = require('../models/login');
 const bcrypt = require('bcrypt');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto')
@@ -28,31 +29,63 @@ exports.postLogin = (req, res) => {
     const email = req.body.email;
     const password = req.body.password;
 
-    User.findOne({email: email})
+    const loginModel = new Login({
+        email: email,
+        password: password
+    });
+
+    loginModel.validate()
+        .then(() => {
+            return User.findOne({ email: email });
+        })
         .then(user => {
-            if(!user){
+            if (!user) {
                 req.session.errorMessage = 'Bu mail adresi ile kayıtlı bir kullanıcı bulunamadı.';
-                req.session.save(function (err) {
-                    console.log(err);
-                        return res.redirect('/login');
+                return req.session.save(err => {
+                    if (err) console.log(err);
+                    return res.redirect('/login');
                 });
             }
-            bcrypt.compare(password,user.password)
+
+            return bcrypt.compare(password, user.password)
                 .then(isSuccess => {
-                    if (isSuccess) {                        
+                    if (isSuccess) {
                         req.session.user = user;
                         req.session.isAuthenticated = true;
                         req.session.isAdmin = user.isAdmin;
-                        return req.session.save(function (err) {
-                            var url = req.session.redirectTo || '/';
+                        return req.session.save(err => {
+                            if (err) console.log(err);
+                            const url = req.session.redirectTo || '/';
                             delete req.session.redirectTo;
-                            res.redirect(url);
+                            return res.redirect(url);
                         });
                     }
-                    res.redirect('/login');
-                }).catch(err => console.log(err));
-        }).catch(err => console.log(err));
-}
+                    
+                    req.session.errorMessage = 'Yanlış şifre!';
+                    return req.session.save(err => {
+                        if (err) console.log(err);
+                        return res.redirect('/login');
+                    });
+                });
+        })
+        .catch(err => {
+            if (err.name === "ValidationError") {
+                let message = '';
+                for (const key in err.errors) {
+                    message += err.errors[key].message + '<br>';
+                }
+
+                return res.render('account/login', {
+                    path: '/login',
+                    title: 'Login',
+                    errorMessage: message,
+                });
+            } else {
+                next(err);
+            }
+        });
+};
+
 
 
 exports.getRegister = (req, res) => {
@@ -111,7 +144,20 @@ exports.postRegister = (req, res) => {
 
         })
         .catch(err => {
-            console.log(err);
+            if (err.name === "ValidationError") {
+                let message = '';
+                for (const key in err.errors) {
+                    message += err.errors[key].message + '<br>';
+                }
+
+                return res.render('account/register', {
+                    path: '/register',
+                    title: 'Register',
+                    errorMessage: message,
+                });
+            } else {
+                next(err);
+            }
         });
 
         res.redirect('/login');
@@ -133,7 +179,7 @@ exports.postReset = (req, res) => {
 
     crypto.randomBytes(32,(err,buffer)=>{
         if(err){
-            console.log(err)
+            
             return res.redirect('/reset-password')
         }
         const token = buffer.toString('hex')
@@ -143,7 +189,7 @@ exports.postReset = (req, res) => {
                 if(!user){
                     req.session.errorMessage = 'Bu mail adresi ile kayıtlı bir kullanıcı bulunamadı.';
                     req.session.save(function (err) {
-                        console.log(err);
+                        ;
                             return res.redirect('/reset-password');
                     });
                 }
@@ -179,7 +225,7 @@ exports.postReset = (req, res) => {
 exports.getLogout = (req, res) => {
     req.session.destroy(err => {
         if (err) {
-            console.log(err);
+            next(err);
         }
         res.redirect('/');
     });

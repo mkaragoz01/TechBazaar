@@ -18,7 +18,7 @@ exports.getProducts = (req,res,next) => {
             }
         )
     }).catch((err) => {
-        console.log(err);
+        next(err)
     })
 }
 
@@ -28,6 +28,12 @@ exports.getAddProducts = (req,res,next)=>{
         {
             title: "New Product",
             path: "/admin/add-product",
+            inputs: {
+                name: '',
+                price: '',
+                imgUrl: '',
+                description: ''
+            }
             //categories: categories,
         }
     )
@@ -77,19 +83,7 @@ exports.postAddProducts = (req,res,next)=>{
                     }
                 )
             }else{
-                res.status(500).render("admin/add-product",
-                    {
-                        title: "New Product",
-                        path: "/admin/add-product",
-                        errorMessage: 'Beklenmedik bir hata oluştu. Lütfen tekrar deneyiniz.',
-                        inputs: {
-                            name: name,
-                            price: price,
-                            imgUrl: imgUrl,
-                            description: description
-                        }
-                    }
-                )
+                next(err)
             }
 
             
@@ -131,7 +125,7 @@ exports.getEditProducts = (req,res,next)=>{
                     })
                 })
         })
-        .catch(err => {console.log(err)})
+        .catch(err => {next(err)})
 }
 
 exports.postEditProducts = (req,res,next)=>{
@@ -156,7 +150,7 @@ exports.postEditProducts = (req,res,next)=>{
     .then(()=>{
         res.redirect("/admin/products?action=edit&success=true");
     })
-    .catch(err => {console.log(err)})
+    .catch(err => {next(err)})
 }
     
 
@@ -172,7 +166,7 @@ exports.postDeleteProduct = (req,res,next) => {
             res.redirect("/admin/products?action=delete");
         })
         .catch((err) => {
-            console.log(err);
+            next(err);
         })
 }
 
@@ -198,7 +192,7 @@ exports.postAddCategory = (req,res,next) => {
         .then(result => {
             res.redirect("/admin/add-category?action:create");
         })
-        .catch(err => console.log(err))
+        .catch(err => next(err))
 }
 
 exports.getCategories = (req,res,next) => {
@@ -210,7 +204,7 @@ exports.getCategories = (req,res,next) => {
                 categories: categories,
                 action: req.query.action,
             })
-        }).catch(err => console.log(err))
+        }).catch(err => next(err))
 }
 
 exports.getEditCategory = (req,res,next)=>{
@@ -241,7 +235,7 @@ exports.postEditCategory = (req,res,next)=>{
         res.redirect("/admin/categories?action=edit");
     })
     .catch(err => {
-        console.log(err);
+        next(err);
     })
 }
 
@@ -252,6 +246,6 @@ exports.postDeleteCategory = (req,res,next)=> {
         res.redirect("/admin/categories?action=delete");
     })
     .catch(err => {
-        console.log(err);
+        next(err);
     })
 }

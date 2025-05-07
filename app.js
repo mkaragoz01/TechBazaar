@@ -8,6 +8,7 @@ const session = require('express-session')
 const mongoDbStore = require('connect-mongodb-session')(session)
 const csurf = require('csurf')
 
+const errorController = require('./controllers/error')
 const adminRoutes = require("./routes/admin")
 const userRoutes = require('./routes/shop')
 const accountRoutes = require('./routes/account')
@@ -54,7 +55,13 @@ app.use(csurf())
 app.use('/admin',adminRoutes);
 app.use(userRoutes);
 app.use(accountRoutes);
-//app.use(errorController.get404Page)
+app.use(errorController.get404Page);
+
+app.use((error, req, res, next) => {
+    console.error(error);
+    res.status(500).render('error/500', { title: 'Error' });
+});
+
 
 app.set('view engine', 'pug');
 app.set('views', './views');
