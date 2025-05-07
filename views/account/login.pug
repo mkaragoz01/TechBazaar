@@ -3,7 +3,7 @@ extends ../layouts/main-layout.pug
 block content
     .col-lg-9
         if errorMessage 
-            div.alert.alert-danger.col-sm-7 #{errorMessage}
+            div.alert.alert-danger.col-sm-7 !{errorMessage}
         form(action="/login" method="POST")
             input(type="hidden" name="_csrf" value=`${csrfToken}`)
             .form-group.row
