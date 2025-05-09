@@ -1,6 +1,7 @@
 const { Mongoose } = require("mongoose");
 const Category = require("../models/category");
 const Product = require("../models/product")
+const fs = require("fs")
 
 exports.getProducts = (req,res,next) => {
     Product
@@ -24,34 +25,54 @@ exports.getProducts = (req,res,next) => {
 
 exports.getAddProducts = (req,res,next)=>{
 
-    res.render("admin/add-product",
-        {
-            title: "New Product",
-            path: "/admin/add-product",
-            inputs: {
-                name: '',
-                price: '',
-                imgUrl: '',
-                description: ''
-            }
-            //categories: categories,
-        }
-    )
+    Category.find()
+        .then(categories => {
+            res.render("admin/add-product",
+                {
+                    title: "New Product",
+                    path: "/admin/add-product",
+                    inputs: {
+                        name: '',
+                        price: '',
+                        description: ''
+                    }
+                    ,categories: categories,
+                }
+            )
+        }).catch(err => next(err))
 }
 
 exports.postAddProducts = (req,res,next)=>{ 
 
     const name = req.body.name;
     const price = req.body.price;
-    const imgUrl = req.body.imgUrl;
+    const image = req.file;
     const description = req.body.description;
+    const categories = req.body.categoryids;
+
+    if(!image){
+        res.render("admin/add-product",
+            {
+                title: "New Product",
+                path: "/admin/add-product",
+                errorMessage: "Lütfen bir resim yükleyin",
+                inputs: {
+                    name: name,
+                    price: price,
+                    description: description,
+                    categories: categories
+                }
+            }
+        )
+    }
 
     const product = new Product(
         {
             name: name,
             price: price,
-            imgUrl: imgUrl,
+            imgUrl: image.filename,
             description: description,
+            categories: categories,
             userId: req.user._id,
             isActive: true
         }
@@ -77,7 +98,6 @@ exports.postAddProducts = (req,res,next)=>{
                         inputs: {
                             name: name,
                             price: price,
-                            imgUrl: imgUrl,
                             description: description
                         }
                     }
@@ -133,24 +153,32 @@ exports.postEditProducts = (req,res,next)=>{
     const id = req.body.id;
     const name = req.body.name;
     const price = req.body.price;
-    const imgUrl = req.body.imgUrl;
+    const image = req.file;
     const description = req.body.description;
     const ids = req.body.categoryids;
 
-    Product.updateOne({_id:id, userId: req.user._id},{
-        $set: {
-            name: name,
-            price: price,
-            imgUrl: imgUrl,
-            description: description,
-            categories: ids,
-            
-        }
-    })
-    .then(()=>{
-        res.redirect("/admin/products?action=edit&success=true");
-    })
-    .catch(err => {next(err)})
+    Product.findOne({_id:id, userId: req.user._id})
+        .then(product => {
+            if(!product) {
+                return res.redirect('/')
+            }
+            product.name = name;
+            product.price = price;
+            product.description = description;
+            product.categories = ids;
+
+            if(image){
+                fs.unlink(`public/img/${product.imgUrl}`, (err) => {
+                    if(err){
+                        console.log(err)
+                    }
+                })
+                product.imgUrl = image.filename
+            }
+            return product.save()
+        }).then(result => {
+            res.redirect("/admin/products?action=edit");
+        }).catch(err => {next(err)})
 }
     
 
@@ -158,15 +186,32 @@ exports.postDeleteProduct = (req,res,next) => {
 
     const id = req.body.productid
 
-    Product.deleteOne({_id: id, userId: req.user._id})
-        .then((result) => {
-            if(result.deletedCount === 0){
-                res.redirect('/')
+    Product.findOne({_id: id, userId: req.user._id})
+        .then(product => {
+            if(!product) {
+                return next(new Error("Ürün bulunamadı"))
             }
-            res.redirect("/admin/products?action=delete");
-        })
-        .catch((err) => {
-            next(err);
+            fs.unlink(`public/img/${product.imgUrl}`, (err) => {
+                if(err){
+                    console.log(err)
+                }
+            })
+
+            return Product.deleteOne({_id: id, userId: req.user._id})
+                .then((result) => {
+                    if(result.deletedCount === 0){
+                        return next(new Error("Ürün bulunamadı"))
+                    }
+                    fs.unlink(`public/img/${product.imgUrl}`, (err) => {
+                        if(err){
+                            console.log(err)
+                        }
+                    })
+                    res.redirect("/admin/products?action=delete");
+                })
+                .catch((err) => {
+                    next(err);
+                })
         })
 }
 
