@@ -1,23 +1,72 @@
 extends ../layouts/main-layout.pug
 
 block content
-    .col-lg-9
-        if errorMessage 
-            div.alert.alert-danger.col-sm-7 !{errorMessage}
-        form(action="/register" method="POST")
-            input(type="hidden" name="_csrf" value=`${csrfToken}`)
-            .form-group.row
-                label(for="name").col-sm-2.col-form-label Fullname
-                .col-sm-10
-                    input.form-control#name(type="text" name="name")
-            .form-group.row
-                label(for="email").col-sm-2.col-form-label Email
-                .col-sm-10
-                    input.form-control#name(type="text" name="email")
-            .form-group.row
-                label(for="password").col-sm-2.col-form-label Password
-                .col-sm-10
-                    input.form-control#name(type="text" name="password")
-            .form-group.row
-                .col-sm-10-offset-sm-2
-                input(type="submit" value="Submit").btn.btn-primary
+  .container
+    .row.justify-content-center(style="padding-top: 7vh")
+      .col-md-8.col-lg-6.col-xl-5
+        .text-center.mb-5
+          h1(style="font-size: 2.8rem; font-weight: 700; color:rgb(61, 97, 133); letter-spacing: 1px; margin-bottom: 1rem; font-family: 'Arial Black', sans-serif") TechStore
+          div(style="height: 3px; width: 80px; background: #3498db; margin: 0 auto")
+        
+        .card.shadow-lg.border-0
+          .card-header.bg-primary.text-white.rounded-top
+            h4.text-center.mb-0 Yeni Hesap Oluştur
+          
+          .card-body.px-5.pt-5.pb-4
+            if errorMessage 
+              .alert.alert-danger.alert-dismissible.fade.show
+                | !{errorMessage}
+                button(type="button" data-dismiss="alert").close
+                  span &times;
+            
+            form(action="/register" method="POST")
+              input(type="hidden" name="_csrf" value=`${csrfToken}`)
+              
+              .form-group.mb-4
+                label(for="name").h6.font-weight-bold Tam Adınız
+                .input-group
+                  .input-group-prepend
+                    span.input-group-text.bg-light
+                      i.fas.fa-user
+                  input.form-control#name(
+                    type="text" 
+                    name="name"
+                    placeholder="Ad ve soyadınızı girin"
+                    required
+                  )
+              
+              .form-group.mb-4
+                label(for="email").h6.font-weight-bold E-posta Adresi
+                .input-group
+                  .input-group-prepend
+                    span.input-group-text.bg-light
+                      i.fas.fa-envelope
+                  input.form-control#email(
+                    type="email" 
+                    name="email"
+                    placeholder="ornek@email.com"
+                    required
+                  )
+              
+              .form-group.mb-4
+                label(for="password").h6.font-weight-bold Şifre
+                .input-group
+                  .input-group-prepend
+                    span.input-group-text.bg-light
+                      i.fas.fa-lock
+                  input.form-control#password(
+                    type="password" 
+                    name="password"
+                    placeholder="En az 6 karakter"
+                    required
+                  )
+              
+              button.btn.btn-primary.btn-block.mt-4.py-2(
+                type="submit"
+              ) 
+                i.fas.fa-user-plus.mr-2
+                | Kayıt Ol
+          
+          .card-footer.text-center.py-3.bg-light.rounded-bottom
+            p.mb-0 Zaten hesabınız var mı? 
+              a.font-weight-bold.text-primary(href="/login") Giriş Yapın

@@ -1,41 +1,66 @@
-nav.navbar.navbar-expand-lg.navbar-dark.bg-primary.fixed-top
-            .container
-                a(href="/").navbar-brand Shopping
-                ul.navbar-nav.mr-auto
-                    li.nav-item
-                        a(href="/", class=(path === '/'?'nav-link active':'nav-link')) Home 
-                    
-                    li.nav-item
-                        a(href="/products", class=(path === '/products'?'nav-link active':'nav-link')) Products 
-                    
-                    if isAuthenticated
-                    
-                        li.nav-item
-                            a(href="/cart", class=(path === '/cart'?'nav-link active':'nav-link')) Cart 
-
-                        li.nav-item
-                            a(href="/orders", class=(path === '/orders'?'nav-link active':'nav-link')) Orders 
-
-                    if isAdmin
-                        li.nav-item
-                            a(href='/admin/add-product', class=(path === '/admin/add-product'?'nav-link active':'nav-link')) Add Product
-
-                        li.nav-item
-                            a(href='/admin/products', class=(path === '/admin/products'?'nav-link active':'nav-link')) Admin Products
-
-                        li.nav-item
-                            a(href='/admin/add-category', class=(path === '/admin/add-category'?'nav-link active':'nav-link')) Add Category
-
-                        li.nav-item
-                            a(href='/admin/categories', class=(path === '/admin/categories'?'nav-link active':'nav-link')) Categories
-                    
-                ul.navbar-nav.ml-auto
-                    if isAuthenticated
-                        li.nav-item
-                            a(href='/logout', class=(path === '/logout'?'nav-link active':'nav-link')) Logout
-                    else
-                        li.nav-item
-                            a.nav-link(href='/login') Login
-                        
-                        li.nav-item
-                            a.nav-link(href='/register') Register
+nav.navbar.navbar-expand-lg.navbar-dark.bg-primary.fixed-top.shadow-sm
+  .container
+    a(href="/").navbar-brand.d-flex.align-items-center
+      span.font-weight-bold(style="font-size: 1.5rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.2)") TECHSTORE
+    
+    button.navbar-toggler(type="button" data-toggle="collapse" data-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation")
+      span.navbar-toggler-icon
+    
+    .collapse.navbar-collapse#navbarContent
+      //- Sol Taraftaki Menü Öğeleri
+      ul.navbar-nav.mr-auto
+        li.nav-item
+          a(href="/", class=(path === '/'?'nav-link active':'nav-link')) 
+            i.fas.fa-home.mr-1
+            | Anasayfa
+        
+        li.nav-item
+          a(href="/products", class=(path === '/products'?'nav-link active':'nav-link'))
+            i.fas.fa-box-open.mr-1
+            | Ürünler
+        
+        if isAuthenticated
+          li.nav-item
+            a(href="/cart", class=(path === '/cart'?'nav-link active':'nav-link'))
+              i.fas.fa-shopping-cart.mr-1
+              | Sepetim
+          
+          li.nav-item
+            a(href="/orders", class=(path === '/orders'?'nav-link active':'nav-link'))
+              i.fas.fa-clipboard-list.mr-1
+              | Siparişlerim
+        
+        if isAdmin
+          li.nav-item.dropdown
+            a.nav-link.dropdown-toggle(href="#" id="adminDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false")
+              i.fas.fa-user-shield.mr-1
+              | Admin
+            .dropdown-menu(aria-labelledby="adminDropdown")
+              a.dropdown-item(href='/admin/add-product')
+                i.fas.fa-plus-circle.mr-2
+                | Ürün Ekle
+              a.dropdown-item(href='/admin/products')
+                i.fas.fa-boxes.mr-2
+                | Ürün Yönetimi
+              a.dropdown-item(href='/admin/add-category')
+                i.fas.fa-tag.mr-2
+                | Kategori Ekle
+              a.dropdown-item(href='/admin/categories')
+                i.fas.fa-tags.mr-2
+                | Kategoriler
+      
+      ul.navbar-nav.ms-auto
+        if isAuthenticated
+          li.nav-item
+            a(href='/logout', class=(path === '/logout'?'nav-link active':'nav-link'))
+              i.fas.fa-sign-out-alt.mr-1
+              | Çıkış Yap
+        else
+          li.nav-item
+            a.nav-link(href='/login')
+              i.fas.fa-sign-in-alt.mr-1
+              | Giriş Yap
+          li.nav-item
+            a.nav-link(href='/register')
+              i.fas.fa-user-plus.mr-1
+              | Kayıt Ol
