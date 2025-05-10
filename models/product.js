@@ -9,9 +9,9 @@ const productSchema = mongoose.Schema({
     },
     price: {
         type: String,
-        required: function() {
-            return this.isActive;
-        }
+        required: [function() {
+            return this.isActive; // isActive true olduğunda price zorunlu
+        }, 'Fiyat alanı aktif ürünler için zorunludur.']
     },
     description: {
         type: String,
@@ -41,7 +41,7 @@ const productSchema = mongoose.Schema({
             {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Category",
-            required: false
+            required: [true, 'Ürün kategorisi girmek zorunludur!'],
             }
         ]
 })

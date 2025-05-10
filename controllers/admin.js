@@ -51,19 +51,24 @@ exports.postAddProducts = (req,res,next)=>{
     const categories = req.body.categoryids;
 
     if(!image){
-        res.render("admin/add-product",
-            {
-                title: "New Product",
-                path: "/admin/add-product",
-                errorMessage: "Lütfen bir resim yükleyin",
-                inputs: {
-                    name: name,
-                    price: price,
-                    description: description,
-                    categories: categories
+
+        Category.find()
+        .then(categories => {
+            res.render("admin/add-product",
+                {
+                    title: "New Product",
+                    path: "/admin/add-product",
+                    errorMessage: "Lütfen bir resim yükleyin",
+                    inputs: {
+                        name: name,
+                        price: price,
+                        description: description,
+                        imgUrl: undefined
+                    },categories: categories
                 }
-            }
-        )
+            )
+        }).catch(err => next(err))
+        return
     }
 
     const product = new Product(
@@ -89,19 +94,22 @@ exports.postAddProducts = (req,res,next)=>{
                 for(const key in err.errors){
                     message += err.errors[key].message + '<br>'
                 }
-
-                res.render("admin/add-product",
-                    {
-                        title: "New Product",
-                        path: "/admin/add-product",
-                        errorMessage: message,
-                        inputs: {
-                            name: name,
-                            price: price,
-                            description: description
+                Category.find()
+                .then(categories => {
+                    res.render("admin/add-product",
+                        {
+                            title: "New Product",
+                            path: "/admin/add-product",
+                            errorMessage: message,
+                            inputs: {
+                                name: name,
+                                price: price,
+                                description: description
+                            },categories: categories
                         }
-                    }
-                )
+                    )
+                }).catch(err => next(err))
+                
             }else{
                 next(err)
             }
