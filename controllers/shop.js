@@ -132,11 +132,9 @@ exports.getOrders = (req,res,next) => {
     })
 }
 
-exports.postOrder = (req,res,next) => {
-
+exports.postOrder = (req, res, next) => {
     req.user
-        .populate('cart.items.productId')
-        .execPopulate()
+        .populate('cart.items.productId') // populate doğrudan çalışır
         .then(user => {
             const order = new Order({
                 user: {
@@ -144,26 +142,27 @@ exports.postOrder = (req,res,next) => {
                     name: req.user.name,
                     email: req.user.email
                 },
-                items: user.cart.items.map( p=> {
-                    return{
+                items: user.cart.items.map(p => {
+                    return {
                         product: {
-                        _id: p.productId._id,
-                        name: p.productId.name,
-                        price: p.productId.price,
-                        imgUrl: p.productId.imgUrl
-                    },
-                    quantity: p.quantity}
+                            _id: p.productId._id,
+                            name: p.productId.name,
+                            price: p.productId.price,
+                            imgUrl: p.productId.imgUrl
+                        },
+                        quantity: p.quantity
+                    }
                 })
-            })
-            return order.save()
+            });
+            return order.save();
         })
-        .then(()=> {
-            return req.user.clearCart();
+        .then(() => {
+            return req.user.clearCart(); // Sepeti temizlemek için
         })
-        .then(()=> {
-            res.redirect('/orders')
+        .then(() => {
+            res.redirect('/orders'); // Sipariş başarıyla kaydedildikten sonra yönlendirme
         })
         .catch(err => {
-            next(err);
-        })
-}
+            next(err); // Hata varsa bir sonraki middleware'e yönlendir
+        });
+};
