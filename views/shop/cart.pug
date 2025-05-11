@@ -1,46 +1,78 @@
 extends ../layouts/main-layout.pug
 
 block content
-    if (action !== 'undefined' && action === 'edit')
-        div.alert.alert-success The product has been update!
+    .container.mt-4
+        if (action !== 'undefined' && action === 'edit')
+            div.alert.alert-success.alert-dismissible.fade.show
+                | Ürün başarıyla güncellendi!
+                button(type="button" data-dismiss="alert").close &times;
 
-    if (action !== 'undefined' && action === 'delete')
-        div.alert.alert-danger The product has been delete!
-    if products.length > 0
-        table.table.table-bordered
-            thead 
-                tr 
-                    th(style="width:200px;") Image 
-                    th(style="width:600px;") Product Name 
-                    th(style="width:200px;") Price 
-                    th Quantity
-                    th
-            tbody 
-                each product in products
-                    tr
-                        td 
-                            img(src='/img/'+product.imgUrl, width='80')
-                        td #{product.name}
-                        td #{product.price} TL 
-                        td #{product.quantity}
-                        td                           
-                            form(action='/delete-cartitem' method='POST')
+        if (action !== 'undefined' && action === 'delete')
+            div.alert.alert-danger.alert-dismissible.fade.show
+                | Ürün başarıyla silindi!
+                button(type="button" data-dismiss="alert").close &times;
+        
+        if products.length > 0
+            - var total = 0;
+            each product in products
+                - total += (product.price * product.quantity)
+
+            .card.shadow-sm.mb-4
+                .card-header.bg-white.border-bottom-0
+                    h4.mb-0 
+                        i.fas.fa-shopping-cart.mr-2.text-primary
+                        | Sepetim (#{products.length} Ürün)
+                .card-body.p-0
+                    .table-responsive
+                        table.table.table-hover.mb-0
+                            thead.bg-light
+                                tr 
+                                    th(style="width:120px;") Resim
+                                    th Ürün Adı
+                                    th.text-right(style="width:150px;") Birim Fiyat
+                                    th.text-center(style="width:120px;") Adet
+                                    th.text-right(style="width:150px;") Tutar
+                                    th(style="width:80px;")
+                            tbody 
+                                each product in products
+                                    tr
+                                        td 
+                                            img(src='/img/'+product.imgUrl, width='70', class='img-thumbnail border-0')
+                                        td.align-middle #{product.name}
+                                        td.align-middle.text-right #{product.price} TL
+                                        td.align-middle.text-center #{product.quantity}
+                                        td.align-middle.text-right #{product.price * product.quantity} TL
+                                        td.align-middle.text-center                          
+                                            form(action='/delete-cartitem' method='POST')
+                                                input(type="hidden" name="_csrf" value=`${csrfToken}`)
+                                                input(type='hidden' name='productid' value=product._id)
+                                                button(type='submit').btn.btn-sm.btn-outline-danger
+                                                    i.fas.fa-trash
+                .card-footer.bg-white.border-top-0
+                    .d-flex.justify-content-between.align-items-center
+                        a(href="/").btn.btn-outline-primary
+                            i.fas.fa-chevron-left.mr-2
+                            | Alışverişe Devam Et
+                        
+                        .d-flex.flex-column.align-items-end
+                            h4.mb-3
+                                | Toplam: 
+                                span.text-primary #{total} TL
+                            
+                            form(action="/create-order" method="POST")
                                 input(type="hidden" name="_csrf" value=`${csrfToken}`)
-                                input(type='hidden' name='productid'
-                                value=product._id)
-                                button(type='submit').btn.btn-danger.btn-sm Delete
+                                button(type="submit").btn.btn-primary
+                                    i.fas.fa-credit-card.mr-2
+                                    | Ödemeye Geç
 
-            tfoot 
-                td(colspan= "4")
-                    - var total = 0;
-                    each product in products 
-                        - total += (product.price * product.quantity)
-                td #{total} TL
-        .text-center 
-            a(href="/").btn.btn-primary Alışverişe Devam Et
-            span(style="margin-left: 30px")
-            form(action="Create-order" method="POST")
-                input(type="hidden" name="_csrf" value=`${csrfToken}`)
-                button(type="submit").btn.btn-primary Alışverişi Tamamla
-    else 
-        h1 No Product
+        else 
+            .text-center.py-5
+                .empty-cart-icon.mb-4
+                    i.fas.fa-shopping-cart.fa-4x.text-muted
+                    .circle.bg-light.rounded-circle.d-inline-flex.align-items-center.justify-content-center(style="width:120px; height:120px;")
+                        i.fas.fa-ban.fa-2x.text-muted
+                h2.font-weight-bold Sepetiniz Boş
+                p.text-muted.mb-4 Sepetinizde henüz ürün bulunmamaktadır.
+                a(href="/").btn.btn-primary.btn-lg.px-5
+                    i.fas.fa-store.mr-2
+                    | Alışverişe Başla

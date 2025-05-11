@@ -1,39 +1,100 @@
 extends ../layouts/main-layout.pug
 
 block content
-    .col-lg-9
+    .container.mt-5
+        .row.justify-content-center
+            .col-lg-10
+                .card.shadow
+                    .card-header.bg-primary.text-white
+                        h4.card-title.mb-0 Ürün Ekle
+                    .card-body
+                        if errorMessage 
+                            .alert.alert-danger.col-md-8.mx-auto !{errorMessage}
 
-        if errorMessage 
-            div.alert.alert-danger.col-sm-7 !{errorMessage}
+                        form(action="/admin/add-product" method="POST" enctype="multipart/form-data" novalidate)
+                            input(type="hidden" name="_csrf" value=`${csrfToken}`)
+                            
+                            .form-group.row.mb-4
+                                label(for="name").col-md-3.col-form-label.font-weight-bold Ürün Adı
+                                .col-md-9
+                                    input.form-control#name(
+                                        type="text" 
+                                        name="name" 
+                                        value=`${inputs.name}`
+                                        placeholder="Ürün adını giriniz"
+                                        required
+                                    )
+                                    small.form-text.text-muted Örneğin: iPhone 13 Pro, Nike Air Max vb.
 
-        form(action="/admin/add-product" method="POST" enctype="multipart/form-data")
-            input(type="hidden" name="_csrf" value=`${csrfToken}`)
-            .form-group.row
-                label(for="name").col-sm-2.col-form-label Product Name
-                .col-sm-10
-                    input.form-control#name(type="text" name="name" value=`${inputs.name}`)
-            .form-group.row
-                label(for="price").col-sm-2.col-form-label Price
-                .col-sm-10
-                    input.form-control#price(type="text" name="price" value=`${inputs.price}`)
-            .form-group.row
-                label(for="imgUrl").col-sm-2.col-form-label Image
-                .col-sm-10
-                    input.form-control-file#image(type="file" name="imgUrl")
-            .form-group.row
-                label(for="categoryid").col-sm-2.col-form-label Category
-                .col-sm-10
-                    each category in categories 
-                        input(type="checkbox" name="categoryids" value=`${category._id}` checked=category.selected)
-                        | #{category.name}
-                        br
-            .form-group.row
-                label(for="description").col-sm-2.col-form-label Description
-                .col-sm-10
-                    textarea.form-control(id="editor" name="description" cols="30" value=`${inputs.description}`)
-            .form-group.row
-                .col-sm-10-offset-sm-2
-                input(type="submit" value="Save Product").btn.btn-primary
+                            .form-group.row.mb-4
+                                label(for="price").col-md-3.col-form-label.font-weight-bold Fiyat
+                                .col-md-9
+                                    .input-group
+                                        input.form-control#price(
+                                            type="number" 
+                                            name="price" 
+                                            value=`${inputs.price}`
+                                            placeholder="Ürün fiyatını giriniz"
+                                            step="0.01"
+                                            min="0"
+                                            required
+                                        )
+                                        .input-group-append
+                                            span.input-group-text TL
+
+                            .form-group.row.mb-4
+                                label(for="image").col-md-3.col-form-label.font-weight-bold Ürün Resmi
+                                .col-md-9
+                                    .custom-file
+                                        input.custom-file-input#image(
+                                            type="file" 
+                                            name="imgUrl"
+                                            accept="image/*"
+                                            required
+                                        )
+                                        label.custom-file-label(for="image") Resim seçin...
+                                    small.form-text.text-muted JPG, PNG formatında, max 2MB boyutunda
+
+                            .form-group.row.mb-4
+                                label.col-md-3.col-form-label.font-weight-bold Kategoriler
+                                .col-md-9
+                                    .category-checkboxes
+                                        each category in categories
+                                            .custom-control.custom-checkbox.mb-2
+                                                input.custom-control-input(
+                                                    type="checkbox"
+                                                    id=`category-${category._id}`
+                                                    name="categoryids" 
+                                                    value=`${category._id}`
+                                                    checked=category.selected
+                                                )
+                                                label.custom-control-label(for=`category-${category._id}`) #{category.name}
+
+                            .form-group.row.mb-4
+                                label(for="editor").col-md-3.col-form-label.font-weight-bold Açıklama
+                                .col-md-9
+                                    textarea.form-control#editor(
+                                        name="description" 
+                                        rows="5"
+                                        placeholder="Ürün açıklamasını detaylı şekilde giriniz"
+                                    ) #{inputs.description}
+
+                            .form-group.row.mt-5
+                                .col-md-9.offset-md-3.d-flex.justify-content-end
+                                    a.btn.btn-outline-secondary.mr-3(href="/admin/products")
+                                        i.fas.fa-times.mr-2
+                                        | İptal
+                                    button.btn.btn-primary(type="submit")
+                                        i.fas.fa-save.mr-2
+                                        | Ürünü Kaydet
+
 block script
     script(src="https://cdn.jsdelivr.net/npm/ckeditor@4.11.3/ckeditor.js")
     script(src="/js/script.js")
+    script.
+        // Dosya seçildiğinde dosya adını göster
+        document.querySelector('.custom-file-input').addEventListener('change', function(e) {
+            var fileName = document.getElementById("image").files[0].name;
+            var nextSibling = e.target.nextElementSibling;
+            nextSibling.innerText = fileName;
+        });

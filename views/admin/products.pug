@@ -1,35 +1,63 @@
 extends ../layouts/main-layout.pug
 
 block content
-    if (action !== 'undefined' && action === 'edit')
-        div.alert.alert-success The product has been update!
+    .container.mt-4
+        if (action !== 'undefined' && action === 'edit')
+            .alert.alert-success.col-md-8.mx-auto 
+                i.fas.fa-check-circle.mr-2
+                | Ürün başarıyla güncellendi!
 
-    if (action !== 'undefined' && action === 'delete')
-        div.alert.alert-danger The product has been delete!
-    if products.length > 0
-        table.table.table-bordered
-            thead 
-                tr 
-                    th(style="width:200px;") Image 
-                    th(style="width:600px;") Product Name 
-                    th(style="width:200px;") Price 
-                    th
-            tbody 
-                each product in products
-                    tr
-                        td 
-                            img(src='/img/'+product.imgUrl, width='80')
-                        td #{product.name}
-                        td #{product.price} TL 
-                        td
-                            a.btn.btn-primary.btn-sm.mr-2(href='/admin/products/'+product._id) Edit
-                            span(style="margin-left: 10px")
+        if (action !== 'undefined' && action === 'delete')
+            .alert.alert-danger.col-md-8.mx-auto
+                i.fas.fa-exclamation-circle.mr-2
+                | Ürün başarıyla silindi!
 
-                            
-                            form(action='/admin/delete-product' method='POST')
-                                input(type='hidden' name='_csrf' value=`${csrfToken}`)
-                                input(type='hidden' name='productid'
-                                value=`${product._id}`)
-                                button(type='submit').btn.btn-danger.btn-sm Delete
-    else 
-        h1 No Product
+        .card.shadow
+            .card-header.bg-primary.text-white.d-flex.justify-content-between.align-items-center
+                h5.mb-0 Ürün Listesi
+                a.btn.btn-light.btn-sm(href="/admin/add-product")
+                    i.fas.fa-plus.mr-2
+                    | Yeni Ürün Ekle
+
+            .card-body
+                if products.length > 0
+                    .table-responsive
+                        table.table.table-hover
+                            thead.thead-light
+                                tr
+                                    th(style="width:120px") Resim
+                                    th Ürün Adı
+                                    th(style="width:150px").text-right Fiyat
+                                    th(style="width:200px").text-center İşlemler
+                            tbody 
+                                each product in products
+                                    tr
+                                        td 
+                                            img.img-thumbnail(src='/img/'+product.imgUrl, width='80', alt=product.name)
+                                        td.align-middle #{product.name}
+                                        td.align-middle.text-right #{product.price} TL
+                                        td.align-middle.text-center(style="vertical-align: middle !important;")
+                                            div(style="display: flex; align-items: center; justify-content: center;")
+                                                a.btn.btn-outline-primary.btn-sm(
+                                                    href='/admin/products/'+product._id
+                                                    style="width: 90px; height: 31px; display: inline-flex; align-items: center; justify-content: center; margin-right: 8px;"
+                                                )
+                                                    i.fas.fa-edit.mr-1
+                                                    | Düzenle
+                                                
+                                                form(action='/admin/delete-product' method='POST' style="display: inline-block; margin: 0; padding: 0;")
+                                                    input(type='hidden' name='_csrf' value=`${csrfToken}`)
+                                                    input(type='hidden' name='productid' value=`${product._id}`)
+                                                    button.btn.btn-outline-danger.btn-sm(
+                                                        type='submit'
+                                                        style="width: 90px; height: 31px; display: inline-flex; align-items: center; justify-content: center;"
+                                                    )
+                                                        i.fas.fa-trash-alt.mr-1
+                                                        | Sil
+                else 
+                    .text-center.py-4
+                        i.fas.fa-box-open.fa-3x.text-muted.mb-3
+                        h4.text-muted Henüz ürün bulunmamaktadır
+                        a.btn.btn-primary(href="/admin/add-product")
+                            i.fas.fa-plus.mr-2
+                            | Yeni Ürün Ekle
