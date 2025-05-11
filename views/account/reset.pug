@@ -1,16 +1,45 @@
 extends ../layouts/main-layout.pug
 
 block content
-    .col-lg-9
-        if errorMessage 
-            div.alert.alert-danger.col-sm-7 #{errorMessage}
-        form(action="/reset-password" method="POST")
-            input(type="hidden" name="_csrf" value=`${csrfToken}`)
-            .form-group.row
-                label(for="email").col-sm-2.col-form-label Email
-                .col-sm-10
-                    input.form-control#name(type="text" name="email")
-            .form-group.row
-                .col-sm-10-offset-sm-2
-                input(type="submit" value="Reset").btn.btn-primary
+  .container
+    .row.justify-content-center(style="padding-top: 8vh")
+      .col-md-8.col-lg-6.col-xl-5
+        .text-center.mb-5
+          h1.display-4.font-weight-bold.text-primary(style="text-shadow: 2px 2px 4px rgba(0,0,0,0.1)") TECHSTORE
+        
+        .card.shadow-lg.border-0
+          .card-header.bg-primary.text-white.rounded-top
+            h4.text-center.mb-0 Şifre Sıfırlama
+          
+          .card-body.px-5.pt-5.pb-4
+            if errorMessage 
+              .alert.alert-danger.alert-dismissible.fade.show
+                | #{errorMessage}
+                button(type="button" data-dismiss="alert").close
+                  span &times;
             
+            form(action="/reset-password" method="POST")
+              input(type="hidden" name="_csrf" value=`${csrfToken}`)
+              
+              .form-group.mb-4
+                label(for="email").h6.font-weight-bold E-posta Adresiniz
+                .input-group
+                  .input-group-prepend
+                    span.input-group-text.bg-light
+                      i.fas.fa-envelope
+                  input.form-control#email(
+                    type="email" 
+                    name="email"
+                    placeholder="Kayıtlı e-posta adresiniz"
+                    required
+                  )
+              
+              button.btn.btn-primary.btn-block.mt-4.py-2(
+                type="submit"
+              ) 
+                i.fas.fa-paper-plane.mr-2
+                | Sıfırlama Bağlantısı Gönder
+          
+          .card-footer.text-center.py-3.bg-light.rounded-bottom
+            p.mb-0 Hatırladınız mı? 
+              a.font-weight-bold.text-primary(href="/login") Giriş Yapın

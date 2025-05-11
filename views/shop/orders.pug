@@ -1,31 +1,44 @@
 extends ../layouts/main-layout.pug
 
 block content
-
     if orders.length > 0
         each order in orders 
             .card.mb-5 
-                .card-header
-                    h3 Order Id: ##{order._id}
-                table.table 
-                    thead 
-                        th Image 
-                        th Product Name 
-                        th Price 
-                        th Quantity 
-                    tbody 
-                        each item in order.items
-                            tr 
-                                td 
-                                    img(src=`/img/${item.product.imgUrl}` width: "80")
-                                td #{item.product.name}
-                                td #{item.product.price}
-                                td #{item.quantity}
-                    tfoot 
-                        tr 
-                            td(colspan="2") #{order.date}
-                            td 
-                            - var total = 0;
-                            each item in order.items 
-                                - total += (item.product.price * item.quantity)
-                            td #{total} TL
+                .card-header.bg-light
+                    h3.mb-0 Sipariş ID: ##{order._id}
+                .card-body
+                    table.table.table-hover
+                        thead.thead-light
+                            tr
+                                th(style="width:120px") Resim
+                                th Ürün Adı
+                                th.text-right Fiyat
+                                th.text-center Adet
+                                th.text-right Tarih
+                                th.text-right Toplam
+                        tbody 
+                            each item in order.items
+                                tr
+                                    td 
+                                        img(src=`/img/${item.product.imgUrl}` width="80" style="max-height:80px").img-thumbnail
+                                    td.align-middle #{item.product.name}
+                                    td.align-middle.text-right #{item.product.price} TL
+                                    td.align-middle.text-center #{item.quantity}
+                                    td.align-middle.text-right 
+                                        - const itemDate = new Date(item.date);
+                                        - if (!isNaN(itemDate)) {
+                                            | #{itemDate.toLocaleDateString('tr-TR', {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'})}
+                                        - } else {
+                                            | Tarih yok
+                                        - }
+                                    td.align-middle.text-right #{(item.product.price * item.quantity)} TL
+                        tfoot.bg-light
+                            tr
+                                td(colspan="5").text-right.font-weight-bold Genel Toplam:
+                                td.text-right.font-weight-bold 
+                                    - var total = 0;
+                                    each item in order.items 
+                                        - total += (item.product.price * item.quantity)
+                                    | #{total} TL
+    else
+        .alert.alert-info Henüz bir siparişiniz bulunmamaktadır.

@@ -3,16 +3,23 @@ extends ../layouts/main-layout.pug
 block content
     .row 
         .col-md-3
-            img(src=`/img/${product.imgUrl}` alt=`${product.description}`)
-            .img-fluid
+            img(src=`/img/${product.imgUrl}` alt=`${product.description}`).img-fluid.rounded.shadow-sm
         .col-md-9.pl-3
             h1.mb-3 #{product.name}
-            hr
-            a(href="").btn.btn-link.p-0.mb-3 Telefon
-            .mb-3
-                h4.text-primary.mb-3 price: #{product.price} TL 
-                button(type="submit").btn.btn-primary.btn-lg Add to Cart
+            hr.mt-0
+            a(href="").btn.btn-link.p-0.mb-3.text-secondary 
+                i.fas.fa-mobile-alt.mr-2
+                | Telefon Kategorisi
+            .mb-4
+                h4.text-primary.mb-3 Fiyat: #{product.price} TL 
+                button(type="submit").btn.btn-primary.btn-lg
+                    i.fas.fa-cart-plus.mr-2
+                    | Sepete Ekle
     .row
         .col-md-12
             hr
-            p.p-3 !{product.description}
+            .card.mt-3
+                .card-header.bg-light
+                    h5.mb-0 Ürün Açıklaması
+                .card-body
+                    p.card-text !{product.description}

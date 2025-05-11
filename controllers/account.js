@@ -233,27 +233,36 @@ exports.getLogout = (req, res) => {
 
 exports.getNewPassword = (req, res) => {
     const token = req.params.token;
-
     errorMessage = req.session.errorMessage;
     delete req.session.errorMessage;
 
     User.findOne({
-        resetToken:token,resetTokenExpiration:{
-            $gt:Date.now()
-        }})
-        .then(user => {
-            var errorMessage = req.session.errorMessage;
-            delete req.session.errorMessage
-
-            res.render('account/new-password', {
-                path: '/new-password',
-                title: 'New Password',
-                errorMessage: errorMessage,
-                userId: user._id.toString(),
-                passwordToken: token
-        })
+        resetToken: token,
+        resetTokenExpiration: { $gt: Date.now() }
     })
-}
+    .then(user => {
+        if (!user) {
+            req.flash('error', 'Password reset token is invalid or has expired.');
+            return res.redirect('/reset-password');
+        }
+
+        var errorMessage = req.session.errorMessage;
+        delete req.session.errorMessage;
+
+        res.render('account/new-password', {
+            path: '/new-password',
+            title: 'New Password',
+            errorMessage: errorMessage,
+            userId: user._id.toString(),
+            passwordToken: token
+        });
+    })
+    .catch(err => {
+        console.error(err);
+        req.flash('error', 'An error occurred. Please try again.');
+        res.redirect('/reset-password');
+    });
+};
 
 exports.postNewPassword = (req, res) => {
     const userId = req.body.userId;

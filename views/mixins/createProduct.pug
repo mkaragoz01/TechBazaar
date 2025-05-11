@@ -1,21 +1,27 @@
 mixin createProduct(product)
-    .col-md-4
-        .card.my-3
-            img(src=`/img/${product.imgUrl}` alt=``).card-img-top
-            .card-body
-                h4.card-title
-                    a(href="/products/"+product._id) #{product.name}
-                .card-text.pt-2
-                
-                small.text-muted
-                    i.fas.fa-lira-sign #{product.price}
+  .col-md-4
+    .card.my-3
+      img(src=`/img/${product.imgUrl}` alt=product.name).card-img-top
+      
+      .card-body
+        h4.card-title
+          a(href="/products/"+product._id) #{product.name}
+        
+        .card-text.pt-2
+          small.text-muted
+            span(style="font-family: Arial, sans-serif") ₺
+            | #{product.price}
 
-            .card-footer.text-center
-                
-                a(href="/products/"+product._id).btn.btn-primary.btn-sm Details
-                span(style="margin-left: 10px")
-
-                form(action='/cart' method='POST')
-                    input(type="hidden" name="_csrf" value=`${csrfToken}`)
-                    input(type='hidden' name='productId' value=`${product._id}`)
-                    button(type='submit').btn.btn-primary.btn-sm.ml-3 Add to Cart
+      .card-footer.text-center
+        a(href="/products/"+product._id).btn.btn-outline-primary.btn-sm
+          i.fas.fa-info-circle.me-1
+          | Detaylar
+        
+        |  
+        
+        form(action='/cart' method='POST' style="display: inline;")
+          input(type="hidden" name="_csrf" value=csrfToken)
+          input(type='hidden' name='productId' value=product._id)
+          button(type='submit').btn.btn-primary.btn-sm
+            i.fas.fa-cart-plus.me-1
+            | Sepete Ekle
