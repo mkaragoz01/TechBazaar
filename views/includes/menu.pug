@@ -6,7 +6,18 @@
         class=`list-group-item list-group-item-action d-flex align-items-center ${category._id==selectedCategory ? 'active bg-primary border-primary' : ''}`
         style=category._id==selectedCategory ? "font-weight: 500" : ""
       )
-        i.fas.fa-folder-open.me-3
+        if category.name === 'Bilgisayar'
+          i.fas.fa-microchip.me-3
+        else if category.name === 'Telefon'
+          i.fas.fa-mobile-alt.me-3
+        else if category.name === 'Tablet'
+          i.fas.fa-tablet-alt.me-3
+        else if category.name === 'Akıllı Saat'
+          i.fas.fa-clock.me-3
+        else if category.name === 'Kulaklık'
+          i.fas.fa-headphones-simple.me-3
+        else
+          i.fas.fa-folder-open.me-3
         | #{category.name}
         if category._id==selectedCategory
           i.fas.fa-arrow-right.ms-auto

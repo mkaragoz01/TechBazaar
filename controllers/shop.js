@@ -35,40 +35,55 @@ exports.getProducts = (req,res,next) => {
     })
 }
 
-exports.getProductsByCategoryId = (req,res,next) => {
+exports.getProductsByCategoryId = (req, res, next) => {
     const categoryid = req.params.categoryid;
     const model = [];
-   
+    
+    const sortOption = req.query.sort || 'price_desc';
+    
+    const getSort = () => {
+        switch(sortOption) {
+            case 'price_asc':
+                return (a, b) => parseFloat(a.price.replace(/[^\d.-]/g, '')) - parseFloat(b.price.replace(/[^\d.-]/g, ''));
+            case 'price_desc':
+                return (a, b) => parseFloat(b.price.replace(/[^\d.-]/g, '')) - parseFloat(a.price.replace(/[^\d.-]/g, ''));
+            default:
+                return (a, b) => parseFloat(a.price.replace(/[^\d.-]/g, '')) - parseFloat(b.price.replace(/[^\d.-]/g, ''));
+        }
+    };
+
     Category.find()
         .then(categories => {
             model.categories = categories;
-            return Product.find({
-                categories: categoryid
-            })
+            return Product.find({ categories: categoryid }).lean();
         })
         .then(products => {
-            res.render('shop/products',
-                {
-                    title: 'Products',
-                    products: products,
-                    categories: model.categories,
-                    selectedCategory: categoryid,
-                    path: "/products"
-                }
-            )
+        
+            const sortedProducts = products.sort(getSort());
+            
+            res.render('shop/products', {
+                title: 'Products',
+                products: sortedProducts,
+                categories: model.categories,
+                selectedCategory: categoryid,
+                selectedSort: sortOption,
+                path: "/products"
+            });
         })
-        .catch((err)=>{
+        .catch((err) => {
             next(err);
-        })
-}
+        });
+};
 
 exports.getProduct = (req,res,next) => {
 
     Product.findOne({_id: req.params.productid})
+        .populate('categories')
         .then((products) => {
             res.render('shop/product-detail',{
                 title: products.name,
                 product: products,
+                categoryName: products.categories[0]?.name,
                 path: '/products'
             })
         }).catch((err) => {
