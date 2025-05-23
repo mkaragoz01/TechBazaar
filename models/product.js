@@ -10,7 +10,7 @@ const productSchema = mongoose.Schema({
     price: {
         type: String,
         required: [function() {
-            return this.isActive; // isActive true olduğunda price zorunlu
+            return this.isActive;
         }, 'Fiyat alanı aktif ürünler için zorunludur.']
     },
     description: {
@@ -27,15 +27,6 @@ const productSchema = mongoose.Schema({
         ref: "User",
         required: true
     },
-    // tags: {
-    //     type: Array,
-    //     validate: {
-    //         validator: function(v) {
-    //             return v && v.length > 0;
-    //         },
-    //         message: 'Ürün en az bir etiket içermelidir!'
-    //     }
-    // },
     isActive: Boolean,
     categories: [
             {
