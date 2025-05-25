@@ -1,20 +1,9 @@
-.container.mb-4
-  .row.justify-content-end
-    .col-auto
-      .input-group
-        select.form-select.form-select-sm#sortSelect(
-          onchange="applySort(this)"
-          style="min-width: 180px;"
-        )
-          option(
-            value="price_desc"
-            selected=selectedSort === 'price_desc'
-          ) Fiyat (Azalan)
-          option(
-            value="price_asc"
-            selected=selectedSort === 'price_asc'
-          ) Fiyat (Artan)
-          
+.input-group(style="width: auto;")
+  select.form-select.form-select-sm#sortSelect(
+    onchange="applySort(this)"
+  )
+    option(value="price_desc" selected=selectedSort === 'price_desc') Fiyat (Azalan)
+    option(value="price_asc" selected=selectedSort === 'price_asc') Fiyat (Artan)
 
 script.
   function applySort(selectElement) {
