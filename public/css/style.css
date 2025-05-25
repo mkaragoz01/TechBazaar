@@ -75,7 +75,6 @@ body {
   padding-top: 7vh;
 }
 
-/* Ana başlık stili */
 .site-header {
   padding-top: 8vh;
 }
@@ -171,4 +170,6 @@ body {
     font-size: 2rem;
   }
 }
-
+.input-group {
+  max-width: 400px;
+}

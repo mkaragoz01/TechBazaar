@@ -14,9 +14,9 @@ block content
           
           .card-body.px-5.pt-5.pb-4
             if errorMessage
-            .alert.alert-danger.alert-dismissible.fade.show(role="alert")
-              | !{errorMessage}
-              button.btn-close(type="button" data-bs-dismiss="alert" aria-label="Kapat")
+              .alert.alert-danger.alert-dismissible(role="alert")
+                | !{errorMessage}
+                button.btn-close(type="button" data-bs-dismiss="alert" aria-label="Kapat")
             
             form(action="/login" method="POST")
               input(type="hidden" name="_csrf" value=`${csrfToken}`)
