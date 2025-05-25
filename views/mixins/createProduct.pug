@@ -5,23 +5,21 @@ mixin createProduct(product)
       
       .card-body
         h4.card-title
-          a(href="/products/"+product._id) #{product.name}
+          a.product-name(href="/products/"+product._id) #{product.name}
         
         .card-text.pt-2
-          small.text-muted
-            span(style="font-family: Arial, sans-serif") ₺
+          .product-price
+            span.product-price-currency ₺
             | #{product.price}
 
       .card-footer.text-center
-        a(href="/products/"+product._id).btn.btn-outline-primary.btn-sm
+        a(href="/products/"+product._id).btn.btn-outline-primary.btn-sm.rounded-pill.me-2
           i.fas.fa-info-circle.me-1
           | Detaylar
-        
-        |  
         
         form(action='/cart' method='POST' style="display: inline;")
           input(type="hidden" name="_csrf" value=csrfToken)
           input(type='hidden' name='productId' value=product._id)
-          button(type='submit').btn.btn-primary.btn-sm
+          button(type='submit').btn.btn-primary.btn-sm.rounded-pill
             i.fas.fa-cart-plus.me-1
             | Sepete Ekle
