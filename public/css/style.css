@@ -6,3 +6,169 @@ body {
     height: 300px;
     object-fit: cover;
 }
+.product-name {
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  font-weight: 500;
+  color: #333;
+  text-decoration: none;
+  font-size: 13px;
+  line-height: 1.4;
+  transition: color 0.2s ease;
+}
+
+.product-name:hover {
+  color: #0066c0; 
+}
+.btn-dark:hover {
+  background-color: #333;
+  border-color: #333;
+}
+
+.btn-outline-dark:hover {
+  background-color: #f8f9fa;
+}
+
+:root {
+  --primary-color: #2563eb;
+  --primary-hover: #1d4ed8;
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+.product-price {
+  font-family: 'Inter', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: rgb(38, 54, 77);
+}
+
+.product-price-currency {
+  font-family: Arial, sans-serif;
+  margin-right: 2px;
+}
+
+.site-title {
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: rgb(61, 97, 133);
+  letter-spacing: 1px;
+  margin-bottom: 1rem;
+  font-family: 'Arial Black', sans-serif;
+}
+
+.title-underline {
+  height: 3px;
+  width: 80px;
+  background: #3498db;
+  margin: 0 auto;
+}
+
+.title-container {
+  padding-top: 7vh;
+}
+
+/* Ana başlık stili */
+.site-header {
+  padding-top: 8vh;
+}
+
+.site-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  letter-spacing: 1px;
+  margin-bottom: 1.5rem;
+  font-family: 'Segoe UI', 'Roboto', sans-serif;
+  text-transform: uppercase;
+}
+
+.text-primary {
+  color: #2c3e50 !important; /* Daha koyu mavi ton */
+}
+
+@media (max-width: 768px) {
+  .site-header {
+    padding-top: 5vh;
+  }
+  
+  .site-title {
+    font-size: 2rem;
+  }
+}
+
+.site-header {
+  padding-top: 7vh;
+}
+
+.brand-title {
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: rgb(61, 97, 133);
+  letter-spacing: 1px;
+  margin-bottom: 1rem;
+  font-family: 'Arial Black', sans-serif;
+  text-transform: uppercase;
+}
+
+.brand-underline {
+  height: 3px;
+  width: 80px;
+  background: #3498db;
+  margin: 0 auto;
+  transition: all 0.3s ease;
+}
+
+.brand-title:hover + .brand-underline {
+  width: 100px;
+  background: #2980b9;
+}
+
+@media (max-width: 768px) {
+  .site-header {
+    padding-top: 5vh;
+  }
+  
+  .brand-title {
+    font-size: 2.2rem;
+  }
+}
+
+.brand-header {
+  padding-top: 8vh;
+}
+
+.brand-logo {
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  letter-spacing: 0.5px;
+  margin-bottom: 1.5rem;
+  text-transform: uppercase;
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  color: #2c3e50; /* Primary color */
+  transition: all 0.3s ease;
+}
+
+.brand-logo:hover {
+  transform: scale(1.02);
+  text-shadow: 3px 3px 6px rgba(0,0,0,0.15);
+}
+
+@media (max-width: 768px) {
+  .brand-header {
+    padding-top: 6vh;
+  }
+  
+  .brand-logo {
+    font-size: 2rem;
+  }
+}
+
