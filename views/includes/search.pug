@@ -1,8 +1,12 @@
-//- includes/search.pug
 .input-group
   input.form-control#productSearchInput(
     type="text",
     placeholder="Ürün ara...",
-    aria-label="Ürün ara"
+    aria-label="Ürün ara",
+    style="width: 251px; height: 30px;"
   )
-  button.btn.btn-primary#searchButton(type="button") Ara
+  .input-group-append
+    button.btn.btn-primary#searchButton(
+      type="button",
+      style="width: 50px; height: 30px; display: flex; align-items: center; justify-content: center;"
+    ) Ara
