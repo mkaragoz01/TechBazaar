@@ -1,100 +1,185 @@
 extends ../layouts/main-layout.pug
 
 block content
-    .container.mt-5
+    .container.mt-4
         .row.justify-content-center
-            .col-lg-10
-                .card.shadow
-                    .card-header.bg-primary.text-white
-                        h4.card-title.mb-0 Ürün Ekle
-                    .card-body
+            .col-lg-8
+                .card.border-0.shadow.rounded-3.overflow-hidden
+                    .card-header.bg-gradient.position-relative.py-3.border-0
+                        .bg-primary.position-absolute.top-0.start-0.end-0.bottom-0.opacity-75
+                        h5.card-title.mb-0.position-relative.text-white.text-center
+                            i.fas.fa-box-open.me-2
+                            | Yeni Ürün Ekle
+                    .card-body.p-4
                         if errorMessage 
-                            .alert.alert-danger.col-md-8.mx-auto !{errorMessage}
+                            .alert.alert-danger.col-md-8.mx-auto.rounded-3.border-0.shadow-sm
+                                i.fas.fa-exclamation-circle.me-2
+                                | !{errorMessage}
 
-                        form(action="/admin/add-product" method="POST" enctype="multipart/form-data" novalidate)
+                        form(action="/admin/add-product" method="POST" enctype="multipart/form-data" novalidate).needs-validation
                             input(type="hidden" name="_csrf" value=`${csrfToken}`)
                             
-                            .form-group.row.mb-4
-                                label(for="name").col-md-3.col-form-label.font-weight-bold Ürün Adı
-                                .col-md-9
-                                    input.form-control#name(
-                                        type="text" 
-                                        name="name" 
-                                        value=`${inputs.name}`
-                                        placeholder="Ürün adını giriniz"
-                                        required
-                                    )
-                                    small.form-text.text-muted Örneğin: iPhone 13 Pro, Huawei Tablet vb.
-
-                            .form-group.row.mb-4
-                                label(for="price").col-md-3.col-form-label.font-weight-bold Fiyat
+                            .form-group.row.mb-3.align-items-center
+                                label(for="name").col-md-3.col-form-label.fw-bold.text-md-end Ürün Adı
                                 .col-md-9
                                     .input-group
-                                        input.form-control#price(
+                                        span.input-group-text.bg-light.border-0.shadow-sm
+                                            i.fas.fa-tag.text-primary
+                                        input.form-control.shadow-sm.border-0#name(
+                                            type="text" 
+                                            name="name" 
+                                            value=`${inputs.name}`
+                                            placeholder="Ürün adını giriniz"
+                                            required
+                                        )
+                                    .form-text.text-muted.mt-1
+                                        i.fas.fa-info-circle.me-1
+                                        | Örneğin: iPhone 13 Pro, Huawei Tablet vb.
+
+                            .form-group.row.mb-3.align-items-center
+                                label(for="price").col-md-3.col-form-label.fw-bold.text-md-end Fiyat
+                                .col-md-9
+                                    .input-group
+                                        span.input-group-text.bg-light.border-0.shadow-sm
+                                            i.fas.fa-lira-sign.text-primary
+                                        input.form-control.shadow-sm.border-0#price(
                                             type="number" 
                                             name="price" 
                                             value=`${inputs.price}`
-                                            placeholder="Ürün fiyatını giriniz"
+                                            placeholder="0.00"
                                             step="0.01"
                                             min="0"
                                             required
                                         )
-                                        .input-group-append
-                                            span.input-group-text TL
+                                        span.input-group-text.bg-light.border-0.shadow-sm TL
 
-                            .form-group.row.mb-4
-                                label(for="image").col-md-3.col-form-label.font-weight-bold Ürün Resmi
+                            .form-group.row.mb-3.align-items-center
+                                label(for="image").col-md-3.col-form-label.fw-bold.text-md-end Ürün Resmi
                                 .col-md-9
-                                    .custom-file
-                                        input.custom-file-input#image(
+                                    .drop-zone.rounded-3.bg-light.shadow-sm.p-3.text-center.position-relative
+                                        input.drop-zone__input.position-absolute.inset-0.w-100.h-100.opacity-0#image(
                                             type="file" 
                                             name="imgUrl"
                                             accept="image/*"
                                             required
                                         )
-                                        label.custom-file-label(for="image") Resim seçin...
-                                    small.form-text.text-muted JPG, PNG formatında, max 2MB boyutunda
+                                        .drop-zone__content
+                                            i.fas.fa-cloud-upload-alt.fa-lg.text-primary.mb-2
+                                            p.mb-0.small Resim seçmek için tıklayın veya sürükleyin
+                                    .form-text.text-muted.mt-1.small
+                                        i.fas.fa-info-circle.me-1
+                                        | JPG, PNG formatında, max 2MB boyutunda
 
-                            .form-group.row.mb-4
-                                label.col-md-3.col-form-label.font-weight-bold Kategoriler
+                            .form-group.row.mb-3.align-items-start
+                                label.col-md-3.col-form-label.fw-bold.text-md-end Kategoriler
                                 .col-md-9
-                                    .category-checkboxes
+                                    .category-grid.row.row-cols-2.row-cols-lg-3.g-2
                                         each category in categories
-                                            .custom-control.custom-checkbox.mb-2
-                                                input.custom-control-input(
-                                                    type="checkbox"
-                                                    id=`category-${category._id}`
-                                                    name="categoryids" 
-                                                    value=`${category._id}`
-                                                    checked=category.selected
-                                                )
-                                                label.custom-control-label(for=`category-${category._id}`) #{category.name}
+                                            .col
+                                                .form-check.custom-checkbox.h-100
+                                                    input.form-check-input.shadow-sm(
+                                                        type="checkbox"
+                                                        id=`category-${category._id}`
+                                                        name="categoryids" 
+                                                        value=`${category._id}`
+                                                        checked=category.selected
+                                                    )
+                                                    label.form-check-label.d-flex.align-items-center.p-2.rounded-3.border.shadow-sm.h-100.small(for=`category-${category._id}`)
+                                                        i.fas.fa-folder.text-primary.me-2
+                                                        span #{category.name}
 
-                            .form-group.row.mb-4
-                                label(for="editor").col-md-3.col-form-label.font-weight-bold Açıklama
+                            .form-group.row.mb-3.align-items-center
+                                label(for="editor").col-md-3.col-form-label.fw-bold.text-md-end Açıklama
                                 .col-md-9
-                                    textarea.form-control#editor(
+                                    textarea.form-control.shadow-sm.border-0#editor(
                                         name="description" 
-                                        rows="5"
+                                        rows="4"
                                         placeholder="Ürün açıklamasını detaylı şekilde giriniz"
                                     ) #{inputs.description}
 
-                            .form-group.row.mt-5
-                                .col-md-9.offset-md-3.d-flex.justify-content-end
-                                    a.btn.btn-outline-secondary.me-4(href="/admin/products")
-                                        i.fas.fa-times.mr-2
+                            .form-group.row.mt-4
+                                .col-md-9.offset-md-3.d-flex.justify-content-end.gap-2
+                                    a.btn.btn-light.px-3.shadow-sm(href="/admin/products")
+                                        i.fas.fa-times.me-2
                                         | İptal
-                                    button.btn.btn-primary(type="submit")
-                                        i.fas.fa-save.mr-2
+                                    button.btn.btn-primary.px-3.shadow-sm(type="submit")
+                                        i.fas.fa-save.me-2
                                         | Ürünü Kaydet
 
 block script
     script(src="https://cdn.jsdelivr.net/npm/ckeditor@4.11.3/ckeditor.js")
     script(src="/js/script.js")
+    style.
+        .drop-zone {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .drop-zone:hover {
+            background-color: #f8f9fa !important;
+        }
+        .category-grid label {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .category-grid label:hover {
+            background-color: #f8f9fa;
+        }
+        .form-check-input:checked + label {
+            background-color: #e8f0fe;
+            border-color: #2563eb !important;
+        }
+        .bg-gradient {
+            background: linear-gradient(45deg, #2563eb, #3b82f6);
+        }
     script.
         // Dosya seçildiğinde dosya adını göster
-        document.querySelector('.custom-file-input').addEventListener('change', function(e) {
-            var fileName = document.getElementById("image").files[0].name;
-            var nextSibling = e.target.nextElementSibling;
-            nextSibling.innerText = fileName;
+        document.querySelector('.drop-zone__input').addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name;
+            if (fileName) {
+                const content = this.closest('.drop-zone').querySelector('.drop-zone__content');
+                content.innerHTML = `
+                    <i class="fas fa-file-image text-primary fa-lg mb-2"></i>
+                    <p class="mb-0 small">${fileName}</p>
+                `;
+            }
         });
+
+        // Drag & Drop işlemleri
+        const dropZone = document.querySelector('.drop-zone');
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            dropZone.classList.add('bg-light');
+        }
+
+        function unhighlight(e) {
+            dropZone.classList.remove('bg-light');
+        }
+
+        dropZone.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            const fileInput = document.querySelector('.drop-zone__input');
+            
+            fileInput.files = files;
+            const event = new Event('change');
+            fileInput.dispatchEvent(event);
+        }

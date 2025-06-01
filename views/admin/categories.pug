@@ -1,65 +1,102 @@
 extends ../layouts/main-layout.pug
 
 block content
-    .container.mt-4
+    .container.mt-3
         if (action !== 'undefined' && action === 'create')
-            .alert.alert-primary.col-md-8.mx-auto
-                i.fas.fa-check-circle.mr-2
+            .alert.alert-success.alert-dismissible.fade.show.border-0.rounded-3.shadow-sm.col-lg-6.mx-auto
+                i.fas.fa-check-circle.me-2
                 | Kategori başarıyla oluşturuldu!
-                
+                button(type="button" data-dismiss="alert").btn-close
+
         if (action !== 'undefined' && action === 'edit')
-            .alert.alert-success.col-md-8.mx-auto
-                i.fas.fa-check-circle.mr-2
+            .alert.alert-success.alert-dismissible.fade.show.border-0.rounded-3.shadow-sm.col-lg-6.mx-auto
+                i.fas.fa-check-circle.me-2
                 | Kategori başarıyla güncellendi!
+                button(type="button" data-dismiss="alert").btn-close
 
         if (action !== 'undefined' && action === 'delete')
-            .alert.alert-danger.col-md-8.mx-auto
-                i.fas.fa-trash-alt.mr-2
+            .alert.alert-danger.alert-dismissible.fade.show.border-0.rounded-3.shadow-sm.col-lg-6.mx-auto
+                i.fas.fa-trash-alt.me-2
                 | Kategori başarıyla silindi!
+                button(type="button" data-dismiss="alert").btn-close
 
-        .card.shadow
-            .card-header.bg-primary.text-white.d-flex.justify-content-between.align-items-center
-                h5.mb-0 Kategori Listesi
-                a.btn.btn-light.btn-sm(href="/admin/add-category")
-                    i.fas.fa-plus.mr-2
-                    | Yeni Kategori Ekle
+        .card.border-0.shadow.rounded-3.overflow-hidden
+            .card-header.bg-gradient.position-relative.py-3.border-0
+                .bg-primary.position-absolute.top-0.start-0.end-0.bottom-0.opacity-75
+                .d-flex.justify-content-between.align-items-center.position-relative
+                    h5.mb-0.text-white
+                        i.fas.fa-folder-open.me-2
+                        | Kategori Listesi
+                    a.btn.btn-light.shadow-sm(href="/admin/add-category")
+                        i.fas.fa-plus.me-2
+                        | Yeni Kategori
 
-            .card-body
+            .card-body.p-0
                 if categories.length > 0
                     .table-responsive
-                        table.table.table-hover
-                            thead.thead-light
+                        table.table.table-hover.align-middle.mb-0
+                            thead.bg-light
                                 tr
-                                    th Kategori Adı
-                                    th Açıklama
-                                    th(style="width: 180px").text-center İşlemler
+                                    th.border-0.py-2.ps-3 Kategori Adı
+                                    th.border-0.py-2 Açıklama
+                                    th.border-0.py-2.text-end.pe-3(style="width:160px") İşlemler
                             tbody 
                                 each category in categories
-                                    tr
-                                        td.align-middle.font-weight-bold #{category.name}
-                                        td.align-middle !{category.description}
-                                        td.align-middle.text-center
-                                            .d-flex.justify-content-center
-                                                a.btn.btn-outline-primary.btn-sm.mr-2(
+                                    tr.category-row
+                                        td.ps-3
+                                            .d-flex.align-items-center
+                                                .category-icon.bg-light.rounded-3.d-flex.align-items-center.justify-content-center.me-3(style="width:48px;height:48px")
+                                                    i.fas.fa-folder.text-primary
+                                                .category-info
+                                                    h6.mb-1.fw-bold.small #{category.name}
+                                        td !{category.description}
+                                        td.text-end.pe-3
+                                            .btn-group
+                                                a.btn.btn-light.btn-sm.shadow-sm(
                                                     href='/admin/categories/'+category._id
-                                                    style="width: 85px; height: 30px; display: inline-flex; align-items: center; justify-content: center; padding: 0.25rem 0.5rem;"
+                                                    title="Düzenle"
                                                 )
-                                                    i.fas.fa-edit.mr-1
-                                                    | Düzenle
-                                                
-                                                form(action='/admin/delete-category' method='POST' style="display: inline-block; margin: 0;")
+                                                    i.fas.fa-edit.text-primary
+
+                                                form(action='/admin/delete-category' method='POST' style="display: inline-block;")
                                                     input(type="hidden" name="_csrf" value=`${csrfToken}`)
                                                     input(type='hidden' name='categoryid' value=`${category._id}`)
-                                                    button.btn.btn-outline-danger.btn-sm(
+                                                    button.btn.btn-light.btn-sm.shadow-sm.ms-1(
                                                         type='submit'
-                                                        style="width: 85px; height: 30px; display: inline-flex; align-items: center; justify-content: center; padding: 0.25rem 0.5rem; margin-left: 8px;"
+                                                        title="Sil"
+                                                        onclick="return confirm('Bu kategoriyi silmek istediğinizden emin misiniz?')"
                                                     )
-                                                        i.fas.fa-trash-alt.mr-1
-                                                        | Sil
+                                                        i.fas.fa-trash-alt.text-danger
                 else 
                     .text-center.py-4
-                        i.fas.fa-folder-open.fa-3x.text-muted.mb-3
-                        h4.text-muted Henüz kategori bulunmamaktadır
-                        a.btn.btn-primary(href="/admin/add-category")
-                            i.fas.fa-plus.mr-2
+                        .empty-state.mb-3
+                            .circle.bg-light.rounded-circle.d-inline-flex.align-items-center.justify-content-center.mb-3(style="width:96px;height:96px")
+                                i.fas.fa-folder-open.fa-2x.text-primary
+                        h5.fw-bold Henüz kategori bulunmamaktadır
+                        p.text-muted.mb-3.small İlk kategoriyi ekleyerek başlayabilirsiniz
+                        a.btn.btn-primary.px-3.shadow-sm(href="/admin/add-category")
+                            i.fas.fa-plus.me-2
                             | Yeni Kategori Ekle
+
+    style.
+        .bg-gradient {
+            background: linear-gradient(45deg, #2563eb, #3b82f6);
+        }
+        .category-row {
+            transition: all 0.2s ease;
+        }
+        .category-row:hover {
+            background-color: #f8f9fa;
+        }
+        .btn-group .btn {
+            transition: all 0.2s ease;
+        }
+        .btn-group .btn:hover {
+            transform: translateY(-2px);
+        }
+        .category-icon {
+            transition: all 0.2s ease;
+        }
+        .category-row:hover .category-icon {
+            transform: scale(1.1);
+        }

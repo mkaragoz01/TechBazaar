@@ -1,6 +1,70 @@
 body {
     padding-top: 60px;
 }
+/* Footer CSS Stilleri */
+.footer-breakout {
+    margin-top: 4rem;
+    /* Footer'ı tam genişlik yapmak için */
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
+    padding-left: 0;
+    padding-right: 0;
+    /* Alternatif olarak margin sıfırlama */
+    box-sizing: border-box;
+}
+
+.footer-breakout a:hover {
+    color: #007bff !important;
+    transform: scale(1.1);
+    transition: all 0.2s ease;
+}
+
+/* Sosyal medya ikonları için ek stiller */
+.footer-breakout .fab {
+    transition: all 0.2s ease;
+}
+
+.footer-breakout a:hover .fab {
+    transform: rotate(5deg);
+}
+
+/* Footer içeriği için container */
+.footer-breakout .container,
+.footer-breakout .container-fluid {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+/* Responsive ayarlar */
+@media (max-width: 767.98px) {
+    .footer-breakout .d-flex {
+        margin-top: 1rem !important;
+    }
+    
+    .footer-breakout h4 {
+        text-align: center;
+    }
+    
+    .footer-breakout small {
+        display: block;
+        text-align: center;
+    }
+    
+    /* Mobilde container padding'i ayarla */
+    .footer-breakout .container,
+    .footer-breakout .container-fluid {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+}
+
+/* Parent container'lardan overflow gizle */
+.footer-breakout {
+    position: relative;
+    overflow-x: hidden;
+    margin-top: 10rem;
+}
+
 .carousel-item img {
     width: 1200px;
     height: 300px;
@@ -172,4 +236,99 @@ body {
 }
 .input-group {
   max-width: 400px;
+}
+
+body {
+font-family: 'Inter', sans-serif;
+background: #f5f7fa;
+margin: 2rem;
+display: flex;
+justify-content: center;
+}
+
+.list-group {
+width: 320px;
+background: #fff;
+border-radius: 12px;
+box-shadow: 0 8px 24px rgb(0 0 0 / 0.1);
+padding: 0.5rem 0;
+user-select: none;
+}
+
+.list-group-item {
+display: flex;
+align-items: center;
+padding: 0.75rem 1.5rem;
+font-weight: 500;
+font-size: 1rem;
+color: #374151;
+cursor: pointer;
+border-left: 4px solid transparent;
+transition: all 0.3s ease;
+gap: 1rem;
+position: relative;
+}
+
+.list-group-item i.category-icon {
+font-size: 1.3rem;
+min-width: 22px;
+text-align: center;
+transition: color 0.3s ease;
+color: #6b7280;
+}
+
+.list-group-item:hover {
+background: #eff6ff;
+color: #2563eb;
+border-left-color: #2563eb;
+box-shadow: inset 2px 0 6px rgba(37, 99, 235, 0.3);
+}
+
+/* Active category */
+.list-group-item.active {
+background: #2563eb;
+color: white;
+border-left-color: #1d4ed8;
+box-shadow: 0 4px 15px rgb(37 99 235 / 0.4);
+}
+
+.list-group-item.active i.category-icon {
+color: white;
+}
+
+.list-group-item.active .arrow-icon {
+position: absolute;
+right: 1.25rem;
+font-size: 1rem;
+color: white;
+animation: bounce 1.6s infinite ease-in-out;
+}
+
+/* Category icon colors */
+.list-group-item[data-category="Bilgisayar"] i.category-icon {
+color: #10b981; /* emerald green */
+}
+.list-group-item[data-category="Telefon"] i.category-icon {
+color: #f59e0b; /* amber */
+}
+.list-group-item[data-category="Tablet"] i.category-icon {
+color: #3b82f6; /* blue */
+}
+.list-group-item[data-category="Akıllı Saat"] i.category-icon {
+color: #8b5cf6; /* violet */
+}
+.list-group-item[data-category="Kulaklık"] i.category-icon {
+color: #ef4444; /* red */
+}
+.list-group-item[data-category="Aksesuar"] i.category-icon {
+color: #f472b6; /* pink */
+}
+
+@keyframes bounce {
+0%, 100% {
+  transform: translateX(0);
+}
+50% {
+  transform: translateX(6px);
+}
 }

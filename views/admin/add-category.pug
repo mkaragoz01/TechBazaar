@@ -1,46 +1,75 @@
 extends ../layouts/main-layout.pug
 
 block content
-    .container.mt-5
+    .container.mt-4
         .row.justify-content-center
-            .col-md-8
-                .card.shadow
-                    .card-header.bg-primary.text-white
-                        h4.card-title.mb-0 Kategori Ekle
-                    .card-body
-                        form(action="/admin/add-category" method="POST")
+            .col-md-6
+                .card.border-0.shadow.rounded-3.overflow-hidden
+                    .card-header.bg-gradient.position-relative.py-3.border-0
+                        .bg-primary.position-absolute.top-0.start-0.end-0.bottom-0.opacity-75
+                        h5.card-title.mb-0.position-relative.text-white.text-center
+                            i.fas.fa-folder-plus.me-2
+                            | Yeni Kategori Ekle
+                    .card-body.p-4
+                        if errorMessage 
+                            .alert.alert-danger.col-md-8.mx-auto.rounded-3.border-0.shadow-sm
+                                i.fas.fa-exclamation-circle.me-2
+                                | !{errorMessage}
+
+                        form(action="/admin/add-category" method="POST").needs-validation
                             input(type="hidden" name="_csrf" value=`${csrfToken}`)
                             
-                            .form-group.row.mb-4
-                                label(for="name").col-md-3.col-form-label.font-weight-bold Kategori Adı
+                            .form-group.row.mb-3.align-items-center
+                                label(for="name").col-md-3.col-form-label.fw-bold.text-md-end Kategori Adı
                                 .col-md-9
-                                    input.form-control#name(
-                                        type="text" 
-                                        name="name"
-                                        placeholder="Kategori adını giriniz"
-                                        required
-                                    )
-                                    small.form-text.text-muted Örneğin: Tablet, Pc vb.
-                            
-                            .form-group.row.mb-4
-                                label(for="description").col-md-3.col-form-label.font-weight-bold Açıklama
+                                    .input-group
+                                        span.input-group-text.bg-light.border-0.shadow-sm
+                                            i.fas.fa-folder.text-primary
+                                        input.form-control.shadow-sm.border-0#name(
+                                            type="text" 
+                                            name="name"
+                                            placeholder="Kategori adını giriniz"
+                                            required
+                                        )
+                                    .form-text.text-muted.mt-1.small
+                                        i.fas.fa-info-circle.me-1
+                                        | Örneğin: Tablet, Pc vb.
+
+                            .form-group.row.mb-3.align-items-center
+                                label(for="description").col-md-3.col-form-label.fw-bold.text-md-end Açıklama
                                 .col-md-9
-                                    textarea.form-control(
-                                        id="editor" 
-                                        name="description" 
-                                        rows="5"
-                                        placeholder="Kategori açıklamasını giriniz"
-                                    )
-                            
-                            .form-group.row
-                                .col-md-9.offset-md-3.d-flex.justify-content-end
-                                    a.btn.btn-outline-secondary.me-4(href="/admin/categories")
-                                        i.fas.fa-times.mr-2
+                                    .input-group
+                                        span.input-group-text.bg-light.border-0.shadow-sm
+                                            i.fas.fa-align-left.text-primary
+                                        textarea.form-control.shadow-sm.border-0(
+                                            id="editor" 
+                                            name="description" 
+                                            rows="4"
+                                            placeholder="Kategori açıklamasını giriniz"
+                                        )
+
+                            .form-group.row.mt-4
+                                .col-md-9.offset-md-3.d-flex.justify-content-end.gap-2
+                                    a.btn.btn-light.px-3.shadow-sm(href="/admin/categories")
+                                        i.fas.fa-times.me-2
                                         | İptal
-                                    button.btn.btn-primary(type="submit")
-                                        i.fas.fa-save.mr-2
+                                    button.btn.btn-primary.px-3.shadow-sm(type="submit")
+                                        i.fas.fa-save.me-2
                                         | Kategori Kaydet
 
 block script
     script(src="https://cdn.jsdelivr.net/npm/ckeditor@4.11.3/ckeditor.js")
     script(src="/js/script.js")
+    style.
+        .bg-gradient {
+            background: linear-gradient(45deg, #2563eb, #3b82f6);
+        }
+        .form-control:focus,
+        .form-control:active {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.15);
+        }
+        .input-group-text {
+            border: none;
+        }
+    script.

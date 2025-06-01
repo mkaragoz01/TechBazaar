@@ -3,13 +3,8 @@ extends ../layouts/main-layout.pug
 include ../mixins/createProduct.pug
 
 block content
-  .container-fluid.mb-4.px-0
-    .row.align-items-center.g-0
-      .col-auto
-        include ../includes/search.pug
-      .col
-      .col-auto
-        include ../includes/filter.pug
+  .d-flex.justify-content-end.mt-0.mb-2
+    include ../includes/filter.pug
   
   .row
     .col-md-3

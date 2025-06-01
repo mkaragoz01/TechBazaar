@@ -1,17 +1,46 @@
 extends ../layouts/main-layout.pug
 
-
 include ../mixins/createProduct.pug
 
 block content
-    .row.align-items-stretch 
-        .col-md-3
-            include ../includes/menu.pug
-        .col-md-9
-            include ../includes/slider.pug
-            .row
-                if products.length > 0
-                    each product in products
-                        +createProduct(product)
-                else
-                    h1 No Products
+    .container-fluid.mb-4
+        .row.g-4
+            .col-md-3
+                .position-sticky(style="top: 80px;")
+                    .d-flex.flex-column.gap-4
+                        include ../includes/menu.pug
+            .col-md-9
+                include ../includes/slider.pug
+                
+                .d-flex.justify-content-end.mt-4
+                    include ../includes/filter.pug
+                
+                .row.g-3.mt-2
+                    if products.length > 0
+                        each product in products
+                            +createProduct(product)
+                    else
+                        .col-12.text-center.py-5
+                            i.fas.fa-box-open.fa-4x.text-muted.mb-3
+                            h3.text-muted Henüz ürün bulunmamaktadır.
+
+    script.
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('productSearchInput');
+            const searchButton = document.getElementById('searchButton');
+            
+            function filterProducts() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const products = document.querySelectorAll('.col-md-4');
+                
+                products.forEach(product => {
+                    const productName = product.querySelector('.product-name').textContent.toLowerCase();
+                    product.style.display = productName.includes(searchTerm) ? 'block' : 'none';
+                });
+            }
+            
+            searchInput.addEventListener('input', filterProducts);
+            searchButton.addEventListener('click', filterProducts);
+        });
+     
+

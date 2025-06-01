@@ -67,10 +67,8 @@ userSchema.methods.addToCart = function(product) {
     return this.save()
 }
 
-userSchema.methods.getCart = function( ){
-    const ids = this.cart.items.map(i => {
-        return i.productId
-    });
+userSchema.methods.getCart = function() {
+    const ids = this.cart.items.map(i => i.productId);
 
     return Product
         .find({
@@ -80,18 +78,34 @@ userSchema.methods.getCart = function( ){
         })
         .select("name price imgUrl")
         .then(products => {
+            // Sepetteki geçersiz ürünleri temizle
+            const validProductIds = products.map(p => p._id.toString());
+            const hasInvalidItems = this.cart.items.some(item => 
+                !validProductIds.includes(item.productId.toString())
+            );
+
+            if (hasInvalidItems) {
+                this.cart.items = this.cart.items.filter(item =>
+                    validProductIds.includes(item.productId.toString())
+                );
+                return this.save().then(() => products);
+            }
+
+            return products;
+        })
+        .then(products => {
             return products.map(p => {
                 return {
                     _id: p._id,
                     imgUrl: p.imgUrl,
                     name: p.name,
                     price: p.price,
-                    quantity:  this.cart.items.find(i => {
+                    quantity: this.cart.items.find(i => {
                         return i.productId.toString() === p._id.toString()
                     }).quantity
                 }
             })
-        })
+        });
 }
 
 userSchema.methods.deleteCartItem = function(productid){

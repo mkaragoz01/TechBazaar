@@ -1,48 +1,74 @@
 extends ../layouts/main-layout.pug
 
 block content
-    .container.mt-5
+    .container.mt-4
         .row.justify-content-center
-            .col-lg-8
-                .card.shadow
-                    .card-header.bg-primary.text-white
-                        h4.card-title.mb-0 Kategori Düzenle
-                    .card-body
-                        form(action="/admin/categories" method="POST")
+            .col-lg-6
+                .card.border-0.shadow-sm.rounded-3.overflow-hidden
+                    .card-header.bg-gradient.position-relative.py-3.border-0
+                        .bg-primary.position-absolute.top-0.start-0.end-0.bottom-0.opacity-75
+                        h5.card-title.mb-0.position-relative.text-white.text-center
+                            i.fas.fa-folder-open.me-2
+                            | Kategori Düzenle
+                    .card-body.p-4
+                        form(action="/admin/categories" method="POST").needs-validation
                             input(type='hidden' name='_csrf' value=`${csrfToken}`)
                             input(type='hidden' name='id' value=`${category._id}`)
 
-                            .form-group.row.mb-4
-                                label(for="name").col-md-3.col-form-label.font-weight-bold Kategori Adı
-                                .col-md-9
-                                    input.form-control#name(
+                            .mb-3
+                                label(for="name").form-label.fw-semibold Kategori Adı
+                                .input-group
+                                    span.input-group-text.bg-light.border-0.shadow-sm
+                                        i.fas.fa-folder.text-primary
+                                    input.form-control.shadow-sm.border-0#name(
                                         type="text" 
                                         name="name" 
                                         value=`${category.name}`
                                         placeholder="Kategori adını giriniz"
                                         required
                                     )
-                                    small.form-text.text-muted Örneğin: Elektronik, Giyim vb.
+                                .form-text.text-muted.mt-1.small
+                                    i.fas.fa-info-circle.me-1
+                                    | Örneğin: Elektronik, Giyim vb.
 
-                            .form-group.row.mb-4
-                                label(for="description").col-md-3.col-form-label.font-weight-bold Açıklama
-                                .col-md-9
-                                    textarea.form-control#editor(
+                            .mb-3
+                                label(for="description").form-label.fw-semibold Açıklama
+                                .input-group
+                                    span.input-group-text.bg-light.border-0.shadow-sm
+                                        i.fas.fa-align-left.text-primary
+                                    textarea.form-control.shadow-sm.border-0#editor(
                                         name="description" 
-                                        rows="5"
+                                        rows="4"
                                         placeholder="Kategori açıklamasını giriniz"
                                         required
                                     ) #{category.description}
 
-                            .form-group.row.mt-4
-                                .col-md-9.offset-md-3.d-flex.justify-content-end
-                                    a.btn.btn-outline-secondary.me-4(href="/admin/categories")
-                                        i.fas.fa-times.mr-2
-                                        | İptal
-                                    button.btn.btn-primary(type="submit")
-                                        i.fas.fa-save.mr-2
-                                        | Değişiklikleri Kaydet
+                            .d-flex.justify-content-end.mt-4.gap-2
+                                a.btn.btn-light.btn-sm.px-3.shadow-sm(href="/admin/categories")
+                                    i.fas.fa-times.me-1
+                                    | İptal
+                                button.btn.btn-primary.btn-sm.px-3.shadow-sm(type="submit")
+                                    i.fas.fa-save.me-1
+                                    | Kaydet
 
 block script
     script(src="https://cdn.jsdelivr.net/npm/ckeditor@4.11.3/ckeditor.js")
     script(src="/js/script.js")
+    style.
+        .bg-gradient {
+            background: linear-gradient(45deg, #2563eb, #3b82f6);
+        }
+        .form-control:focus,
+        .form-control:active {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.15);
+        }
+        .input-group-text {
+            border: none;
+        }
+        .form-label {
+            font-size: 0.9rem;
+        }
+        .form-text {
+            font-size: 0.8rem;
+        }
