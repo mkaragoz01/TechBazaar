@@ -1,12 +1,6 @@
-.input-group
-  input.form-control#productSearchInput(
-    type="text",
-    placeholder="Ürün ara...",
-    aria-label="Ürün ara",
-    style="width: 251px; height: 30px;"
-  )
-  .input-group-append
-    button.btn.btn-primary#searchButton(
-      type="button",
-      style="width: 50px; height: 30px; display: flex; align-items: center; justify-content: center;"
-    ) Ara
+.card.shadow-sm
+    .card-body
+        .input-group
+            input#productSearchInput.form-control(type='text' placeholder='Ürün adı...' aria-label='Search products')
+            button#searchButton.btn.btn-primary(type='button')
+                i.fas.fa-search 

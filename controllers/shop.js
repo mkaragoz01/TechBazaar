@@ -3,36 +3,66 @@ const Category = require("../models/category")
 const Order = require("../models/order")
 
 exports.getIndex = (req,res,next) => {
-
-    Promise.all([Product.find(), Category.find()])
+    const sortOption = req.query.sort || 'price_desc';
+    
+    Promise.all([Product.find().lean(), Category.find()])
     .then(([products, categories]) => {
+        // Ürünleri sırala
+        const sortedProducts = sortProducts(products, sortOption);
+
         res.render('shop/index', {
             title: 'Shopping',
-            products: products,
+            products: sortedProducts,
             path: "/",
-            categories: categories
+            categories: categories,
+            selectedSort: sortOption
         });
     })
     .catch(err => next(err));
-
 }
 
 exports.getProducts = (req,res,next) => {
+    const sortOption = req.query.sort || 'price_desc';
 
-    Promise.all([Product.find(), Category.find()])
+    Promise.all([Product.find().lean(), Category.find()])
     .then(([products, categories]) => {
-        res.render('shop/products',
-            {
-                title: 'Products',
-                products: products,
-                path: req.path,
-                categories: categories
-            }
-        )
+        // Ürünleri sırala
+        const sortedProducts = sortProducts(products, sortOption);
+
+        res.render('shop/products', {
+            title: 'Products',
+            products: sortedProducts,
+            path: req.path,
+            categories: categories,
+            selectedSort: sortOption
+        });
     })
     .catch((err) => {
         next(err);
-    })
+    });
+}
+
+// Ürünleri sıralama fonksiyonu
+function sortProducts(products, sortOption) {
+    switch(sortOption) {
+        case 'price_asc':
+            return products.sort((a, b) => {
+                const priceA = parseFloat(a.price.replace(/[^\d.-]/g, ''));
+                const priceB = parseFloat(b.price.replace(/[^\d.-]/g, ''));
+                return priceA - priceB;
+            });
+        case 'price_desc':
+            return products.sort((a, b) => {
+                const priceA = parseFloat(a.price.replace(/[^\d.-]/g, ''));
+                const priceB = parseFloat(b.price.replace(/[^\d.-]/g, ''));
+                return priceB - priceA;
+            });
+        case 'date_asc':
+            return products.sort((a, b) => new Date(a.date) - new Date(b.date));
+        case 'date_desc':
+        default:
+            return products.sort((a, b) => new Date(b.date) - new Date(a.date));
+    }
 }
 
 exports.getProductsByCategoryId = (req, res, next) => {
@@ -149,35 +179,107 @@ exports.getOrders = (req,res,next) => {
 
 exports.postOrder = (req, res, next) => {
     req.user
-        .populate('cart.items.productId') // populate doğrudan çalışır
-        .then(user => {
+        .getCart()
+        .then(products => {
+            if (!products || products.length === 0) {
+                throw new Error('Sepetinizde ürün bulunmamaktadır.');
+            }
+
             const order = new Order({
                 user: {
                     userId: req.user._id,
                     name: req.user.name,
                     email: req.user.email
                 },
-                items: user.cart.items.map(p => {
-                    return {
-                        product: {
-                            _id: p.productId._id,
-                            name: p.productId.name,
-                            price: p.productId.price,
-                            imgUrl: p.productId.imgUrl
-                        },
-                        quantity: p.quantity
-                    }
-                })
+                items: products.map(p => ({
+                    product: {
+                        _id: p._id,
+                        name: p.name,
+                        price: p.price,
+                        imgUrl: p.imgUrl
+                    },
+                    quantity: p.quantity,
+                    date: new Date()
+                }))
             });
+
             return order.save();
         })
         .then(() => {
-            return req.user.clearCart(); // Sepeti temizlemek için
+            return req.user.clearCart();
         })
         .then(() => {
-            res.redirect('/orders'); // Sipariş başarıyla kaydedildikten sonra yönlendirme
+            res.redirect('/orders');
         })
         .catch(err => {
-            next(err); // Hata varsa bir sonraki middleware'e yönlendir
+            console.error('Error in postOrder:', err);
+            req.session.errorMessage = err.message;
+            res.redirect('/cart');
         });
 };
+
+// En yeni ürünleri getiren fonksiyon
+exports.getNewestProducts = (req, res, next) => {
+    Promise.all([
+        Product.find()
+            .sort({ date: -1 })  // En yeni tarihten eskiye doğru sırala
+            .limit(12),          // İlk 12 ürünü al
+        Category.find()
+    ])
+    .then(([products, categories]) => {
+        res.render('shop/products', {
+            title: 'En Yeni Ürünler',
+            products: products,
+            path: req.path,
+            categories: categories
+        });
+    })
+    .catch(err => next(err));
+};
+
+// Rastgele favori ürünleri getiren fonksiyon
+exports.getFavoriteProducts = (req, res, next) => {
+    Promise.all([
+        Product.aggregate([
+            { $sample: { size: 12 } }  // Rastgele 12 ürün seç
+        ]),
+        Category.find()
+    ])
+    .then(([products, categories]) => {
+        res.render('shop/products', {
+            title: 'Favori Ürünler',
+            products: products,
+            path: req.path,
+            categories: categories
+        });
+    })
+    .catch(err => next(err));
+};
+
+// En pahalı (premium) ürünleri getiren fonksiyon
+exports.getPremiumProducts = (req, res, next) => {
+    Promise.all([
+        Product.find().lean(),  // lean() ile saf JavaScript objesi olarak al
+        Category.find()
+    ])
+    .then(([products, categories]) => {
+        // Fiyatları sayısal değere çevirip sıralama
+        const sortedProducts = products
+            .sort((a, b) => {
+                const priceA = parseFloat(a.price.replace(/[^\d.-]/g, ''));
+                const priceB = parseFloat(b.price.replace(/[^\d.-]/g, ''));
+                return priceB - priceA; // Azalan sıralama (en pahalıdan en ucuza)
+            })
+            .slice(0, 12); // İlk 12 ürünü al
+
+        res.render('shop/products', {
+            title: 'Premium Ürünler',
+            products: sortedProducts,
+            path: req.path,
+            categories: categories
+        });
+    })
+    .catch(err => next(err));
+};
+
+

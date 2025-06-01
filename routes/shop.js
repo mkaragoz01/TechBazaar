@@ -22,4 +22,9 @@ router.post('/delete-cartitem',locals, isAuthenticated,shopController.postCartIt
 router.get('/orders',locals, isAuthenticated,shopController.getOrders);
 router.post('/create-order',locals, isAuthenticated,shopController.postOrder);
 
+// Filtreleme route'ları
+router.get('/filter/newest', locals, shopController.getNewestProducts);
+router.get('/filter/favorites', locals, shopController.getFavoriteProducts);
+router.get('/filter/premium', locals, shopController.getPremiumProducts);
+
 module.exports = router

@@ -1,63 +1,109 @@
 extends ../layouts/main-layout.pug
 
 block content
-    .container.mt-4
+    .container.mt-3
         if (action !== 'undefined' && action === 'edit')
-            .alert.alert-success.col-md-8.mx-auto 
-                i.fas.fa-check-circle.mr-2
+            .alert.alert-success.alert-dismissible.fade.show.border-0.rounded-3.shadow-sm.col-lg-6.mx-auto
+                i.fas.fa-check-circle.me-2
                 | Ürün başarıyla güncellendi!
+                button(type="button" data-dismiss="alert").btn-close
 
         if (action !== 'undefined' && action === 'delete')
-            .alert.alert-danger.col-md-8.mx-auto
-                i.fas.fa-exclamation-circle.mr-2
+            .alert.alert-danger.alert-dismissible.fade.show.border-0.rounded-3.shadow-sm.col-lg-6.mx-auto
+                i.fas.fa-trash-alt.me-2
                 | Ürün başarıyla silindi!
+                button(type="button" data-dismiss="alert").btn-close
 
-        .card.shadow
-            .card-header.bg-primary.text-white.d-flex.justify-content-between.align-items-center
-                h5.mb-0 Ürün Listesi
-                a.btn.btn-light.btn-sm(href="/admin/add-product")
-                    i.fas.fa-plus.mr-2
-                    | Yeni Ürün Ekle
+        .card.border-0.shadow.rounded-3.overflow-hidden
+            .card-header.bg-gradient.position-relative.py-3.border-0
+                .bg-primary.position-absolute.top-0.start-0.end-0.bottom-0.opacity-75
+                .d-flex.justify-content-between.align-items-center.position-relative
+                    h5.mb-0.text-white
+                        i.fas.fa-box-open.me-2
+                        | Ürün Listesi
+                    a.btn.btn-light.shadow-sm(href="/admin/add-product")
+                        i.fas.fa-plus.me-2
+                        | Yeni Ürün
 
-            .card-body
+            .card-body.p-0
                 if products.length > 0
                     .table-responsive
-                        table.table.table-hover
-                            thead.thead-light
+                        table.table.table-hover.align-middle.mb-0
+                            thead.bg-light
                                 tr
-                                    th(style="width:120px") Resim
-                                    th Ürün Adı
-                                    th(style="width:150px").text-right Fiyat
-                                    th(style="width:200px").text-center İşlemler
+                                    th.border-0.py-2.ps-3(style="width:100px") Resim
+                                    th.border-0.py-2 Ürün Adı
+                                    th.border-0.py-2.text-end(style="width:120px") Fiyat
+                                    th.border-0.py-2.text-end.pe-3(style="width:160px") İşlemler
                             tbody 
                                 each product in products
-                                    tr
-                                        td 
-                                            img.img-thumbnail(src='/img/'+product.imgUrl, width='80', alt=product.name)
-                                        td.align-middle #{product.name}
-                                        td.align-middle.text-right #{product.price} TL
-                                        td.align-middle.text-center(style="vertical-align: middle !important;")
-                                            div(style="display: flex; align-items: center; justify-content: center;")
-                                                a.btn.btn-outline-primary.btn-sm(
+                                    tr.product-row
+                                        td.ps-3
+                                            .product-image.rounded-3.overflow-hidden.shadow-sm(style="width:64px;height:64px")
+                                                img(src='/img/'+product.imgUrl alt=product.name style="width:100%;height:100%;object-fit:contain;padding:0.4rem").bg-light
+                                        td
+                                            .product-info
+                                                h6.product-name.mb-1.fw-bold.small #{product.name}
+                                                a(href=`/products/${product._id}`).btn.btn-link.btn-sm.text-decoration-none.p-0.small
+                                                    i.fas.fa-external-link-alt.me-1
+                                                    | Ürün Detayı
+                                        td.text-end
+                                            .price-tag
+                                                span.fw-bold.small #{product.price}
+                                                span.small.text-muted.ms-1 TL
+                                        td.text-end.pe-3
+                                            .btn-group
+                                                a.btn.btn-light.btn-sm.shadow-sm(
                                                     href='/admin/products/'+product._id
-                                                    style="width: 90px; height: 31px; display: inline-flex; align-items: center; justify-content: center; margin-right: 8px;"
+                                                    title="Düzenle"
                                                 )
-                                                    i.fas.fa-edit.mr-1
-                                                    | Düzenle
+                                                    i.fas.fa-edit.text-primary
                                                 
-                                                form(action='/admin/delete-product' method='POST' style="display: inline-block; margin: 0; padding: 0;")
+                                                form(action='/admin/delete-product' method='POST' style="display: inline-block;")
                                                     input(type='hidden' name='_csrf' value=`${csrfToken}`)
                                                     input(type='hidden' name='productid' value=`${product._id}`)
-                                                    button.btn.btn-outline-danger.btn-sm(
+                                                    button.btn.btn-light.btn-sm.shadow-sm.ms-1(
                                                         type='submit'
-                                                        style="width: 90px; height: 31px; display: inline-flex; align-items: center; justify-content: center;"
+                                                        title="Sil"
+                                                        onclick="return confirm('Bu ürünü silmek istediğinizden emin misiniz?')"
                                                     )
-                                                        i.fas.fa-trash-alt.mr-1
-                                                        | Sil
+                                                        i.fas.fa-trash-alt.text-danger
                 else 
                     .text-center.py-4
-                        i.fas.fa-box-open.fa-3x.text-muted.mb-3
-                        h4.text-muted Henüz ürün bulunmamaktadır
-                        a.btn.btn-primary(href="/admin/add-product")
-                            i.fas.fa-plus.mr-2
+                        .empty-state.mb-3
+                            .circle.bg-light.rounded-circle.d-inline-flex.align-items-center.justify-content-center.mb-3(style="width:96px;height:96px")
+                                i.fas.fa-box-open.fa-2x.text-primary
+                        h5.fw-bold Henüz ürün bulunmamaktadır
+                        p.text-muted.mb-3.small İlk ürünü ekleyerek başlayabilirsiniz
+                        a.btn.btn-primary.px-3.shadow-sm(href="/admin/add-product")
+                            i.fas.fa-plus.me-2
                             | Yeni Ürün Ekle
+
+    style.
+        .bg-gradient {
+            background: linear-gradient(45deg, #2563eb, #3b82f6);
+        }
+        .product-row {
+            transition: all 0.2s ease;
+        }
+        .product-row:hover {
+            background-color: #f8f9fa;
+        }
+        .product-image {
+            transition: all 0.2s ease;
+        }
+        .product-row:hover .product-image {
+            transform: scale(1.05);
+        }
+        .btn-group .btn {
+            transition: all 0.2s ease;
+        }
+        .btn-group .btn:hover {
+            transform: translateY(-2px);
+        }
+        .price-tag {
+            transition: all 0.2s ease;
+        }
+        .product-row:hover .price-tag {
+            transform: scale(1.05);
+        }

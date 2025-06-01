@@ -1,93 +1,104 @@
 extends ../layouts/main-layout.pug
 
 block content
-    .container.mt-5
-        .row.justify-content-center
-            .col-lg-10
-                .card.shadow
-                    .card-header.bg-primary.text-white
-                        h4.card-title.mb-0 Ürün Düzenle
-                    .card-body
-                        form(action="/admin/products" method="POST" enctype="multipart/form-data" novalidate)
-                            input(type="hidden" name="_csrf" value=`${csrfToken}`)
-                            input(type='hidden' name='id' value=`${product._id}`)
-                            
-                            .form-group.row.mb-4
-                                label(for="name").col-md-3.col-form-label.font-weight-bold Ürün Adı
-                                .col-md-9
-                                    input.form-control#name(
-                                        type="text" 
-                                        name="name" 
-                                        value=`${product.name}`
-                                        placeholder="Ürün adını giriniz"
-                                        required
-                                    )
-                                    small.form-text.text-muted Örneğin: iPhone 13 Pro, Nike Air Max vb.
+  .container.mt-4
+    .row.justify-content-center
+      .col-lg-10
+        .card.border-0.shadow-sm.rounded-3.overflow-hidden
+          .card-header.bg-gradient.position-relative.py-3.border-0
+            .bg-primary.position-absolute.top-0.start-0.end-0.bottom-0.opacity-75
+            h4.card-title.mb-0.text-white.text-center.position-relative
+              i.fas.fa-edit.me-2
+              | Ürün Düzenle
+          .card-body.p-4
+            if errorMessage
+              .alert.alert-danger.text-center.rounded-2.shadow-sm
+                i.fas.fa-exclamation-circle.me-2
+                | !{errorMessage}
 
-                            .form-group.row.mb-4
-                                label(for="price").col-md-3.col-form-label.font-weight-bold Fiyat
-                                .col-md-9
-                                    .input-group
-                                        input.form-control#price(
-                                            type="number" 
-                                            name="price" 
-                                            value=`${product.price}`
-                                            placeholder="Ürün fiyatını giriniz"
-                                            step="0.01"
-                                            min="0"
-                                            required
-                                        )
-                                        .input-group-append
-                                            span.input-group-text TL
+            form(action="/admin/products" method="POST" enctype="multipart/form-data" novalidate).needs-validation
+              input(type="hidden" name="_csrf" value=`${csrfToken}`)
+              input(type="hidden" name="id" value=`${product._id}`)
 
-                            .form-group.row.mb-4
-                                label(for="image").col-md-3.col-form-label.font-weight-bold Ürün Resmi
-                                .col-md-9
-                                    .mb-3
-                                        img.img-thumbnail(src=`/img/${product.imgUrl}` width="150" alt="Mevcut ürün resmi")
-                                    .custom-file
-                                        input.custom-file-input#image(
-                                            type="file" 
-                                            name="imgUrl"
-                                            accept="image/*"
-                                        )
-                                        label.custom-file-label(for="image") Yeni resim seçin...
-                                    small.form-text.text-muted JPG, PNG formatında, max 2MB boyutunda
+              .mb-3
+                label(for="name").fw-bold Ürün Adı
+                input.form-control.shadow-sm.border-0#name(type="text" name="name" value=`${product.name}` placeholder="Ürün adını giriniz" required)
+                .form-text.text-muted.mt-1
+                  i.fas.fa-info-circle.me-1
+                  | Örn: iPhone 13 Pro
 
-                            .form-group.row.mb-4
-                                label.col-md-3.col-form-label.font-weight-bold Kategoriler
-                                .col-md-9
-                                    .category-checkboxes
-                                        each category in categories
-                                            .custom-control.custom-checkbox.mb-2
-                                                input.custom-control-input(
-                                                    type="checkbox"
-                                                    id=`category-${category._id}`
-                                                    name="categoryids" 
-                                                    value=`${category._id}`
-                                                    checked=category.selected
-                                                )
-                                                label.custom-control-label(for=`category-${category._id}`) #{category.name}
+              .mb-3
+                label(for="price").fw-bold Fiyat
+                .input-group
+                  input.form-control.shadow-sm.border-0#price(type="number" name="price" value=`${product.price}` step="0.01" min="0" required)
+                  span.input-group-text.bg-light.border-0.shadow-sm TL
 
-                            .form-group.row.mb-4
-                                label(for="editor").col-md-3.col-form-label.font-weight-bold Açıklama
-                                .col-md-9
-                                    textarea.form-control#editor(
-                                        name="description" 
-                                        rows="5"
-                                        placeholder="Ürün açıklamasını detaylı şekilde giriniz"
-                                        required
-                                    ) #{product.description}
+              .mb-3
+                label(for="image").fw-bold Ürün Resmi
+                .current-image.text-center.p-2.bg-light.rounded-2.shadow-sm
+                  img.img-fluid.rounded-2(src=`/img/${product.imgUrl}` style="max-height: 180px" alt=product.name)
+                .drop-zone.rounded-2.bg-light.shadow-sm.p-3.text-center.position-relative
+                  input.drop-zone__input.position-absolute.inset-0.w-100.h-100.opacity-0#image(type="file" name="imgUrl" accept="image/*")
+                  .drop-zone__content
+                    i.fas.fa-cloud-upload-alt.fa-lg.text-primary.mb-1
+                    p.mb-0 Tıklayın veya sürükleyin
+                .form-text.text-muted.mt-1
+                  i.fas.fa-info-circle.me-1
+                  | Max 2MB JPG, PNG
 
-                            .form-group.row.mt-5
-                                .col-md-9.offset-md-3.d-flex.justify-content-end
-                                    a.btn.btn-outline-secondary.me-4(href="/admin/products")
-                                        i.fas.fa-times.mr-2
-                                        | İptal
-                                    button.btn.btn-primary(type="submit")
-                                        i.fas.fa-save.mr-2
-                                        | Değişiklikleri Kaydet
+              .mb-3
+                label.fw-bold Kategoriler
+                .category-grid.row.row-cols-2.row-cols-lg-3.g-2
+                  each category in categories
+                    .col
+                      .form-check.custom-checkbox.h-100
+                        input.form-check-input.shadow-sm(type="checkbox" id=`cat-${category._id}` name="categoryids" value=`${category._id}` checked=category.selected)
+                        label.form-check-label.d-flex.align-items-center.p-2.rounded-2.border.shadow-sm.h-100(for=`cat-${category._id}`)
+                          i.fas.fa-folder.text-primary.me-2
+                          span #{category.name}
+
+              .mb-3
+                label(for="editor").fw-bold Açıklama
+                textarea.form-control.shadow-sm.border-0#editor(name="description" rows="3" required)= product.description
+
+              .mt-4.d-flex.justify-content-end.gap-2
+                a.btn.btn-light.btn-sm.shadow-sm(href="/admin/products")
+                  i.fas.fa-times.me-1
+                  | İptal
+                button.btn.btn-primary.btn-sm.shadow-sm(type="submit")
+                  i.fas.fa-save.me-1
+                  | Kaydet
 
 block script
-    script(src="https://cdn.jsdelivr.net/npm/ckeditor@4.11.3/ckeditor.js")
-    script(src="/js/script.js")
+  script(src="https://cdn.jsdelivr.net/npm/ckeditor@4.11.3/ckeditor.js")
+  script(src="/js/script.js")
+  style.
+    .bg-gradient { background: linear-gradient(45deg, #2563eb, #3b82f6); }
+    .drop-zone { cursor: pointer; transition: .3s; }
+    .drop-zone:hover, .category-grid label:hover { background-color: #f8f9fa !important; }
+    .form-check-input:checked + label {
+      background-color: #e8f0fe;
+      border-color: #2563eb !important;
+    }
+    .current-image:hover { transform: scale(1.02); transition: .3s; }
+  script.
+    const input = document.querySelector('.drop-zone__input');
+    input.addEventListener('change', e => {
+      const f = e.target.files[0];
+      if (f) {
+        input.closest('.drop-zone').querySelector('.drop-zone__content').innerHTML =
+          `<i class="fas fa-file-image text-primary fa-2x mb-2"></i><p class="mb-0">${f.name}</p>`;
+      }
+    });
+
+    const dz = document.querySelector('.drop-zone');
+    ['dragenter','dragover','dragleave','drop'].forEach(ev => dz.addEventListener(ev, e => {
+      e.preventDefault(); e.stopPropagation();
+      dz.classList.toggle('bg-light', ['dragenter','dragover'].includes(ev));
+    }));
+
+    dz.addEventListener('drop', e => {
+      const files = e.dataTransfer.files;
+      input.files = files;
+      input.dispatchEvent(new Event('change'));
+    });

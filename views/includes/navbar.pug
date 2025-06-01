@@ -1,66 +1,92 @@
 nav.navbar.navbar-expand-lg.navbar-dark.bg-primary.fixed-top.shadow-sm
   .container
     a(href="/").navbar-brand.d-flex.align-items-center
+      i.fas.fa-laptop.me-2
       span.font-weight-bold(style="font-size: 1.5rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.2)") TechStore
     
-    button.navbar-toggler(type="button" data-toggle="collapse" data-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation")
+    button.navbar-toggler.border-0(type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation")
       span.navbar-toggler-icon
     
     .collapse.navbar-collapse#navbarContent
 
-      ul.navbar-nav.mr-auto
+      ul.navbar-nav.me-auto
         li.nav-item
           a(href="/", class=(path === '/'?'nav-link active':'nav-link')) 
-            i.fas.fa-home.mr-1
+            i.fas.fa-home.me-2
             | Anasayfa
         
         li.nav-item
           a(href="/products", class=(path === '/products'?'nav-link active':'nav-link'))
-            i.fas.fa-box-open.mr-1
+            i.fas.fa-box-open.me-2
             | Ürünler
         
         if isAuthenticated
           li.nav-item
             a(href="/cart", class=(path === '/cart'?'nav-link active':'nav-link'))
-              i.fas.fa-shopping-cart.mr-1
+              i.fas.fa-shopping-cart.me-2
               | Sepetim
           
           li.nav-item
             a(href="/orders", class=(path === '/orders'?'nav-link active':'nav-link'))
-              i.fas.fa-clipboard-list.mr-1
+              i.fas.fa-clipboard-list.me-2
               | Siparişlerim
         
         if isAdmin
           li.nav-item.dropdown
-            a.nav-link.dropdown-toggle(href="#" id="adminDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false")
-              i.fas.fa-user-shield.mr-1
+            a.nav-link.dropdown-toggle(href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false")
+              i.fas.fa-user-shield.me-2
               | Admin
-            .dropdown-menu(aria-labelledby="adminDropdown")
-              a.dropdown-item(href='/admin/add-product')
-                i.fas.fa-plus-circle.mr-2
+            .dropdown-menu.border-0.shadow-sm.rounded-3.mt-2(aria-labelledby="adminDropdown")
+              a.dropdown-item.py-2(href='/admin/add-product')
+                i.fas.fa-plus-circle.me-2.text-primary
                 | Ürün Ekle
-              a.dropdown-item(href='/admin/products')
-                i.fas.fa-boxes.mr-2
+              a.dropdown-item.py-2(href='/admin/products')
+                i.fas.fa-boxes.me-2.text-primary
                 | Ürün Yönetimi
-              a.dropdown-item(href='/admin/add-category')
-                i.fas.fa-tag.mr-2
+              .dropdown-divider
+              a.dropdown-item.py-2(href='/admin/add-category')
+                i.fas.fa-tag.me-2.text-primary
                 | Kategori Ekle
-              a.dropdown-item(href='/admin/categories')
-                i.fas.fa-tags.mr-2
+              a.dropdown-item.py-2(href='/admin/categories')
+                i.fas.fa-tags.me-2.text-primary
                 | Kategoriler
       
       ul.navbar-nav.ms-auto
         if isAuthenticated
           li.nav-item
             a(href='/logout', class=(path === '/logout'?'nav-link active':'nav-link'))
-              i.fas.fa-sign-out-alt.mr-1
+              i.fas.fa-sign-out-alt.me-2
               | Çıkış Yap
         else
           li.nav-item
             a.nav-link(href='/login')
-              i.fas.fa-sign-in-alt.mr-1
+              i.fas.fa-sign-in-alt.me-2
               | Giriş Yap
           li.nav-item
             a.nav-link(href='/register')
-              i.fas.fa-user-plus.mr-1
+              i.fas.fa-user-plus.me-2
               | Kayıt Ol
+
+    style.
+        .nav-link {
+            transition: all 0.2s ease;
+        }
+        .nav-link:hover {
+            opacity: 0.9;
+        }
+        .dropdown-menu {
+            min-width: 200px;
+        }
+        .dropdown-item {
+            transition: all 0.2s ease;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+        .dropdown-item:hover {
+            background-color: #f8f9fa;
+            padding-left: 1.25rem;
+        }
+        .dropdown-item i {
+            width: 20px;
+            text-align: center;
+        }
