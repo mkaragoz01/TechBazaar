@@ -19,4 +19,6 @@ router.get('/categories/:categoryid',isAdmin, locals, adminController.getEditCat
 router.post('/categories',isAdmin, locals, adminController.postEditCategory)
 router.post('/delete-category',isAdmin, locals, adminController.postDeleteCategory)
 
+router.get('/dashboards',isAdmin, locals, adminController.getDashboards)
+
 module.exports = router;

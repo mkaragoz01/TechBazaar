@@ -1,6 +1,7 @@
 const { Mongoose } = require("mongoose");
 const Category = require("../models/category");
 const Product = require("../models/product")
+const Orders = require("../models/order");
 const fs = require("fs")
 
 exports.getProducts = (req,res,next) => {
@@ -302,3 +303,17 @@ exports.postDeleteCategory = (req,res,next)=> {
         next(err);
     })
 }
+
+exports.getDashboards = async (req, res, next) => {
+  try {
+    const orders = await Orders.find()
+    .populate('user.userId');
+    console.log('Tüm Siparişler: ', orders);
+    res.render('admin/dashboards', {
+      pageTitle: 'Sipariş Panosu',
+      orders : orders,
+    });
+  } catch (err) {
+    console.error(err);
+    next(err);
+}}
