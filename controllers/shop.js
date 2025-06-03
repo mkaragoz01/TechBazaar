@@ -1,6 +1,7 @@
 const Product = require("../models/product")
 const Category = require("../models/category")
 const Order = require("../models/order")
+const sorted_all = require("../public/js/sorted")
 
 exports.getIndex = (req,res,next) => {
     const sortOption = req.query.sort || 'price_desc';
@@ -8,7 +9,7 @@ exports.getIndex = (req,res,next) => {
     Promise.all([Product.find().lean(), Category.find()])
     .then(([products, categories]) => {
         // Ürünleri sırala
-        const sortedProducts = sortProducts(products, sortOption);
+        const sortedProducts = sorted_all.sortProducts(products, sortOption);
 
         res.render('shop/index', {
             title: 'Shopping',
@@ -27,7 +28,7 @@ exports.getProducts = (req,res,next) => {
     Promise.all([Product.find().lean(), Category.find()])
     .then(([products, categories]) => {
         // Ürünleri sırala
-        const sortedProducts = sortProducts(products, sortOption);
+        const sortedProducts = sorted_all.sortProducts(products, sortOption);
 
         res.render('shop/products', {
             title: 'Products',
@@ -40,29 +41,6 @@ exports.getProducts = (req,res,next) => {
     .catch((err) => {
         next(err);
     });
-}
-
-// Ürünleri sıralama fonksiyonu
-function sortProducts(products, sortOption) {
-    switch(sortOption) {
-        case 'price_asc':
-            return products.sort((a, b) => {
-                const priceA = parseFloat(a.price.replace(/[^\d.-]/g, ''));
-                const priceB = parseFloat(b.price.replace(/[^\d.-]/g, ''));
-                return priceA - priceB;
-            });
-        case 'price_desc':
-            return products.sort((a, b) => {
-                const priceA = parseFloat(a.price.replace(/[^\d.-]/g, ''));
-                const priceB = parseFloat(b.price.replace(/[^\d.-]/g, ''));
-                return priceB - priceA;
-            });
-        case 'date_asc':
-            return products.sort((a, b) => new Date(a.date) - new Date(b.date));
-        case 'date_desc':
-        default:
-            return products.sort((a, b) => new Date(b.date) - new Date(a.date));
-    }
 }
 
 exports.getProductsByCategoryId = (req, res, next) => {
@@ -218,12 +196,11 @@ exports.postOrder = (req, res, next) => {
         });
 };
 
-// En yeni ürünleri getiren fonksiyon
 exports.getNewestProducts = (req, res, next) => {
     Promise.all([
         Product.find()
-            .sort({ date: -1 })  // En yeni tarihten eskiye doğru sırala
-            .limit(12),          // İlk 12 ürünü al
+            .sort({ date: -1 })  
+            .limit(12),        
         Category.find()
     ])
     .then(([products, categories]) => {
@@ -237,11 +214,10 @@ exports.getNewestProducts = (req, res, next) => {
     .catch(err => next(err));
 };
 
-// Rastgele favori ürünleri getiren fonksiyon
 exports.getFavoriteProducts = (req, res, next) => {
     Promise.all([
         Product.aggregate([
-            { $sample: { size: 12 } }  // Rastgele 12 ürün seç
+            { $sample: { size: 12 } } 
         ]),
         Category.find()
     ])
@@ -256,21 +232,19 @@ exports.getFavoriteProducts = (req, res, next) => {
     .catch(err => next(err));
 };
 
-// En pahalı (premium) ürünleri getiren fonksiyon
 exports.getPremiumProducts = (req, res, next) => {
     Promise.all([
-        Product.find().lean(),  // lean() ile saf JavaScript objesi olarak al
+        Product.find().lean(), 
         Category.find()
     ])
     .then(([products, categories]) => {
-        // Fiyatları sayısal değere çevirip sıralama
         const sortedProducts = products
             .sort((a, b) => {
                 const priceA = parseFloat(a.price.replace(/[^\d.-]/g, ''));
                 const priceB = parseFloat(b.price.replace(/[^\d.-]/g, ''));
-                return priceB - priceA; // Azalan sıralama (en pahalıdan en ucuza)
+                return priceB - priceA; 
             })
-            .slice(0, 12); // İlk 12 ürünü al
+            .slice(0, 12); 
 
         res.render('shop/products', {
             title: 'Premium Ürünler',
@@ -281,5 +255,3 @@ exports.getPremiumProducts = (req, res, next) => {
     })
     .catch(err => next(err));
 };
-
-

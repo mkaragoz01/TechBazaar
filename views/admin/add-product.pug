@@ -132,7 +132,6 @@ block script
             background: linear-gradient(45deg, #2563eb, #3b82f6);
         }
     script.
-        // Dosya seçildiğinde dosya adını göster
         document.querySelector('.drop-zone__input').addEventListener('change', function(e) {
             const fileName = e.target.files[0]?.name;
             if (fileName) {
@@ -144,7 +143,6 @@ block script
             }
         });
 
-        // Drag & Drop işlemleri
         const dropZone = document.querySelector('.drop-zone');
         
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
