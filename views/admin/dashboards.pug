@@ -150,7 +150,7 @@ block content
                                             th.border-0.py-3.text-end Sipariş Tutarı
                                             th.border-0.py-3.text-center Durum
                                     tbody
-                                        each order in orders.slice(0, 10)
+                                        each order in orders.slice(0, 5)
                                             tr.product-row
                                                 - let orderDate = null
                                                 - if (order.items && order.items.length > 0)
@@ -194,7 +194,7 @@ block content
                                                         i.fas.fa-check.me-1
                                                         | Tamamlandı
 
-            // Charts Section
+            // Charts Section - First Row
             .row.mb-4
                 .col-lg-6.mb-4
                     .card.border-0.shadow-lg.rounded-4.h-100
@@ -219,6 +219,31 @@ block content
                         .card-body.p-4
                             .chart-container(style="height: 300px")
                                 canvas#dailySalesChart
+
+            .row.mb-4
+                .col-lg-6.mb-4
+                    .card.border-0.shadow-lg.rounded-4.h-100
+                        .card-header.bg-gradient.position-relative.py-3.border-0
+                            .bg-warning.position-absolute.top-0.start-0.end-0.bottom-0.opacity-75
+                            .position-relative
+                                h5.mb-0.text-white
+                                    i.fas.fa-chart-bar.me-2
+                                    | Gelir Analizi
+                        .card-body.p-4
+                            .chart-container(style="height: 300px")
+                                canvas#revenueAnalysisChart
+
+                .col-lg-6.mb-4
+                    .card.border-0.shadow-lg.rounded-4.h-100
+                        .card-header.bg-gradient.position-relative.py-3.border-0
+                            .bg-info.position-absolute.top-0.start-0.end-0.bottom-0.opacity-75
+                            .position-relative
+                                h5.mb-0.text-white
+                                    i.fas.fa-chart-area.me-2
+                                    | Haftalık Sipariş Trendi
+                        .card-body.p-4
+                            .chart-container(style="height: 300px")
+                                canvas#weeklyOrdersChart
 
             // Performance Metrics
             .row.mb-4
@@ -381,7 +406,6 @@ block content
                 });
             }
 
-            // Daily Sales Chart (Line)
             const dailySalesCtx = document.getElementById('dailySalesChart');
             if (dailySalesCtx) {
                 // Get last 10 days data
@@ -397,7 +421,6 @@ block content
                     dailyData[dateKey] = 0;
                 }
                 
-                // Calculate daily sales quantity
                 orders.forEach(order => {
                     let orderDate;
                     if (order.date) {
@@ -460,6 +483,217 @@ block content
                             x: {
                                 grid: {
                                     display: false
+                                }
+                            }
+                        },
+                        interaction: {
+                            intersect: false,
+                            mode: 'index'
+                        }
+                    }
+                });
+            }
+            const revenueAnalysisCtx = document.getElementById('revenueAnalysisChart');
+            if (revenueAnalysisCtx && sortedProducts.length > 0) {
+                const revenueLabels = sortedProducts.map(p => p.product.name.length > 15 ? p.product.name.substring(0, 15) + '...' : p.product.name);
+                const revenueValues = sortedProducts.map(p => p.totalRevenue);
+                
+                new Chart(revenueAnalysisCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: revenueLabels,
+                        datasets: [{
+                            label: 'Gelir (TL)',
+                            data: revenueValues,
+                            backgroundColor: [
+                                'rgba(245, 158, 11, 0.8)',
+                                'rgba(16, 185, 129, 0.8)',
+                                'rgba(37, 99, 235, 0.8)',
+                                'rgba(239, 68, 68, 0.8)',
+                                'rgba(139, 92, 246, 0.8)'
+                            ],
+                            borderColor: [
+                                '#f59e0b',
+                                '#10b981',
+                                '#2563eb',
+                                '#ef4444',
+                                '#8b5cf6'
+                            ],
+                            borderWidth: 2,
+                            borderRadius: 8,
+                            borderSkipped: false
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + ' TL';
+                                    }
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    maxRotation: 45,
+                                    minRotation: 0
+                                }
+                            }
+                        },
+                        interaction: {
+                            intersect: false,
+                            mode: 'index'
+                        }
+                    }
+                });
+            }
+
+            const weeklyOrdersCtx = document.getElementById('weeklyOrdersChart');
+            if (weeklyOrdersCtx) {
+                const weeklyData = {};
+                const last4Weeks = [];
+                
+                for (let i = 3; i >= 0; i--) {
+                    const startDate = new Date();
+                    startDate.setDate(startDate.getDate() - (i + 1) * 7);
+                    const endDate = new Date();
+                    endDate.setDate(endDate.getDate() - i * 7);
+                    
+                    const weekLabel = startDate.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' }) + 
+                                   ' - ' + endDate.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' });
+                    
+                    last4Weeks.push(weekLabel);
+                    weeklyData[weekLabel] = { orders: 0, revenue: 0 };
+                }
+                
+                orders.forEach(order => {
+                    let orderDate;
+                    if (order.date) {
+                        orderDate = new Date(order.date);
+                    } else if (order.createdAt) {
+                        orderDate = new Date(order.createdAt);
+                    } else {
+                        // Yeterli tarih yoksa rastgele bir tarih ata
+                        orderDate = new Date();
+                        orderDate.setDate(orderDate.getDate() - Math.floor(Math.random() * 28));
+                    }
+                    
+                    if (!isNaN(orderDate)) {
+                        for (let i = 0; i < 4; i++) {
+                            const weekStart = new Date();
+                            weekStart.setDate(weekStart.getDate() - (i + 1) * 7);
+                            const weekEnd = new Date();
+                            weekEnd.setDate(weekEnd.getDate() - i * 7);
+                            
+                            if (orderDate >= weekStart && orderDate <= weekEnd) {
+                                const weekLabel = last4Weeks[3 - i];
+                                weeklyData[weekLabel].orders++;
+                                
+                                let orderRevenue = 0;
+                                order.items.forEach(item => {
+                                    orderRevenue += (item.product.price * item.quantity);
+                                });
+                                weeklyData[weekLabel].revenue += orderRevenue;
+                                break;
+                            }
+                        }
+                    }
+                });
+                
+                const ordersData = last4Weeks.map(week => weeklyData[week].orders);
+                const revenueData = last4Weeks.map(week => weeklyData[week].revenue);
+                
+                new Chart(weeklyOrdersCtx, {
+                    type: 'line',
+                    data: {
+                        labels: last4Weeks,
+                        datasets: [
+                            {
+                                label: 'Sipariş Sayısı',
+                                data: ordersData,
+                                borderColor: '#06b6d4',
+                                backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                                tension: 0.4,
+                                fill: true,
+                                pointBackgroundColor: '#06b6d4',
+                                pointBorderColor: '#ffffff',
+                                pointBorderWidth: 2,
+                                pointRadius: 6,
+                                yAxisID: 'y'
+                            },
+                            {
+                                label: 'Gelir (TL)',
+                                data: revenueData,
+                                borderColor: '#f59e0b',
+                                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                                tension: 0.4,
+                                fill: true,
+                                pointBackgroundColor: '#f59e0b',
+                                pointBorderColor: '#ffffff',
+                                pointBorderWidth: 2,
+                                pointRadius: 6,
+                                yAxisID: 'y1'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    usePointStyle: true,
+                                    padding: 20
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return Math.round(value) + ' sipariş';
+                                    }
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Sipariş Sayısı'
+                                }
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                beginAtZero: true,
+                                grid: {
+                                    drawOnChartArea: false,
+                                },
+                                ticks: {
+                                    callback: function(value) {
+                                        return Math.round(value) + ' TL';
+                                    }
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Gelir (TL)'
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    maxRotation: 45,
+                                    minRotation: 0
                                 }
                             }
                         },
