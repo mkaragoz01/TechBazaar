@@ -156,7 +156,7 @@ block content
         function validateOrder() {
             try {
                 // Sipariş oluşturmadan önce kontroller
-                const products = !{JSON.stringify(products)};
+                const products = !{JSON.stringify(products).replace(/</g, '\\u003c')};
                 if (!products || products.length === 0) {
                     alert('Sepetinizde ürün bulunmamaktadır.');
                     return false;

@@ -3,6 +3,7 @@ const Category = require("../models/category");
 const Product = require("../models/product")
 const Orders = require("../models/order");
 const fs = require("fs")
+const sanitizeDescription = require("../utility/sanitizeDescription")
 
 exports.getProducts = (req,res,next) => {
     Product
@@ -77,7 +78,7 @@ exports.postAddProducts = (req,res,next)=>{
             name: name,
             price: price,
             imgUrl: image.filename,
-            description: description,
+            description: sanitizeDescription(description),
             categories: categories,
             userId: req.user._id,
             isActive: true
@@ -173,7 +174,7 @@ exports.postEditProducts = (req,res,next)=>{
             }
             product.name = name;
             product.price = price;
-            product.description = description;
+            product.description = sanitizeDescription(description);
             product.categories = ids;
 
             if(image){
@@ -239,7 +240,7 @@ exports.postAddCategory = (req,res,next) => {
 
     const category = new Category({
         name: name,
-        description: description
+        description: sanitizeDescription(description)
     })
 
     category.save()
@@ -282,7 +283,7 @@ exports.postEditCategory = (req,res,next)=>{
     Category.updateOne({_id: id},{
         $set: {
             name: name,
-            description: description
+            description: sanitizeDescription(description)
         }
     })
     .then(() => {
