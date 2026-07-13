@@ -1,3 +1,4 @@
+require('dotenv').config()
 const express = require("express")
 const app = express()
 const bodyParser = require('body-parser')
@@ -12,7 +13,7 @@ const errorController = require('./controllers/error')
 const adminRoutes = require("./routes/admin")
 const userRoutes = require('./routes/shop')
 const accountRoutes = require('./routes/account')
-const connectionString = 'mongodb://localhost/node-app';
+const connectionString = process.env.MONGODB_URI || 'mongodb://localhost/node-app';
 
 const User = require("./models/user")
 
@@ -24,7 +25,7 @@ var store = new mongoDbStore({
 app.use(bodyParser.urlencoded({extended: false}))
 app.use(cookieParser())
 app.use(session({
-    secret: 'mysecret',
+    secret: process.env.SESSION_SECRET || 'mysecret',
     resave: false,
     saveUninitialized: false,
     cookie: {maxAge: 3600000 },
