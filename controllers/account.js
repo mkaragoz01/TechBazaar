@@ -25,7 +25,7 @@ exports.getLogin = (req, res) => {
     });
 }
 
-exports.postLogin = (req, res) => {
+exports.postLogin = (req, res, next) => {
     const email = req.body.email;
     const password = req.body.password;
 
@@ -60,7 +60,7 @@ exports.postLogin = (req, res) => {
                             return res.redirect(url);
                         });
                     }
-                    
+
                     req.session.errorMessage = 'Yanlış şifre!';
                     return req.session.save(err => {
                         if (err) console.log(err);
@@ -100,7 +100,7 @@ exports.getRegister = (req, res) => {
     });
 }
 
-exports.postRegister = (req, res) => {
+exports.postRegister = (req, res, next) => {
     const name = req.body.name;
     const email = req.body.email;
     const password = req.body.password;
@@ -109,39 +109,41 @@ exports.postRegister = (req, res) => {
         .then(user => {
             if(user){
                 req.session.errorMessage = 'Bu mail adresi üzerine kayıtlı kullanıcı bulunmaktadır.';
-                req.session.save(function (err) {
-                    console.log(err);
-                        return res.redirect('/register');
-                });}
-            return bcrypt.hash(password, 10)
-            .then(hashedPassword => {
-                const newUser = new User({
-                    name: name,
-                    email: email,
-                    password: hashedPassword,
-                    cart: { items: [] }
-                })
-            return newUser.save();
-            })
-        }
-        )
-        .then(() => {
-            const mailOptions = {
-                from: '"TechStore" <karagozmuhammet45@gmail.com>',
-                to: email,
-                subject: 'Hesap Oluşturuldu',
-                html: '<h1>Hesap Oluşturuldu</h1><p>Hesabınız başarıyla oluşturuldu.</p>',
-                text: 'Hesabınız başarıyla oluşturuldu.'
-            };
-
-            transporter.sendMail(mailOptions)
-                .then(() => {
-                    console.log('Mail gönderildi.');
-                })
-                .catch(err => {
-                    console.error('Mail gönderme hatası:', err);
+                return req.session.save(function (err) {
+                    if (err) console.log(err);
+                    return res.redirect('/register');
                 });
+            }
 
+            return bcrypt.hash(password, 10)
+                .then(hashedPassword => {
+                    const newUser = new User({
+                        name: name,
+                        email: email,
+                        password: hashedPassword,
+                        cart: { items: [] }
+                    })
+                    return newUser.save();
+                })
+                .then(() => {
+                    const mailOptions = {
+                        from: '"TechStore" <karagozmuhammet45@gmail.com>',
+                        to: email,
+                        subject: 'Hesap Oluşturuldu',
+                        html: '<h1>Hesap Oluşturuldu</h1><p>Hesabınız başarıyla oluşturuldu.</p>',
+                        text: 'Hesabınız başarıyla oluşturuldu.'
+                    };
+
+                    transporter.sendMail(mailOptions)
+                        .then(() => {
+                            console.log('Mail gönderildi.');
+                        })
+                        .catch(err => {
+                            console.error('Mail gönderme hatası:', err);
+                        });
+
+                    res.redirect('/login');
+                });
         })
         .catch(err => {
             if (err.name === "ValidationError") {
@@ -159,8 +161,6 @@ exports.postRegister = (req, res) => {
                 next(err);
             }
         });
-
-        res.redirect('/login');
 }
 
 exports.getReset = (req, res) => {
@@ -174,12 +174,12 @@ exports.getReset = (req, res) => {
     });
 }
 
-exports.postReset = (req, res) => {
+exports.postReset = (req, res, next) => {
     const email = req.body.email;
 
     crypto.randomBytes(32,(err,buffer)=>{
         if(err){
-            
+
             return res.redirect('/reset-password')
         }
         const token = buffer.toString('hex')
@@ -188,52 +188,53 @@ exports.postReset = (req, res) => {
             .then(user=>{
                 if(!user){
                     req.session.errorMessage = 'Bu mail adresi ile kayıtlı bir kullanıcı bulunamadı.';
-                    req.session.save(function (err) {
-                        ;
-                            return res.redirect('/reset-password');
+                    return req.session.save(function (err) {
+                        if (err) console.log(err);
+                        return res.redirect('/reset-password');
                     });
                 }
                 user.resetToken = token;
                 user.resetTokenExpiration = Date.now() + 3600000;
 
-                return user.save()
-            }).then(result=> {
-                res.redirect('/')
+                return user.save().then(result=> {
+                    res.redirect('/')
 
-                const mailOptions = {
-                    from: '"TechStore" <karagozmuhammet45@gmail.com>',
-                    to: email,
-                    subject: 'Parola Sıfırlama',
-                    html: `<p>Parolanızı güncellemek için aşağıdaki linke tıklayınız.</p>
-                           <p>
-                            <a href="http://localhost:3000/reset-password/${token}">Parola Sıfırlama Linki</a>
-                           </p>`,
-                    text: 'Hesabınız başarıyla oluşturuldu.'
-                };
-    
-                transporter.sendMail(mailOptions)
-                    .then(() => {
-                        console.log('Mail gönderildi.');
-                    })
-                    .catch(err => {
-                        console.error('Mail gönderme hatası:', err);
-                    });
+                    const mailOptions = {
+                        from: '"TechStore" <karagozmuhammet45@gmail.com>',
+                        to: email,
+                        subject: 'Parola Sıfırlama',
+                        html: `<p>Parolanızı güncellemek için aşağıdaki linke tıklayınız.</p>
+                               <p>
+                                <a href="http://localhost:3000/reset-password/${token}">Parola Sıfırlama Linki</a>
+                               </p>`,
+                        text: 'Parolanızı sıfırlamak için maildeki linke tıklayınız.'
+                    };
+
+                    transporter.sendMail(mailOptions)
+                        .then(() => {
+                            console.log('Mail gönderildi.');
+                        })
+                        .catch(err => {
+                            console.error('Mail gönderme hatası:', err);
+                        });
+                });
             })
+            .catch(err => next(err));
     })
 }
 
-exports.getLogout = (req, res) => {
+exports.getLogout = (req, res, next) => {
     req.session.destroy(err => {
         if (err) {
-            next(err);
+            return next(err);
         }
         res.redirect('/');
     });
 }
 
-exports.getNewPassword = (req, res) => {
+exports.getNewPassword = (req, res, next) => {
     const token = req.params.token;
-    errorMessage = req.session.errorMessage;
+    const errorMessage = req.session.errorMessage;
     delete req.session.errorMessage;
 
     User.findOne({
@@ -242,12 +243,12 @@ exports.getNewPassword = (req, res) => {
     })
     .then(user => {
         if (!user) {
-            req.flash('error', 'Password reset token is invalid or has expired.');
-            return res.redirect('/reset-password');
+            req.session.errorMessage = 'Parola sıfırlama linki geçersiz veya süresi dolmuş.';
+            return req.session.save(err => {
+                if (err) console.log(err);
+                return res.redirect('/reset-password');
+            });
         }
-
-        var errorMessage = req.session.errorMessage;
-        delete req.session.errorMessage;
 
         res.render('account/new-password', {
             path: '/new-password',
@@ -257,14 +258,10 @@ exports.getNewPassword = (req, res) => {
             passwordToken: token
         });
     })
-    .catch(err => {
-        console.error(err);
-        req.flash('error', 'An error occurred. Please try again.');
-        res.redirect('/reset-password');
-    });
+    .catch(err => next(err));
 };
 
-exports.postNewPassword = (req, res) => {
+exports.postNewPassword = (req, res, next) => {
     const userId = req.body.userId;
     const newPassword = req.body.password;
     const token = req.body.passwordToken;
@@ -277,16 +274,25 @@ exports.postNewPassword = (req, res) => {
         _id: userId
     })
         .then(user => {
+            if (!user) {
+                req.session.errorMessage = 'Parola sıfırlama linki geçersiz veya süresi dolmuş.';
+                return req.session.save(err => {
+                    if (err) console.log(err);
+                    return res.redirect('/reset-password');
+                });
+            }
+
             _user = user;
-            return bcrypt.hash(newPassword, 10);
+            return bcrypt.hash(newPassword, 10)
+                .then(hashedPassword => {
+                    _user.password = hashedPassword;
+                    _user.resetToken = undefined;
+                    _user.resetTokenExpiration = undefined;
+                    return _user.save();
+                })
+                .then(()=> {
+                    res.redirect('/login')
+                });
         })
-        .then(hashedPassword => {
-            _user.password = hashedPassword;
-            _user.resetToken = undefined;
-            _user.resetTokenExpiration = undefined;
-            return _user.save();
-        })
-        .then(()=> {
-            res.redirect('/login')
-        }).catch(err => console.log(err))
+        .catch(err => next(err));
 }
