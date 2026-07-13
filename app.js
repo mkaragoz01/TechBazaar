@@ -7,7 +7,6 @@ const cookieParser = require('cookie-parser')
 const session = require('express-session')
 const mongoDbStore = require('connect-mongodb-session')(session)
 const csurf = require('csurf')
-const multer = require('multer')
 
 const errorController = require('./controllers/error')
 const adminRoutes = require("./routes/admin")
@@ -22,17 +21,7 @@ var store = new mongoDbStore({
     collection: 'MySessions'
 })
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, './public/img/')
-    },
-    filename: (req, file, cb) => {
-        cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname))
-    }
-})
-
 app.use(bodyParser.urlencoded({extended: false}))
-app.use(multer({storage: storage}).single('imgUrl'))
 app.use(cookieParser())
 app.use(session({
     secret: 'mysecret',
