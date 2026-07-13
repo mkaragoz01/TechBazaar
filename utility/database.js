@@ -3,7 +3,7 @@ const mongoClient = mongodb.MongoClient;
 let _db;
 
 const mongoConnect = (callback) =>{
-    mongoClient.connect('mongodb://localhost:27017/node-app')
+    mongoClient.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/node-app')
     .then(client => {
         console.log("Connected to MongoDB");
         _db = client.db()
