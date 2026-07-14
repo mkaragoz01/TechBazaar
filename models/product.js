@@ -19,6 +19,11 @@ const productSchema = mongoose.Schema({
         minlength: [3,'Ürün açıklaması minimum 3 karakter içermelidir.']
     },
     imgUrl: String,
+    stock: {
+        type: Number,
+        default: 0,
+        min: [0, 'Stok negatif olamaz.']
+    },
     date: {
         type: Date,
         default: Date.now
