@@ -43,4 +43,9 @@ const productSchema = mongoose.Schema({
         ]
 })
 
+productSchema.index({ name: 'text', description: 'text' }, { default_language: 'turkish' })
+productSchema.index({ categories: 1 })
+productSchema.index({ userId: 1 })
+productSchema.index({ isActive: 1 })
+
 module.exports = mongoose.model('Product', productSchema)
