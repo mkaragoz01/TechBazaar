@@ -6,7 +6,7 @@ const sorted_all = require("../public/js/sorted")
 exports.getIndex = (req,res,next) => {
     const sortOption = req.query.sort || 'price_desc';
     
-    Promise.all([Product.find().lean(), Category.find()])
+    Promise.all([Product.find({ isActive: true }).lean(), Category.find()])
     .then(([products, categories]) => {
         // Ürünleri sırala
         const sortedProducts = sorted_all.sortProducts(products, sortOption);
@@ -25,7 +25,7 @@ exports.getIndex = (req,res,next) => {
 exports.getProducts = (req,res,next) => {
     const sortOption = req.query.sort || 'price_desc';
 
-    Promise.all([Product.find().lean(), Category.find()])
+    Promise.all([Product.find({ isActive: true }).lean(), Category.find()])
     .then(([products, categories]) => {
         // Ürünleri sırala
         const sortedProducts = sorted_all.sortProducts(products, sortOption);
@@ -63,7 +63,7 @@ exports.getProductsByCategoryId = (req, res, next) => {
     Category.find()
         .then(categories => {
             model.categories = categories;
-            return Product.find({ categories: categoryid }).lean();
+            return Product.find({ categories: categoryid, isActive: true }).lean();
         })
         .then(products => {
         
@@ -85,13 +85,16 @@ exports.getProductsByCategoryId = (req, res, next) => {
 
 exports.getProduct = (req,res,next) => {
 
-    Product.findOne({_id: req.params.productid})
+    Product.findOne({_id: req.params.productid, isActive: true})
         .populate('categories')
-        .then((products) => {
+        .then((product) => {
+            if(!product) {
+                return res.redirect('/')
+            }
             res.render('shop/product-detail',{
-                title: products.name,
-                product: products,
-                categoryName: products.categories[0]?.name,
+                title: product.name,
+                product: product,
+                categoryName: product.categories[0]?.name,
                 path: '/products'
             })
         }).catch((err) => {
@@ -199,9 +202,9 @@ exports.postOrder = (req, res, next) => {
 
 exports.getNewestProducts = (req, res, next) => {
     Promise.all([
-        Product.find()
-            .sort({ date: -1 })  
-            .limit(12),        
+        Product.find({ isActive: true })
+            .sort({ date: -1 })
+            .limit(12),
         Category.find()
     ])
     .then(([products, categories]) => {
@@ -218,7 +221,8 @@ exports.getNewestProducts = (req, res, next) => {
 exports.getFavoriteProducts = (req, res, next) => {
     Promise.all([
         Product.aggregate([
-            { $sample: { size: 12 } } 
+            { $match: { isActive: true } },
+            { $sample: { size: 12 } }
         ]),
         Category.find()
     ])
@@ -235,7 +239,7 @@ exports.getFavoriteProducts = (req, res, next) => {
 
 exports.getPremiumProducts = (req, res, next) => {
     Promise.all([
-        Product.find().lean(), 
+        Product.find({ isActive: true }).lean(),
         Category.find()
     ])
     .then(([products, categories]) => {

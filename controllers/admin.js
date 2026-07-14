@@ -9,7 +9,7 @@ exports.getProducts = (req,res,next) => {
     Product
     .find({userId: req.user._id})
     .populate('userId','name -_id')
-    .select('name price imgUrl userId')
+    .select('name price imgUrl userId isActive')
     .then((products) => {
         res.render('admin/products',
             {
@@ -201,32 +201,15 @@ exports.postDeleteProduct = (req,res,next) => {
 
     const id = req.body.productid
 
-    Product.findOne({_id: id, userId: req.user._id})
-        .then(product => {
-            if(!product) {
+    Product.updateOne({_id: id, userId: req.user._id}, {isActive: false})
+        .then((result) => {
+            if(result.matchedCount === 0){
                 return next(new Error("Ürün bulunamadı"))
             }
-            fs.unlink(`public/img/${product.imgUrl}`, (err) => {
-                if(err){
-                    console.log(err)
-                }
-            })
-
-            return Product.deleteOne({_id: id, userId: req.user._id})
-                .then((result) => {
-                    if(result.deletedCount === 0){
-                        return next(new Error("Ürün bulunamadı"))
-                    }
-                    fs.unlink(`public/img/${product.imgUrl}`, (err) => {
-                        if(err){
-                            console.log(err)
-                        }
-                    })
-                    res.redirect("/admin/products?action=delete");
-                })
-                .catch((err) => {
-                    next(err);
-                })
+            res.redirect("/admin/products?action=delete");
+        })
+        .catch((err) => {
+            next(err);
         })
 }
 

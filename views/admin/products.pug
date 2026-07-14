@@ -43,7 +43,10 @@ block content
                                                 img(src='/img/'+product.imgUrl alt=product.name style="width:100%;height:100%;object-fit:contain;padding:0.4rem").bg-light
                                         td
                                             .product-info
-                                                h6.product-name.mb-1.fw-bold.small #{product.name}
+                                                h6.product-name.mb-1.fw-bold.small
+                                                    | #{product.name}
+                                                    if product.isActive === false
+                                                        span.badge.bg-secondary.ms-2 Pasif
                                                 a(href=`/products/${product._id}`).btn.btn-link.btn-sm.text-decoration-none.p-0.small
                                                     i.fas.fa-external-link-alt.me-1
                                                     | Ürün Detayı
