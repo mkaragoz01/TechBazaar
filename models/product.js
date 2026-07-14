@@ -8,10 +8,11 @@ const productSchema = mongoose.Schema({
         maxlength: [255, 'Ürün adı en fazla 255 karakter olmalıdır!'],
     },
     price: {
-        type: String,
+        type: Number,
         required: [function() {
             return this.isActive;
-        }, 'Fiyat alanı aktif ürünler için zorunludur.']
+        }, 'Fiyat alanı aktif ürünler için zorunludur.'],
+        min: [0, 'Fiyat negatif olamaz.']
     },
     description: {
         type: String,

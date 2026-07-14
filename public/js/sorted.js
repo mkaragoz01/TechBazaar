@@ -1,17 +1,9 @@
 function sortProducts(products, sortOption) {
     switch(sortOption) {
         case 'price_asc':
-            return products.sort((a, b) => {
-                const priceA = parseFloat(a.price.replace(/[^\d.-]/g, ''));
-                const priceB = parseFloat(b.price.replace(/[^\d.-]/g, ''));
-                return priceA - priceB;
-            });
+            return products.sort((a, b) => a.price - b.price);
         case 'price_desc':
-            return products.sort((a, b) => {
-                const priceA = parseFloat(a.price.replace(/[^\d.-]/g, ''));
-                const priceB = parseFloat(b.price.replace(/[^\d.-]/g, ''));
-                return priceB - priceA;
-            });
+            return products.sort((a, b) => b.price - a.price);
         case 'date_asc':
             return products.sort((a, b) => new Date(a.date) - new Date(b.date));
         case 'date_desc':

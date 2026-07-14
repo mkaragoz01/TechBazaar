@@ -52,11 +52,11 @@ exports.getProductsByCategoryId = (req, res, next) => {
     const getSort = () => {
         switch(sortOption) {
             case 'price_asc':
-                return (a, b) => parseFloat(a.price.replace(/[^\d.-]/g, '')) - parseFloat(b.price.replace(/[^\d.-]/g, ''));
+                return (a, b) => a.price - b.price;
             case 'price_desc':
-                return (a, b) => parseFloat(b.price.replace(/[^\d.-]/g, '')) - parseFloat(a.price.replace(/[^\d.-]/g, ''));
+                return (a, b) => b.price - a.price;
             default:
-                return (a, b) => parseFloat(a.price.replace(/[^\d.-]/g, '')) - parseFloat(b.price.replace(/[^\d.-]/g, ''));
+                return (a, b) => a.price - b.price;
         }
     };
 
@@ -240,12 +240,8 @@ exports.getPremiumProducts = (req, res, next) => {
     ])
     .then(([products, categories]) => {
         const sortedProducts = products
-            .sort((a, b) => {
-                const priceA = parseFloat(a.price.replace(/[^\d.-]/g, ''));
-                const priceB = parseFloat(b.price.replace(/[^\d.-]/g, ''));
-                return priceB - priceA; 
-            })
-            .slice(0, 12); 
+            .sort((a, b) => b.price - a.price)
+            .slice(0, 12);
 
         res.render('shop/products', {
             title: 'Premium Ürünler',

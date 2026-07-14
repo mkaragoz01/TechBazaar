@@ -22,7 +22,7 @@ mixin createProduct(product)
           a(href="/products/"+product._id).product-name.text-decoration-none.text-dark #{product.name}
         .d-flex.justify-content-between.align-items-center.mt-2
           .price-tag
-            span.fs-5.fw-bold.text-primary #{product.price}
+            span.fs-5.fw-bold.text-primary #{formatPriceNumber(product.price)}
             span.ms-1.small.text-muted TL
 
     style.

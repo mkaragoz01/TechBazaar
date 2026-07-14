@@ -70,12 +70,14 @@ app.use((error, req, res, next) => {
 
 app.set('view engine', 'pug');
 app.set('views', './views');
+app.locals.formatPrice = require('./utility/formatPrice').formatPrice;
+app.locals.formatPriceNumber = require('./utility/formatPrice').formatPriceNumber;
 
 mongoose.connect(connectionString)
     .then(()=> {
         console.log('Connected to MongoDB')
-        app.listen(3000, () => {
-            console.log('Server is running on port 3000')
+        app.listen(5000, () => {
+            console.log('Server is running on port 5000')
         })
     })
     .catch(err => {

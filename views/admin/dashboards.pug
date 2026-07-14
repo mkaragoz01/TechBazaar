@@ -46,7 +46,7 @@ block content
                         each order in orders
                             each item in order.items
                                 - totalRevenue += (item.product.price * item.quantity);
-                        h4.fw-bold.text-warning #{totalRevenue}
+                        h4.fw-bold.text-warning #{formatPriceNumber(totalRevenue)}
                         span.small.text-muted TL
                         p.text-muted.mb-0 Toplam Gelir
             
@@ -57,7 +57,7 @@ block content
                             .circle.bg-light.rounded-circle.d-inline-flex.align-items-center.justify-content-center(style="width:60px;height:60px")
                                 i.fas.fa-chart-bar.fa-2x.text-info
                         - var avgOrderValue = totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0;
-                        h4.fw-bold.text-info #{avgOrderValue}
+                        h4.fw-bold.text-info #{formatPriceNumber(avgOrderValue)}
                         span.small.text-muted TL
                         p.text-muted.mb-0 Ortalama Sipariş
 
@@ -120,11 +120,11 @@ block content
                                                         | #{productStat.totalQuantity}
                                                 td.py-3.text-end
                                                     .price-tag
-                                                        span.fw-bold #{productStat.product.price}
+                                                        span.fw-bold #{formatPriceNumber(productStat.product.price)}
                                                         span.small.text-muted.ms-1 TL
                                                 td.py-3.text-end
                                                     .total-price
-                                                        span.fw-bold.text-primary #{productStat.totalRevenue}
+                                                        span.fw-bold.text-primary #{formatPriceNumber(productStat.totalRevenue)}
                                                         span.small.text-muted.ms-1 TL
 
             // Recent Orders Summary
@@ -186,7 +186,7 @@ block content
                                                     each item in order.items
                                                         - orderTotal += (item.product.price * item.quantity)
                                                     .total-price
-                                                        span.fw-bold.text-success #{orderTotal}
+                                                        span.fw-bold.text-success #{formatPriceNumber(orderTotal)}
                                                         span.small.text-muted.ms-1 TL
 
                                                 td.py-3.text-center
@@ -496,7 +496,7 @@ block content
             const revenueAnalysisCtx = document.getElementById('revenueAnalysisChart');
             if (revenueAnalysisCtx && sortedProducts.length > 0) {
                 const revenueLabels = sortedProducts.map(p => p.product.name.length > 15 ? p.product.name.substring(0, 15) + '...' : p.product.name);
-                const revenueValues = sortedProducts.map(p => p.totalRevenue);
+                const revenueValues = sortedProducts.map(p => p.totalRevenue / 100);
                 
                 new Chart(revenueAnalysisCtx, {
                     type: 'bar',
@@ -609,7 +609,7 @@ block content
                 });
                 
                 const ordersData = last4Weeks.map(week => weeklyData[week].orders);
-                const revenueData = last4Weeks.map(week => weeklyData[week].revenue);
+                const revenueData = last4Weeks.map(week => weeklyData[week].revenue / 100);
                 
                 new Chart(weeklyOrdersCtx, {
                     type: 'line',

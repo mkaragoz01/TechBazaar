@@ -3,6 +3,7 @@ const Product = require("../models/product")
 const Orders = require("../models/order");
 const fs = require("fs")
 const sanitizeDescription = require("../utility/sanitizeDescription")
+const { parsePriceToKurus } = require("../utility/formatPrice")
 
 exports.getProducts = (req,res,next) => {
     Product
@@ -50,8 +51,9 @@ exports.postAddProducts = (req,res,next)=>{
     const image = req.file;
     const description = req.body.description;
     const categories = req.body.categoryids;
+    const priceInKurus = parsePriceToKurus(price);
 
-    if(!image){
+    if(!image || Number.isNaN(priceInKurus)){
 
         Category.find()
         .then(categories => {
@@ -59,7 +61,7 @@ exports.postAddProducts = (req,res,next)=>{
                 {
                     title: "New Product",
                     path: "/admin/add-product",
-                    errorMessage: "Lütfen bir resim yükleyin",
+                    errorMessage: !image ? "Lütfen bir resim yükleyin" : "Lütfen geçerli bir fiyat girin",
                     inputs: {
                         name: name,
                         price: price,
@@ -75,7 +77,7 @@ exports.postAddProducts = (req,res,next)=>{
     const product = new Product(
         {
             name: name,
-            price: price,
+            price: priceInKurus,
             imgUrl: image.filename,
             description: sanitizeDescription(description),
             categories: categories,
@@ -165,14 +167,18 @@ exports.postEditProducts = (req,res,next)=>{
     const image = req.file;
     const description = req.body.description;
     const ids = req.body.categoryids;
+    const priceInKurus = parsePriceToKurus(price);
 
     Product.findOne({_id:id, userId: req.user._id})
         .then(product => {
             if(!product) {
                 return res.redirect('/')
             }
+            if(Number.isNaN(priceInKurus)){
+                throw new Error("Lütfen geçerli bir fiyat girin")
+            }
             product.name = name;
-            product.price = price;
+            product.price = priceInKurus;
             product.description = sanitizeDescription(description);
             product.categories = ids;
 
