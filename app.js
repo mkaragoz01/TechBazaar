@@ -8,6 +8,7 @@ const cookieParser = require('cookie-parser')
 const session = require('express-session')
 const mongoDbStore = require('connect-mongodb-session')(session)
 const csurf = require('csurf')
+const helmet = require('helmet')
 
 const errorController = require('./controllers/error')
 const adminRoutes = require("./routes/admin")
@@ -22,6 +23,9 @@ var store = new mongoDbStore({
     collection: 'MySessions'
 })
 
+// CSP disabled: views load Bootstrap/jQuery/Chart.js/CKEditor from third-party CDNs
+// with no nonce/hash setup yet; helmet's default CSP would block all of them.
+app.use(helmet({ contentSecurityPolicy: false }))
 app.use(bodyParser.urlencoded({extended: false}))
 app.use(cookieParser())
 app.use(session({
