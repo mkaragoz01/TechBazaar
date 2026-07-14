@@ -10,6 +10,8 @@ const userSchema = mongoose.Schema({
     email: {
         type: String,
         unique: true,
+        lowercase: true,
+        trim: true,
         validate: [isEmail,"Lütfen geçerli bir email adresi giriniz!"]
     },
     password: {
