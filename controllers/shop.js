@@ -5,16 +5,14 @@ const sorted_all = require("../public/js/sorted")
 
 exports.getIndex = (req,res,next) => {
     const sortOption = req.query.sort || 'price_desc';
-    
-    Promise.all([Product.find({ isActive: true }).lean(), Category.find()])
+
+    Promise.all([Product.find({ isActive: true }).lean(), Category.find().lean()])
     .then(([products, categories]) => {
         // Ürünleri sırala
         const sortedProducts = sorted_all.sortProducts(products, sortOption);
 
-        res.render('shop/index', {
-            title: 'Shopping',
+        res.json({
             products: sortedProducts,
-            path: "/",
             categories: categories,
             selectedSort: sortOption
         });

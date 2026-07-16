@@ -6,7 +6,7 @@ const isAuthenticated = require("../middleware/authentication")
 const locals = require("../middleware/locals")
 
 
-router.get('/',locals,shopController.getIndex);
+router.get('/api/home',locals,shopController.getIndex);
 
 router.get('/products',locals,shopController.getProducts);
 router.get('/products/:productid',locals,shopController.getProduct);

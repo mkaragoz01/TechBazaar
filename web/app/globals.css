@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #e9eae7;
+  --surface: #f5f5f2;
+  --surface-2: #ffffff;
+  --ink: #221f1d;
+  --ink-muted: #6b6660;
+  --accent: #e8541e;
+  --accent-ink: #ffffff;
+  --info: #3b6ea5;
+  --success: #4c8b5f;
+  --border: #d3d2cc;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #171614;
+    --surface: #221f1d;
+    --surface-2: #29261f;
+    --ink: #edebe6;
+    --ink-muted: #a6a099;
+    --accent: #ff6b35;
+    --accent-ink: #171614;
+    --info: #6fa8dc;
+    --success: #6fbf86;
+    --border: #3a3733;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-info: var(--info);
+  --color-success: var(--success);
+  --color-border: var(--border);
+
+  --font-display: var(--font-big-shoulders);
+  --font-body: var(--font-work-sans);
+  --font-data: var(--font-ibm-plex-mono);
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+
+/* Signature "price-tag notch" — a small die-cut punch mark in the top-left
+   corner, standing in for the rounded-corner-plus-accent-bar card cliché. */
+.notch {
+  clip-path: polygon(0 14px, 14px 0, 100% 0, 100% 100%, 0 100%);
+  position: relative;
+}
+.notch::before {
+  content: "";
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
