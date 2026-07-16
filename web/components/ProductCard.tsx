@@ -1,6 +1,7 @@
 import Image from "next/image";
-import type { Product } from "@/lib/api";
-import { productImageUrl } from "@/lib/api";
+import Link from "next/link";
+import type { Product } from "@/lib/types";
+import { productImageUrl } from "@/lib/server-api";
 import { formatPriceNumber } from "@/lib/formatPrice";
 
 export default function ProductCard({
@@ -11,7 +12,7 @@ export default function ProductCard({
   categoryName?: string;
 }) {
   return (
-    <a
+    <Link
       href={`/products/${product._id}`}
       className="notch group flex flex-col gap-2 border border-border bg-surface-2 p-4 transition-transform hover:-translate-y-1 hover:border-accent motion-reduce:transition-none motion-reduce:hover:translate-y-0"
     >
@@ -47,6 +48,6 @@ export default function ProductCard({
         {formatPriceNumber(product.price)}{" "}
         <span className="text-xs font-normal text-ink-muted">TL</span>
       </span>
-    </a>
+    </Link>
   );
 }

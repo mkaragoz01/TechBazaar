@@ -9,6 +9,7 @@ const session = require('express-session')
 const mongoDbStore = require('connect-mongodb-session')(session)
 const csurf = require('csurf')
 const helmet = require('helmet')
+const requireApiClient = require('./middleware/requireApiClient')
 
 const errorController = require('./controllers/error')
 const adminRoutes = require("./routes/admin")
@@ -27,6 +28,7 @@ var store = new mongoDbStore({
 // with no nonce/hash setup yet; helmet's default CSP would block all of them.
 app.use(helmet({ contentSecurityPolicy: false }))
 app.use(bodyParser.urlencoded({extended: false}))
+app.use(express.json())
 app.use(cookieParser())
 app.use(session({
     secret: process.env.SESSION_SECRET || 'mysecret',
@@ -56,7 +58,17 @@ app.use((req, res, next) => {
         });
 });
 
-app.use(csurf())
+// /api/* is the fetch-based JSON surface consumed by web/ (Next.js) — it
+// uses requireApiClient (a custom-header check) instead of csurf's
+// form-embedded token, since it never renders an HTML form to embed one in.
+// The remaining Pug-rendered routes keep csurf until they're migrated away.
+app.use('/api', requireApiClient)
+app.use((req, res, next) => {
+    if (req.path.startsWith('/api/')) {
+        return next();
+    }
+    return csurf()(req, res, next);
+})
 app.use('/admin',adminRoutes);
 app.use(userRoutes);
 app.use(accountRoutes);
@@ -64,6 +76,9 @@ app.use(errorController.get404Page);
 
 app.use((error, req, res, next) => {
     console.error(error);
+    if (req.path.startsWith('/api/')) {
+        return res.status(500).json({ error: 'Beklenmedik bir sunucu hatası oluştu.' });
+    }
     res.status(500).render('error/500', { title: 'Error' });
 });
 

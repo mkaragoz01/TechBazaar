@@ -2,28 +2,23 @@ const express = require('express')
 const router = express.Router()
 
 const shopController = require("../controllers/shop")
-const isAuthenticated = require("../middleware/authentication")
-const locals = require("../middleware/locals")
+const apiAuthentication = require("../middleware/apiAuthentication")
 
+router.get('/api/categories', shopController.getCategoriesJson);
 
-router.get('/api/home',locals,shopController.getIndex);
+router.get('/api/home', shopController.getIndex);
+router.get('/api/products', shopController.getProducts);
+router.get('/api/products/:productid', shopController.getProduct);
 
-router.get('/products',locals,shopController.getProducts);
-router.get('/products/:productid',locals,shopController.getProduct);
+router.get('/api/cart', apiAuthentication, shopController.getCart);
+router.post('/api/cart', apiAuthentication, shopController.postCart);
+router.post('/api/cart/delete-item', apiAuthentication, shopController.postCartItemDelete);
 
-router.get('/categories/:categoryid',locals,shopController.getProductsByCategoryId);
+router.get('/api/orders', apiAuthentication, shopController.getOrders);
+router.post('/api/orders', apiAuthentication, shopController.postOrder);
 
-
-router.get('/cart',locals, isAuthenticated,shopController.getCart);
-router.post('/cart',locals, isAuthenticated,shopController.postCart);
-router.post('/delete-cartitem',locals, isAuthenticated,shopController.postCartItemDelete);
-
-
-router.get('/orders',locals, isAuthenticated,shopController.getOrders);
-router.post('/create-order',locals, isAuthenticated,shopController.postOrder);
-
-router.get('/filter/newest', locals, shopController.getNewestProducts);
-router.get('/filter/favorites', locals, shopController.getFavoriteProducts);
-router.get('/filter/premium', locals, shopController.getPremiumProducts);
+router.get('/api/filter/newest', shopController.getNewestProducts);
+router.get('/api/filter/favorites', shopController.getFavoriteProducts);
+router.get('/api/filter/premium', shopController.getPremiumProducts);
 
 module.exports = router

@@ -5,6 +5,7 @@ const nodemailer = require('nodemailer');
 const crypto = require('crypto')
 require("dotenv").config();
 
+const WEB_ORIGIN = process.env.WEB_ORIGIN || 'http://localhost:3000';
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -14,14 +15,22 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-exports.getLogin = (req, res) => {
-    var errorMessage = req.session.errorMessage;
-    delete req.session.errorMessage
+function validationMessage(err) {
+    return Object.values(err.errors).map(e => e.message).join(' ');
+}
 
-    res.render('account/login', {
-        path: '/login',
-        title: 'Login',
-        errorMessage: errorMessage,
+exports.getMe = (req, res) => {
+    if (!req.session.isAuthenticated || !req.user) {
+        return res.status(401).json({ error: 'Giriş yapılmamış.' });
+    }
+
+    res.json({
+        user: {
+            _id: req.user._id,
+            name: req.user.name,
+            email: req.user.email,
+            isAdmin: req.user.isAdmin,
+        }
     });
 }
 
@@ -29,90 +38,54 @@ exports.postLogin = (req, res, next) => {
     const email = req.body.email;
     const password = req.body.password;
 
-    const loginModel = new Login({
-        email: email,
-        password: password
-    });
+    const loginModel = new Login({ email, password });
 
     loginModel.validate()
-        .then(() => {
-            return User.findOne({ email: email });
-        })
+        .then(() => User.findOne({ email }))
         .then(user => {
             if (!user) {
-                req.session.errorMessage = 'Bu mail adresi ile kayıtlı bir kullanıcı bulunamadı.';
-                return req.session.save(err => {
-                    if (err) console.log(err);
-                    return res.redirect('/login');
-                });
+                return res.status(401).json({ error: 'Bu mail adresi ile kayıtlı bir kullanıcı bulunamadı.' });
             }
 
             return bcrypt.compare(password, user.password)
                 .then(isSuccess => {
-                    if (isSuccess) {
-                        req.session.user = user;
-                        req.session.isAuthenticated = true;
-                        req.session.isAdmin = user.isAdmin;
-                        return req.session.save(err => {
-                            if (err) console.log(err);
-                            const url = req.session.redirectTo || '/';
-                            delete req.session.redirectTo;
-                            return res.redirect(url);
-                        });
+                    if (!isSuccess) {
+                        return res.status(401).json({ error: 'Yanlış şifre!' });
                     }
 
-                    req.session.errorMessage = 'Yanlış şifre!';
+                    req.session.user = user;
+                    req.session.isAuthenticated = true;
+                    req.session.isAdmin = user.isAdmin;
                     return req.session.save(err => {
-                        if (err) console.log(err);
-                        return res.redirect('/login');
+                        if (err) return next(err);
+                        res.json({
+                            user: {
+                                _id: user._id,
+                                name: user.name,
+                                email: user.email,
+                                isAdmin: user.isAdmin,
+                            }
+                        });
                     });
                 });
         })
         .catch(err => {
             if (err.name === "ValidationError") {
-                let message = '';
-                for (const key in err.errors) {
-                    message += err.errors[key].message + '<br>';
-                }
-
-                return res.render('account/login', {
-                    path: '/login',
-                    title: 'Login',
-                    errorMessage: message,
-                });
-            } else {
-                next(err);
+                return res.status(400).json({ error: validationMessage(err) });
             }
+            next(err);
         });
 };
-
-
-
-exports.getRegister = (req, res) => {
-    var errorMessage = req.session.errorMessage;
-    delete req.session.errorMessage
-
-    res.render('account/register', {
-        path: '/register',
-        title: 'Register',
-        isAuthenticated: req.session.isAuthenticated,
-        errorMessage: errorMessage,
-    });
-}
 
 exports.postRegister = (req, res, next) => {
     const name = req.body.name;
     const email = req.body.email;
     const password = req.body.password;
 
-    User.findOne({email : email})
+    User.findOne({ email })
         .then(user => {
-            if(user){
-                req.session.errorMessage = 'Bu mail adresi üzerine kayıtlı kullanıcı bulunmaktadır.';
-                return req.session.save(function (err) {
-                    if (err) console.log(err);
-                    return res.redirect('/register');
-                });
+            if (user) {
+                return res.status(409).json({ error: 'Bu mail adresi üzerine kayıtlı kullanıcı bulunmaktadır.' });
             }
 
             return bcrypt.hash(password, 10)
@@ -135,69 +108,37 @@ exports.postRegister = (req, res, next) => {
                     };
 
                     transporter.sendMail(mailOptions)
-                        .then(() => {
-                            console.log('Mail gönderildi.');
-                        })
-                        .catch(err => {
-                            console.error('Mail gönderme hatası:', err);
-                        });
+                        .then(() => console.log('Mail gönderildi.'))
+                        .catch(err => console.error('Mail gönderme hatası:', err));
 
-                    res.redirect('/login');
+                    res.status(201).json({ ok: true });
                 });
         })
         .catch(err => {
             if (err.name === "ValidationError") {
-                let message = '';
-                for (const key in err.errors) {
-                    message += err.errors[key].message + '<br>';
-                }
-
-                return res.render('account/register', {
-                    path: '/register',
-                    title: 'Register',
-                    errorMessage: message,
-                });
-            } else {
-                next(err);
+                return res.status(400).json({ error: validationMessage(err) });
             }
+            next(err);
         });
-}
-
-exports.getReset = (req, res) => {
-    var errorMessage = req.session.errorMessage;
-    delete req.session.errorMessage
-
-    res.render('account/reset', {
-        path: '/reset-password',
-        title: 'Reset Password',
-        errorMessage: errorMessage,
-    });
 }
 
 exports.postReset = (req, res, next) => {
     const email = req.body.email;
 
-    crypto.randomBytes(32,(err,buffer)=>{
-        if(err){
-
-            return res.redirect('/reset-password')
-        }
+    crypto.randomBytes(32, (err, buffer) => {
+        if (err) return next(err);
         const token = buffer.toString('hex')
 
-        User.findOne({email:email})
-            .then(user=>{
-                if(!user){
-                    req.session.errorMessage = 'Bu mail adresi ile kayıtlı bir kullanıcı bulunamadı.';
-                    return req.session.save(function (err) {
-                        if (err) console.log(err);
-                        return res.redirect('/reset-password');
-                    });
+        User.findOne({ email })
+            .then(user => {
+                if (!user) {
+                    return res.status(404).json({ error: 'Bu mail adresi ile kayıtlı bir kullanıcı bulunamadı.' });
                 }
                 user.resetToken = token;
                 user.resetTokenExpiration = Date.now() + 3600000;
 
-                return user.save().then(result=> {
-                    res.redirect('/')
+                return user.save().then(() => {
+                    res.json({ ok: true });
 
                     const mailOptions = {
                         from: '"TechStore" <karagozmuhammet45@gmail.com>',
@@ -205,37 +146,29 @@ exports.postReset = (req, res, next) => {
                         subject: 'Parola Sıfırlama',
                         html: `<p>Parolanızı güncellemek için aşağıdaki linke tıklayınız.</p>
                                <p>
-                                <a href="http://localhost:3000/reset-password/${token}">Parola Sıfırlama Linki</a>
+                                <a href="${WEB_ORIGIN}/reset-password/${token}">Parola Sıfırlama Linki</a>
                                </p>`,
                         text: 'Parolanızı sıfırlamak için maildeki linke tıklayınız.'
                     };
 
                     transporter.sendMail(mailOptions)
-                        .then(() => {
-                            console.log('Mail gönderildi.');
-                        })
-                        .catch(err => {
-                            console.error('Mail gönderme hatası:', err);
-                        });
+                        .then(() => console.log('Mail gönderildi.'))
+                        .catch(err => console.error('Mail gönderme hatası:', err));
                 });
             })
             .catch(err => next(err));
     })
 }
 
-exports.getLogout = (req, res, next) => {
+exports.postLogout = (req, res, next) => {
     req.session.destroy(err => {
-        if (err) {
-            return next(err);
-        }
-        res.redirect('/');
+        if (err) return next(err);
+        res.json({ ok: true });
     });
 }
 
-exports.getNewPassword = (req, res, next) => {
+exports.getNewPasswordToken = (req, res, next) => {
     const token = req.params.token;
-    const errorMessage = req.session.errorMessage;
-    delete req.session.errorMessage;
 
     User.findOne({
         resetToken: token,
@@ -243,20 +176,10 @@ exports.getNewPassword = (req, res, next) => {
     })
     .then(user => {
         if (!user) {
-            req.session.errorMessage = 'Parola sıfırlama linki geçersiz veya süresi dolmuş.';
-            return req.session.save(err => {
-                if (err) console.log(err);
-                return res.redirect('/reset-password');
-            });
+            return res.status(400).json({ error: 'Parola sıfırlama linki geçersiz veya süresi dolmuş.' });
         }
 
-        res.render('account/new-password', {
-            path: '/new-password',
-            title: 'New Password',
-            errorMessage: errorMessage,
-            userId: user._id.toString(),
-            passwordToken: token
-        });
+        res.json({ userId: user._id.toString(), passwordToken: token });
     })
     .catch(err => next(err));
 };
@@ -265,33 +188,26 @@ exports.postNewPassword = (req, res, next) => {
     const userId = req.body.userId;
     const newPassword = req.body.password;
     const token = req.body.passwordToken;
-    let _user;
 
     User.findOne({
-        resetToken:token,resetTokenExpiration:{
-            $gt:Date.now()
-        },
+        resetToken: token,
+        resetTokenExpiration: { $gt: Date.now() },
         _id: userId
     })
         .then(user => {
             if (!user) {
-                req.session.errorMessage = 'Parola sıfırlama linki geçersiz veya süresi dolmuş.';
-                return req.session.save(err => {
-                    if (err) console.log(err);
-                    return res.redirect('/reset-password');
-                });
+                return res.status(400).json({ error: 'Parola sıfırlama linki geçersiz veya süresi dolmuş.' });
             }
 
-            _user = user;
             return bcrypt.hash(newPassword, 10)
                 .then(hashedPassword => {
-                    _user.password = hashedPassword;
-                    _user.resetToken = undefined;
-                    _user.resetTokenExpiration = undefined;
-                    return _user.save();
+                    user.password = hashedPassword;
+                    user.resetToken = undefined;
+                    user.resetTokenExpiration = undefined;
+                    return user.save();
                 })
-                .then(()=> {
-                    res.redirect('/login')
+                .then(() => {
+                    res.json({ ok: true });
                 });
         })
         .catch(err => next(err));

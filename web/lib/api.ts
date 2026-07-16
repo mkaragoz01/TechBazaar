@@ -1,22 +1,7 @@
-import { EXPRESS_ORIGIN } from "./config";
+import { serverFetch } from "./server-api";
+import type { Category, Product, CartItem, Order } from "./types";
 
-export type Category = {
-  _id: string;
-  name: string;
-  description?: string;
-};
-
-export type Product = {
-  _id: string;
-  name: string;
-  price: number; // kuruş
-  description?: string;
-  imgUrl?: string;
-  stock?: number;
-  isActive?: boolean;
-  categories: string[];
-  date?: string;
-};
+export type { Category, Product, CartItem, Order };
 
 export type HomeData = {
   products: Product[];
@@ -25,16 +10,55 @@ export type HomeData = {
 };
 
 export async function getHomeData(sort?: string): Promise<HomeData> {
-  const url = new URL("/api/home", EXPRESS_ORIGIN);
-  if (sort) url.searchParams.set("sort", sort);
-
-  const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) {
-    throw new Error(`/api/home failed: ${res.status}`);
-  }
-  return res.json();
+  const params = sort ? `?sort=${encodeURIComponent(sort)}` : "";
+  return serverFetch<HomeData>(`/api/home${params}`);
 }
 
-export function productImageUrl(imgUrl: string | undefined): string {
-  return `${EXPRESS_ORIGIN}/img/${imgUrl ?? ""}`;
+export type ProductsData = {
+  products: Product[];
+  categories: Category[];
+  selectedSort: string;
+  selectedCategory?: string;
+};
+
+export async function getProducts(params: {
+  sort?: string;
+  category?: string;
+}): Promise<ProductsData> {
+  const search = new URLSearchParams();
+  if (params.sort) search.set("sort", params.sort);
+  if (params.category) search.set("category", params.category);
+  const qs = search.toString();
+  return serverFetch<ProductsData>(`/api/products${qs ? `?${qs}` : ""}`);
+}
+
+export async function getProduct(productId: string): Promise<{
+  product: Product;
+  categoryName?: string;
+}> {
+  return serverFetch(`/api/products/${productId}`);
+}
+
+export async function getCart(): Promise<{ items: CartItem[] }> {
+  return serverFetch(`/api/cart`);
+}
+
+export async function getOrders(): Promise<{ orders: Order[] }> {
+  return serverFetch(`/api/orders`);
+}
+
+export type FilterKind = "newest" | "favorites" | "premium";
+
+export async function getFilteredProducts(kind: FilterKind): Promise<{
+  products: Product[];
+  categories: Category[];
+}> {
+  return serverFetch(`/api/filter/${kind}`);
+}
+
+export async function getResetToken(token: string): Promise<{
+  userId: string;
+  passwordToken: string;
+}> {
+  return serverFetch(`/api/auth/reset-password/${token}`);
 }

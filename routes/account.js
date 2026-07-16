@@ -2,20 +2,14 @@ const express = require('express');
 const router = express.Router();
 
 const accountController = require('../controllers/account');
-const locals = require('../middleware/locals');
 const authLimiter = require('../middleware/authLimiter');
 
-router.get('/login', locals, accountController.getLogin);
-router.post('/login', locals, authLimiter, accountController.postLogin);
+router.get('/api/auth/me', accountController.getMe);
+router.post('/api/auth/login', authLimiter, accountController.postLogin);
+router.post('/api/auth/register', authLimiter, accountController.postRegister);
+router.post('/api/auth/reset-password', authLimiter, accountController.postReset);
+router.get('/api/auth/reset-password/:token', accountController.getNewPasswordToken);
+router.post('/api/auth/new-password', authLimiter, accountController.postNewPassword);
+router.post('/api/auth/logout', accountController.postLogout);
 
-router.get('/register', locals, accountController.getRegister);
-router.post('/register', locals, authLimiter, accountController.postRegister);
-
-router.get('/reset-password', locals, accountController.getReset);
-router.post('/reset-password', locals, authLimiter, accountController.postReset);
-
-router.get('/reset-password/:token', locals, accountController.getNewPassword);
-router.post('/new-password', locals, authLimiter, accountController.postNewPassword);
-
-router.get('/logout', locals, accountController.getLogout);
 module.exports = router;
