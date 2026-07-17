@@ -1,308 +1,214 @@
 const Category = require("../models/category");
 const Product = require("../models/product")
-const Orders = require("../models/order");
+const Order = require("../models/order");
 const fs = require("fs")
 const sanitizeDescription = require("../utility/sanitizeDescription")
 const { parsePriceToKurus } = require("../utility/formatPrice")
 
-exports.getProducts = (req,res,next) => {
-    Product
-    .find({userId: req.user._id})
-    .populate('userId','name -_id')
-    .select('name price imgUrl userId isActive')
-    .then((products) => {
-        res.render('admin/products',
-            {
-                title: 'Admin Products',
-                products: products,
-                path: "/admin/products",
-                action: req.query.action,
-                
-            }
-        )
-    }).catch((err) => {
-        next(err)
-    })
+function validationMessage(err) {
+    return Object.values(err.errors).map(e => e.message).join(' ');
 }
 
-exports.getAddProducts = (req,res,next)=>{
-
-    Category.find()
-        .then(categories => {
-            res.render("admin/add-product",
-                {
-                    title: "New Product",
-                    path: "/admin/add-product",
-                    inputs: {
-                        name: '',
-                        price: '',
-                        description: ''
-                    }
-                    ,categories: categories,
-                }
-            )
-        }).catch(err => next(err))
+function asArray(value) {
+    if (value === undefined) return [];
+    return Array.isArray(value) ? value : [value];
 }
 
-exports.postAddProducts = (req,res,next)=>{ 
+exports.getProducts = async (req, res, next) => {
+    try {
+        const products = await Product.find({ userId: req.user._id }).lean();
+        res.json({ products });
+    } catch (err) {
+        next(err);
+    }
+}
 
+exports.getProduct = async (req, res, next) => {
+    try {
+        const product = await Product.findOne({ _id: req.params.productid, userId: req.user._id }).lean();
+        if (!product) {
+            return res.status(404).json({ error: 'Ürün bulunamadı.' });
+        }
+        res.json({ product });
+    } catch (err) {
+        next(err);
+    }
+}
+
+exports.postAddProduct = async (req, res, next) => {
     const name = req.body.name;
     const price = req.body.price;
     const image = req.file;
     const description = req.body.description;
-    const categories = req.body.categoryids;
+    const categoryIds = asArray(req.body.categoryids);
     const priceInKurus = parsePriceToKurus(price);
 
-    if(!image || Number.isNaN(priceInKurus)){
-
-        Category.find()
-        .then(categories => {
-            res.render("admin/add-product",
-                {
-                    title: "New Product",
-                    path: "/admin/add-product",
-                    errorMessage: !image ? "Lütfen bir resim yükleyin" : "Lütfen geçerli bir fiyat girin",
-                    inputs: {
-                        name: name,
-                        price: price,
-                        description: description,
-                        imgUrl: undefined
-                    },categories: categories
-                }
-            )
-        }).catch(err => next(err))
-        return
+    if (!image) {
+        return res.status(400).json({ error: 'Lütfen bir resim yükleyin.' });
+    }
+    if (Number.isNaN(priceInKurus)) {
+        return res.status(400).json({ error: 'Lütfen geçerli bir fiyat girin.' });
     }
 
-    const product = new Product(
-        {
-            name: name,
+    try {
+        const product = new Product({
+            name,
             price: priceInKurus,
             imgUrl: image.filename,
             description: sanitizeDescription(description),
-            categories: categories,
+            categories: categoryIds,
             userId: req.user._id,
             isActive: true
+        });
+        await product.save();
+        res.status(201).json({ ok: true, product });
+    } catch (err) {
+        if (err.name === "ValidationError") {
+            return res.status(400).json({ error: validationMessage(err) });
         }
-    )
-  
-    product.save()
-        .then(() => {
-            res.redirect('/admin/products')
-        })
-        .catch(err => {
-            
-            if(err.name === "ValidationError"){
-                let message = '';
-                for(const key in err.errors){
-                    message += err.errors[key].message + '<br>'
-                }
-                Category.find()
-                .then(categories => {
-                    res.render("admin/add-product",
-                        {
-                            title: "New Product",
-                            path: "/admin/add-product",
-                            errorMessage: message,
-                            inputs: {
-                                name: name,
-                                price: price,
-                                description: description
-                            },categories: categories
-                        }
-                    )
-                }).catch(err => next(err))
-                
-            }else{
-                next(err)
-            }
-
-            
-        })
+        next(err);
+    }
 }
 
-
-exports.getEditProducts = (req,res,next)=>{
-
-    Product.findOne({_id:req.params.productid,userId: req.user._id})
-        .then(product => {
-            if(!product) {
-                return res.redirect('/')
-            }
-            return product;
-        })
-        .then(product => {
-
-            Category.find()
-                .then(categories=> {
-                    console.log(categories)
-                    categories = categories.map(category => {
-                        if(product.categories){
-                            product.categories.find(item => {
-                                if(item.toString() === category._id.toString()){
-                                    category.selected = true
-                                }
-                            })
-                        }
-                        
-                        return category;
-                    })
-                    res.render('admin/edit-product',{
-                        title: 'Edit Product',
-                        path: '/admin/products',
-                        product: product,
-                        categories: categories,
-                        
-                    })
-                })
-        })
-        .catch(err => {next(err)})
-}
-
-exports.postEditProducts = (req,res,next)=>{
-
-    const id = req.body.id;
+exports.putEditProduct = async (req, res, next) => {
+    const id = req.params.productid;
     const name = req.body.name;
     const price = req.body.price;
     const image = req.file;
     const description = req.body.description;
-    const ids = req.body.categoryids;
+    const categoryIds = asArray(req.body.categoryids);
     const priceInKurus = parsePriceToKurus(price);
 
-    Product.findOne({_id:id, userId: req.user._id})
-        .then(product => {
-            if(!product) {
-                return res.redirect('/')
-            }
-            if(Number.isNaN(priceInKurus)){
-                throw new Error("Lütfen geçerli bir fiyat girin")
-            }
-            product.name = name;
-            product.price = priceInKurus;
-            product.description = sanitizeDescription(description);
-            product.categories = ids;
-
-            if(image){
-                fs.unlink(`public/img/${product.imgUrl}`, (err) => {
-                    if(err){
-                        console.log(err)
-                    }
-                })
-                product.imgUrl = image.filename
-            }
-            return product.save()
-        }).then(result => {
-            res.redirect("/admin/products?action=edit");
-        }).catch(err => {next(err)})
-}
-    
-
-exports.postDeleteProduct = (req,res,next) => {
-
-    const id = req.body.productid
-
-    Product.updateOne({_id: id, userId: req.user._id}, {isActive: false})
-        .then((result) => {
-            if(result.matchedCount === 0){
-                return next(new Error("Ürün bulunamadı"))
-            }
-            res.redirect("/admin/products?action=delete");
-        })
-        .catch((err) => {
-            next(err);
-        })
-}
-
-exports.getAddCategory = (req,res,next) => {
-    res.render("admin/add-category",{
-        title: "New Category",
-        path: "/admin/add-category",
-        
-
-    })
-}
-
-exports.postAddCategory = (req,res,next) => {
-    const name = req.body.name;
-    const description = req.body.description;
-
-    const category = new Category({
-        name: name,
-        description: sanitizeDescription(description)
-    })
-
-    category.save()
-        .then(result => {
-            res.redirect("/admin/add-category?action:create");
-        })
-        .catch(err => next(err))
-}
-
-exports.getCategories = (req,res,next) => {
-    Category.find()
-        .then(categories => {
-            res.render("admin/categories",{
-                title: "Categories",
-                path: "/admin/categories",
-                categories: categories,
-                action: req.query.action,
-            })
-        }).catch(err => next(err))
-}
-
-exports.getEditCategory = (req,res,next)=>{
-
-    Category.findById(req.params.categoryid)
-        .then(category => {
-            res.render('admin/edit-category',{
-                title: 'Edit Categories',
-                path: '/admin/categories',
-                category: category,
-            })
-        })
-}
-
-exports.postEditCategory = (req,res,next)=>{
-
-    const id = req.body.id;
-    const name = req.body.name;
-    const description = req.body.description;
-
-    Category.updateOne({_id: id},{
-        $set: {
-            name: name,
-            description: sanitizeDescription(description)
+    try {
+        const product = await Product.findOne({ _id: id, userId: req.user._id });
+        if (!product) {
+            return res.status(404).json({ error: 'Ürün bulunamadı.' });
         }
-    })
-    .then(() => {
-        res.redirect("/admin/categories?action=edit");
-    })
-    .catch(err => {
+        if (Number.isNaN(priceInKurus)) {
+            return res.status(400).json({ error: 'Lütfen geçerli bir fiyat girin.' });
+        }
+
+        product.name = name;
+        product.price = priceInKurus;
+        product.description = sanitizeDescription(description);
+        product.categories = categoryIds;
+
+        if (image) {
+            const oldImgUrl = product.imgUrl;
+            product.imgUrl = image.filename;
+            fs.unlink(`public/img/${oldImgUrl}`, (err) => {
+                if (err) console.log(err);
+            });
+        }
+
+        await product.save();
+        res.json({ ok: true, product });
+    } catch (err) {
+        if (err.name === "ValidationError") {
+            return res.status(400).json({ error: validationMessage(err) });
+        }
         next(err);
-    })
+    }
 }
 
-exports.postDeleteCategory = (req,res,next)=> {
-    const id = req.body.categoryid;
-    Category.deleteOne({ _id: id})
-    .then((result) => {
-        res.redirect("/admin/categories?action=delete");
-    })
-    .catch(err => {
+exports.deleteProduct = async (req, res, next) => {
+    try {
+        const result = await Product.updateOne(
+            { _id: req.params.productid, userId: req.user._id },
+            { isActive: false }
+        );
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ error: 'Ürün bulunamadı.' });
+        }
+        res.json({ ok: true });
+    } catch (err) {
         next(err);
-    })
+    }
 }
 
-exports.getDashboards = async (req, res, next) => {
-  try {
-    const orders = await Orders.find()
-    .populate('user.userId');
-    console.log('Tüm Siparişler: ', orders);
-    res.render('admin/dashboards', {
-      pageTitle: 'Sipariş Panosu',
-      orders : orders,
-    });
-  } catch (err) {
-    console.error(err);
-    next(err);
-}}
+exports.getCategories = async (req, res, next) => {
+    try {
+        const categories = await Category.find().lean();
+        res.json({ categories });
+    } catch (err) {
+        next(err);
+    }
+}
+
+exports.getCategory = async (req, res, next) => {
+    try {
+        const category = await Category.findById(req.params.categoryid).lean();
+        if (!category) {
+            return res.status(404).json({ error: 'Kategori bulunamadı.' });
+        }
+        res.json({ category });
+    } catch (err) {
+        next(err);
+    }
+}
+
+exports.postAddCategory = async (req, res, next) => {
+    const name = req.body.name;
+    const description = req.body.description;
+
+    try {
+        const category = new Category({ name, description: sanitizeDescription(description) });
+        await category.save();
+        res.status(201).json({ ok: true, category });
+    } catch (err) {
+        if (err.name === "ValidationError") {
+            return res.status(400).json({ error: validationMessage(err) });
+        }
+        if (err.code === 11000) {
+            return res.status(409).json({ error: 'Bu isimde bir kategori zaten var.' });
+        }
+        next(err);
+    }
+}
+
+exports.putEditCategory = async (req, res, next) => {
+    const id = req.params.categoryid;
+    const name = req.body.name;
+    const description = req.body.description;
+
+    try {
+        const result = await Category.updateOne(
+            { _id: id },
+            { $set: { name, description: sanitizeDescription(description) } },
+            { runValidators: true }
+        );
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ error: 'Kategori bulunamadı.' });
+        }
+        res.json({ ok: true });
+    } catch (err) {
+        if (err.name === "ValidationError") {
+            return res.status(400).json({ error: validationMessage(err) });
+        }
+        if (err.code === 11000) {
+            return res.status(409).json({ error: 'Bu isimde bir kategori zaten var.' });
+        }
+        next(err);
+    }
+}
+
+exports.deleteCategory = async (req, res, next) => {
+    try {
+        const result = await Category.deleteOne({ _id: req.params.categoryid });
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ error: 'Kategori bulunamadı.' });
+        }
+        res.json({ ok: true });
+    } catch (err) {
+        next(err);
+    }
+}
+
+exports.getDashboard = async (req, res, next) => {
+    try {
+        const orders = await Order.find().sort({ createdAt: -1 }).lean();
+        res.json({ orders });
+    } catch (err) {
+        next(err);
+    }
+}

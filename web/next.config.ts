@@ -26,13 +26,18 @@ const nextConfig: NextConfig = {
   },
   async rewrites() {
     return {
-      // Anything not yet migrated to a real Next.js page (old Pug routes,
-      // uploaded product images, /admin, /login, ...) falls back to Express
-      // so the site stays a single coherent origin during the migration.
+      // Every page now lives in Next.js — Express is left as a pure JSON
+      // API (/api/*) plus the static host for uploaded product images
+      // (/img/*). Both are proxied so the browser only ever talks to this
+      // origin and session cookies stay same-site.
       fallback: [
         {
-          source: "/:path*",
-          destination: `${EXPRESS_ORIGIN}/:path*`,
+          source: "/api/:path*",
+          destination: `${EXPRESS_ORIGIN}/api/:path*`,
+        },
+        {
+          source: "/img/:path*",
+          destination: `${EXPRESS_ORIGIN}/img/:path*`,
         },
       ],
     };

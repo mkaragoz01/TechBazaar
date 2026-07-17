@@ -62,3 +62,23 @@ export async function getResetToken(token: string): Promise<{
 }> {
   return serverFetch(`/api/auth/reset-password/${token}`);
 }
+
+export async function getAdminProducts(): Promise<{ products: Product[] }> {
+  return serverFetch(`/api/admin/products`);
+}
+
+export async function getAdminProduct(productId: string): Promise<{ product: Product }> {
+  return serverFetch(`/api/admin/products/${productId}`);
+}
+
+export async function getAdminCategories(): Promise<{ categories: Category[] }> {
+  return serverFetch(`/api/admin/categories`);
+}
+
+export async function getAdminCategory(categoryId: string): Promise<{ category: Category }> {
+  return serverFetch(`/api/admin/categories/${categoryId}`);
+}
+
+export async function getAdminDashboard(): Promise<{ orders: Order[] }> {
+  return serverFetch(`/api/admin/dashboard`);
+}

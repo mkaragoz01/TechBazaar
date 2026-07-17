@@ -7,7 +7,6 @@ const mongoose = require('mongoose')
 const cookieParser = require('cookie-parser')
 const session = require('express-session')
 const mongoDbStore = require('connect-mongodb-session')(session)
-const csurf = require('csurf')
 const helmet = require('helmet')
 const requireApiClient = require('./middleware/requireApiClient')
 
@@ -24,9 +23,11 @@ var store = new mongoDbStore({
     collection: 'MySessions'
 })
 
-// CSP disabled: views load Bootstrap/jQuery/Chart.js/CKEditor from third-party CDNs
-// with no nonce/hash setup yet; helmet's default CSP would block all of them.
-app.use(helmet({ contentSecurityPolicy: false }))
+// Express is now a pure JSON API (/api/*) plus a static host for uploaded
+// product images (/img/*) — the storefront/admin UI all lives in web/
+// (Next.js) as a separate app, so there's no more HTML/inline-script here
+// for helmet's default CSP to conflict with.
+app.use(helmet())
 app.use(bodyParser.urlencoded({extended: false}))
 app.use(express.json())
 app.use(cookieParser())
@@ -43,7 +44,7 @@ app.use((req, res, next) => {
     if (!req.session.user || !req.session.user._id) {
         return next();
     }
-    
+
     User.findById(req.session.user._id)
         .then(user => {
             if (!user) {
@@ -58,35 +59,16 @@ app.use((req, res, next) => {
         });
 });
 
-// /api/* is the fetch-based JSON surface consumed by web/ (Next.js) — it
-// uses requireApiClient (a custom-header check) instead of csurf's
-// form-embedded token, since it never renders an HTML form to embed one in.
-// The remaining Pug-rendered routes keep csurf until they're migrated away.
 app.use('/api', requireApiClient)
-app.use((req, res, next) => {
-    if (req.path.startsWith('/api/')) {
-        return next();
-    }
-    return csurf()(req, res, next);
-})
-app.use('/admin',adminRoutes);
+app.use(adminRoutes);
 app.use(userRoutes);
 app.use(accountRoutes);
 app.use(errorController.get404Page);
 
 app.use((error, req, res, next) => {
     console.error(error);
-    if (req.path.startsWith('/api/')) {
-        return res.status(500).json({ error: 'Beklenmedik bir sunucu hatası oluştu.' });
-    }
-    res.status(500).render('error/500', { title: 'Error' });
+    res.status(500).json({ error: 'Beklenmedik bir sunucu hatası oluştu.' });
 });
-
-
-app.set('view engine', 'pug');
-app.set('views', './views');
-app.locals.formatPrice = require('./utility/formatPrice').formatPrice;
-app.locals.formatPriceNumber = require('./utility/formatPrice').formatPriceNumber;
 
 mongoose.connect(connectionString)
     .then(()=> {
