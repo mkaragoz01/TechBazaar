@@ -14,7 +14,7 @@ function StatTile({ label, value }: { label: string; value: string }) {
   return (
     <div className="border border-border bg-surface-2 p-4">
       <p className="font-data text-xs uppercase tracking-widest text-ink-muted">{label}</p>
-      <p className="mt-1 font-display text-2xl font-black tabular-nums text-ink">{value}</p>
+      <p className="mt-1 font-display text-2xl font-bold tabular-nums text-ink">{value}</p>
     </div>
   );
 }
@@ -83,7 +83,7 @@ export default async function AdminDashboardPage() {
 
   return (
     <div>
-      <h1 className="mb-6 font-display text-2xl font-black text-ink">Panel</h1>
+      <h1 className="mb-6 font-display text-2xl font-bold text-ink">Panel</h1>
 
       <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <StatTile label="Toplam Sipariş" value={String(totalOrders)} />

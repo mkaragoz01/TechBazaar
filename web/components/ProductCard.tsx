@@ -14,40 +14,44 @@ export default function ProductCard({
   return (
     <Link
       href={`/products/${product._id}`}
-      className="notch group flex flex-col gap-2 border border-border bg-surface-2 p-4 transition-transform hover:-translate-y-1 hover:border-accent motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+      className="group flex flex-col gap-3 rounded-3xl bg-surface p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg motion-reduce:transition-none motion-reduce:hover:translate-y-0"
     >
-      {categoryName ? (
-        <span className="font-data text-[0.65rem] uppercase tracking-widest text-info">
-          {categoryName}
-        </span>
-      ) : null}
-
-      <div className="relative h-28 border border-border bg-bg">
+      <div className="product-spotlight relative h-40 rounded-2xl">
         {product.imgUrl ? (
           <Image
             src={productImageUrl(product.imgUrl)}
             alt={product.name}
             fill
-            sizes="(max-width: 640px) 45vw, 220px"
-            className="object-contain p-3"
+            sizes="(max-width: 640px) 90vw, 320px"
+            className="object-contain p-4"
           />
         ) : null}
       </div>
 
-      <h3 className="font-display text-base font-black leading-tight text-ink">
+      {categoryName ? (
+        <span className="text-xs font-bold uppercase tracking-wide text-info">
+          {categoryName}
+        </span>
+      ) : null}
+
+      <h3 className="font-display text-base font-bold leading-tight text-ink">
         {product.name}
       </h3>
 
       {product.description ? (
-        <p className="line-clamp-2 font-body text-xs text-ink-muted">
+        <p className="line-clamp-2 font-body text-sm text-ink-muted">
           {product.description}
         </p>
       ) : null}
 
-      <span className="font-data text-lg font-semibold tabular-nums text-ink">
-        {formatPriceNumber(product.price)}{" "}
-        <span className="text-xs font-normal text-ink-muted">TL</span>
-      </span>
+      <div className="mt-1 flex items-baseline justify-between">
+        <span className="font-display text-lg font-bold tabular-nums text-ink">
+          {formatPriceNumber(product.price)} TL
+        </span>
+        <span className="rounded-full border border-border px-4 py-2 text-xs font-semibold text-ink transition-colors group-hover:bg-ink group-hover:text-bg group-hover:border-ink">
+          İncele
+        </span>
+      </div>
     </Link>
   );
 }

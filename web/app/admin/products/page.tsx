@@ -9,7 +9,7 @@ export default async function AdminProductsPage() {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="font-display text-2xl font-black text-ink">Ürünler</h1>
+        <h1 className="font-display text-2xl font-bold text-ink">Ürünler</h1>
         <Link
           href="/admin/products/new"
           className="bg-accent px-4 py-2 font-data text-xs uppercase tracking-widest text-accent-ink"

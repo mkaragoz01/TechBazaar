@@ -8,7 +8,7 @@ export default async function AdminCategoriesPage() {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="font-display text-2xl font-black text-ink">Kategoriler</h1>
+        <h1 className="font-display text-2xl font-bold text-ink">Kategoriler</h1>
         <Link
           href="/admin/categories/new"
           className="bg-accent px-4 py-2 font-data text-xs uppercase tracking-widest text-accent-ink"

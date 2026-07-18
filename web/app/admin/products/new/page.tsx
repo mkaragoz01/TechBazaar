@@ -6,7 +6,7 @@ export default async function NewProductPage() {
 
   return (
     <div>
-      <h1 className="mb-6 font-display text-2xl font-black text-ink">Yeni Ürün</h1>
+      <h1 className="mb-6 font-display text-2xl font-bold text-ink">Yeni Ürün</h1>
       <ProductForm categories={categories} />
     </div>
   );

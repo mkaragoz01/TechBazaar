@@ -11,7 +11,7 @@ export default async function EditCategoryPage({
 
   return (
     <div>
-      <h1 className="mb-6 font-display text-2xl font-black text-ink">Kategoriyi Düzenle</h1>
+      <h1 className="mb-6 font-display text-2xl font-bold text-ink">Kategoriyi Düzenle</h1>
       <CategoryForm category={category} />
     </div>
   );

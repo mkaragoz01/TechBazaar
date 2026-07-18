@@ -28,7 +28,7 @@ export default function CreateOrderButton() {
         type="button"
         onClick={handleClick}
         disabled={loading}
-        className="bg-accent px-6 py-3 font-data text-xs uppercase tracking-widest text-accent-ink disabled:opacity-60"
+        className="rounded-full bg-accent px-7 py-3.5 font-semibold text-accent-ink transition-opacity hover:opacity-90 disabled:opacity-60"
       >
         Sipariş Ver
       </button>

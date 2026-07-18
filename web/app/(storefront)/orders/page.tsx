@@ -25,7 +25,7 @@ export default async function OrdersPage() {
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-10">
-      <h1 className="mb-6 font-display text-3xl font-black text-ink">Siparişlerim</h1>
+      <h1 className="mb-6 font-display text-3xl font-bold text-ink">Siparişlerim</h1>
 
       {orders.length === 0 ? (
         <p className="font-body text-ink-muted">Henüz siparişiniz bulunmuyor.</p>
@@ -38,7 +38,7 @@ export default async function OrdersPage() {
             );
 
             return (
-              <div key={order._id} className="border border-border bg-surface-2 p-5">
+              <div key={order._id} className="rounded-2xl bg-surface p-6 shadow-sm">
                 <div className="mb-4 flex items-center justify-between border-b border-border pb-3">
                   <span className="font-data text-xs text-ink-muted">
                     Sipariş #{order._id.slice(-8)}
@@ -54,7 +54,7 @@ export default async function OrdersPage() {
                 <div className="flex flex-col gap-3">
                   {order.items.map((item, index) => (
                     <div key={index} className="flex items-center gap-4">
-                      <div className="relative h-12 w-12 shrink-0 border border-border bg-bg">
+                      <div className="product-spotlight relative h-12 w-12 shrink-0 rounded-lg">
                         {item.product.imgUrl ? (
                           <Image
                             src={productImageUrl(item.product.imgUrl)}

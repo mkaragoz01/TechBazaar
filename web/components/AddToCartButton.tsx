@@ -32,7 +32,7 @@ export default function AddToCartButton({ productId }: { productId: string }) {
         type="button"
         onClick={handleClick}
         disabled={status === "loading"}
-        className="bg-accent px-6 py-3 font-data text-xs uppercase tracking-widest text-accent-ink disabled:opacity-60"
+        className="rounded-full bg-accent px-7 py-3.5 font-semibold text-accent-ink transition-opacity hover:opacity-90 disabled:opacity-60"
       >
         {status === "done" ? "Sepete Eklendi" : "Sepete Ekle"}
       </button>

@@ -5,13 +5,13 @@ export default function FormField({
   ...props
 }: { label: string } & InputHTMLAttributes<HTMLInputElement>) {
   return (
-    <label className="flex flex-col gap-1">
-      <span className="font-data text-xs uppercase tracking-widest text-ink-muted">
+    <label className="flex flex-col gap-1.5">
+      <span className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
         {label}
       </span>
       <input
         {...props}
-        className="border border-border bg-surface-2 px-3 py-2 font-body text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-info"
+        className="rounded-xl border border-border bg-surface px-4 py-3 font-body text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-info"
       />
     </label>
   );

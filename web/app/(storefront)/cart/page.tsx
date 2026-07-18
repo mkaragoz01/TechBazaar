@@ -21,7 +21,7 @@ export default async function CartPage() {
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-10">
-      <h1 className="mb-6 font-display text-3xl font-black text-ink">Sepetim</h1>
+      <h1 className="mb-6 font-display text-3xl font-bold text-ink">Sepetim</h1>
 
       {items.length === 0 ? (
         <p className="font-body text-ink-muted">Sepetiniz boş.</p>
@@ -30,9 +30,9 @@ export default async function CartPage() {
           {items.map((item) => (
             <div
               key={item._id}
-              className="flex items-center gap-4 border border-border bg-surface-2 p-4"
+              className="flex items-center gap-4 rounded-2xl bg-surface p-4 shadow-sm"
             >
-              <div className="relative h-16 w-16 shrink-0 border border-border bg-bg">
+              <div className="product-spotlight relative h-16 w-16 shrink-0 rounded-xl">
                 {item.imgUrl ? (
                   <Image
                     src={productImageUrl(item.imgUrl)}
@@ -44,7 +44,7 @@ export default async function CartPage() {
                 ) : null}
               </div>
               <div className="flex-1">
-                <p className="font-display font-black text-ink">{item.name}</p>
+                <p className="font-display font-bold text-ink">{item.name}</p>
                 <p className="font-data text-xs text-ink-muted">
                   {item.quantity} adet × {formatPriceNumber(item.price)} TL
                 </p>

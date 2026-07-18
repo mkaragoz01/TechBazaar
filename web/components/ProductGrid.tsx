@@ -24,18 +24,16 @@ export default function ProductGrid({
 
   return (
     <>
-      <div className="mb-6 flex items-center justify-between border-b border-border pb-4">
-        <span className="font-data text-xs uppercase tracking-widest text-ink-muted">
-          {products.length} ürün
-        </span>
+      <div className="mb-8 flex items-center justify-between">
+        <span className="text-sm text-ink-muted">{products.length} ürün</span>
         {selectedSort ? (
-          <div className="flex gap-4 font-data text-xs uppercase tracking-widest">
+          <div className="flex gap-2 text-sm font-semibold">
             <Link
               href={sortHref("price_asc")}
               className={
                 selectedSort === "price_asc"
-                  ? "text-accent"
-                  : "text-ink-muted transition-colors hover:text-ink"
+                  ? "rounded-full bg-ink px-4 py-2 text-bg"
+                  : "rounded-full border border-border px-4 py-2 text-ink-muted transition-colors hover:text-ink"
               }
             >
               Fiyat: Artan
@@ -44,8 +42,8 @@ export default function ProductGrid({
               href={sortHref("price_desc")}
               className={
                 selectedSort === "price_desc"
-                  ? "text-accent"
-                  : "text-ink-muted transition-colors hover:text-ink"
+                  ? "rounded-full bg-ink px-4 py-2 text-bg"
+                  : "rounded-full border border-border px-4 py-2 text-ink-muted transition-colors hover:text-ink"
               }
             >
               Fiyat: Azalan
@@ -55,7 +53,7 @@ export default function ProductGrid({
       </div>
 
       {products.length > 0 ? (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {products.map((product) => (
             <ProductCard
               key={product._id}

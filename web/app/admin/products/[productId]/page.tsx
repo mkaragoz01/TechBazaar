@@ -14,7 +14,7 @@ export default async function EditProductPage({
 
   return (
     <div>
-      <h1 className="mb-6 font-display text-2xl font-black text-ink">Ürünü Düzenle</h1>
+      <h1 className="mb-6 font-display text-2xl font-bold text-ink">Ürünü Düzenle</h1>
       <ProductForm categories={categories} product={product} />
     </div>
   );

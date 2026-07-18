@@ -26,7 +26,7 @@ export default async function ProductDetailPage({
 
   return (
     <main className="mx-auto grid max-w-4xl gap-8 px-6 py-10 sm:grid-cols-2">
-      <div className="relative h-80 border border-border bg-bg sm:h-full">
+      <div className="product-spotlight relative h-80 rounded-[28px] sm:h-full">
         {product.imgUrl ? (
           <Image
             src={productImageUrl(product.imgUrl)}
@@ -44,7 +44,7 @@ export default async function ProductDetailPage({
             {categoryName}
           </span>
         ) : null}
-        <h1 className="mt-1 font-display text-3xl font-black text-ink">
+        <h1 className="mt-1 font-display text-3xl font-bold text-ink">
           {product.name}
         </h1>
         {product.description ? (

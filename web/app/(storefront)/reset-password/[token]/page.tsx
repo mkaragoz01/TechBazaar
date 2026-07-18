@@ -16,10 +16,12 @@ export default async function NewPasswordPage({
     if (err instanceof ApiError) {
       return (
         <main className="mx-auto max-w-md px-6 py-16">
-          <h1 className="mb-4 font-display text-3xl font-black text-ink">
-            Şifre Sıfırlama
-          </h1>
-          <p className="font-body text-accent">{err.message}</p>
+          <div className="rounded-3xl bg-surface p-8 shadow-sm sm:p-10">
+            <h1 className="mb-4 font-display text-3xl font-bold text-ink">
+              Şifre Sıfırlama
+            </h1>
+            <p className="font-body text-accent">{err.message}</p>
+          </div>
         </main>
       );
     }
@@ -28,10 +30,12 @@ export default async function NewPasswordPage({
 
   return (
     <main className="mx-auto max-w-md px-6 py-16">
-      <h1 className="mb-6 font-display text-3xl font-black text-ink">
-        Yeni Şifre Belirle
-      </h1>
-      <NewPasswordForm userId={data.userId} passwordToken={data.passwordToken} />
+      <div className="rounded-3xl bg-surface p-8 shadow-sm sm:p-10">
+        <h1 className="mb-6 font-display text-3xl font-bold text-ink">
+          Yeni Şifre Belirle
+        </h1>
+        <NewPasswordForm userId={data.userId} passwordToken={data.passwordToken} />
+      </div>
     </main>
   );
 }
