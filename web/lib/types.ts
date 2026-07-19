@@ -46,6 +46,11 @@ export type OrderStatus = "pending" | "processing" | "shipped" | "delivered";
 export type Order = {
   _id: string;
   status: OrderStatus;
+  user?: {
+    userId: string;
+    name: string;
+    email: string;
+  };
   items: {
     product: OrderItemProduct;
     quantity: number;

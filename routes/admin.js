@@ -25,4 +25,7 @@ router.delete('/api/admin/brands/:brandid', apiIsAdmin, adminController.deleteBr
 
 router.get('/api/admin/dashboard', apiIsAdmin, adminController.getDashboard)
 
+router.get('/api/admin/orders', apiIsAdmin, adminController.getOrders)
+router.put('/api/admin/orders/:orderid/status', apiIsAdmin, adminController.putOrderStatus)
+
 module.exports = router;

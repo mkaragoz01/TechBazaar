@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getAdminDashboard } from "@/lib/api";
 import { formatPriceNumber } from "@/lib/formatPrice";
 import DashboardCharts from "@/components/admin/DashboardCharts";
@@ -133,7 +134,17 @@ export default async function AdminDashboardPage() {
             </table>
           </div>
 
-          <div className="mt-8 overflow-x-auto border border-border">
+          <div className="mt-8 flex items-center justify-between">
+            <h2 className="font-display text-lg font-bold text-ink">Son Siparişler</h2>
+            <Link
+              href="/admin/orders"
+              className="font-data text-xs uppercase tracking-widest text-info hover:text-accent"
+            >
+              Tüm siparişleri gör
+            </Link>
+          </div>
+
+          <div className="mt-3 overflow-x-auto border border-border">
             <table className="w-full border-collapse font-body text-sm">
               <thead>
                 <tr className="border-b border-border bg-surface text-left">

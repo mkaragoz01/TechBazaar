@@ -102,3 +102,8 @@ export async function getAdminBrand(brandId: string): Promise<{ brand: Brand }> 
 export async function getAdminDashboard(): Promise<{ orders: Order[] }> {
   return serverFetch(`/api/admin/dashboard`);
 }
+
+export async function getAdminOrders(status?: string): Promise<{ orders: Order[] }> {
+  const query = status ? `?status=${encodeURIComponent(status)}` : "";
+  return serverFetch(`/api/admin/orders${query}`);
+}

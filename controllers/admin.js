@@ -320,3 +320,35 @@ exports.getDashboard = async (req, res, next) => {
         next(err);
     }
 }
+
+const ORDER_STATUSES = ['pending', 'processing', 'shipped', 'delivered'];
+
+exports.getOrders = async (req, res, next) => {
+    try {
+        const status = req.query.status;
+        const filter = {};
+        if (status && ORDER_STATUSES.includes(status)) {
+            filter.status = status;
+        }
+        const orders = await Order.find(filter).sort({ createdAt: -1 }).lean();
+        res.json({ orders });
+    } catch (err) {
+        next(err);
+    }
+}
+
+exports.putOrderStatus = async (req, res, next) => {
+    try {
+        const status = req.body.status;
+        if (!ORDER_STATUSES.includes(status)) {
+            return res.status(400).json({ error: 'Geçersiz sipariş durumu.' });
+        }
+        const result = await Order.updateOne({ _id: req.params.orderid }, { $set: { status } });
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ error: 'Sipariş bulunamadı.' });
+        }
+        res.json({ ok: true });
+    } catch (err) {
+        next(err);
+    }
+}
