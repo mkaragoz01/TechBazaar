@@ -51,6 +51,18 @@ export default async function OrdersPage() {
                   </span>
                 </div>
 
+                {order.shippingAddress || order.paymentDisplay ? (
+                  <div className="mb-4 flex flex-col gap-1 border-b border-border pb-3 font-body text-xs text-ink-muted">
+                    {order.shippingAddress ? (
+                      <p>
+                        {order.shippingAddress.fullName} · {order.shippingAddress.addressLine},{" "}
+                        {order.shippingAddress.district}/{order.shippingAddress.city}
+                      </p>
+                    ) : null}
+                    {order.paymentDisplay ? <p>{order.paymentDisplay}</p> : null}
+                  </div>
+                ) : null}
+
                 <div className="flex flex-col gap-3">
                   {order.items.map((item, index) => (
                     <div key={index} className="flex items-center gap-4">

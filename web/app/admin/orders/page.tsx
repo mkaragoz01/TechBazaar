@@ -63,6 +63,9 @@ export default async function AdminOrdersPage({
                 Müşteri
               </th>
               <th className="px-4 py-3 font-data text-xs uppercase tracking-widest text-ink-muted">
+                Teslimat Adresi
+              </th>
+              <th className="px-4 py-3 font-data text-xs uppercase tracking-widest text-ink-muted">
                 Tarih
               </th>
               <th className="px-4 py-3 font-data text-xs uppercase tracking-widest text-ink-muted">
@@ -87,6 +90,19 @@ export default async function AdminOrdersPage({
                   <td className="px-4 py-3 text-ink">
                     {order.user?.name ?? "-"}
                     <div className="text-xs text-ink-muted">{order.user?.email}</div>
+                  </td>
+                  <td className="max-w-xs px-4 py-3 text-xs text-ink-muted">
+                    {order.shippingAddress ? (
+                      <>
+                        {order.shippingAddress.fullName} · {order.shippingAddress.phone}
+                        <div>
+                          {order.shippingAddress.addressLine}, {order.shippingAddress.district}/
+                          {order.shippingAddress.city}
+                        </div>
+                      </>
+                    ) : (
+                      "-"
+                    )}
                   </td>
                   <td className="px-4 py-3 text-ink-muted">
                     {order.createdAt

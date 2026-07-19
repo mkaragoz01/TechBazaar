@@ -2,6 +2,8 @@ const Product = require("../models/product")
 const Category = require("../models/category")
 const Brand = require("../models/brand")
 const Order = require("../models/order")
+const Address = require("../models/address")
+const PaymentMethod = require("../models/paymentMethod")
 const sorted_all = require("../public/js/sorted")
 
 exports.getCategoriesJson = (req,res,next) => {
@@ -160,6 +162,18 @@ exports.postOrder = async (req, res, next) => {
             return res.status(400).json({ error: 'Sepetinizde ürün bulunmamaktadır.' });
         }
 
+        const { addressId, paymentMethodId } = req.body;
+        const [address, paymentMethod] = await Promise.all([
+            Address.findOne({ _id: addressId, userId: req.user._id }).lean(),
+            PaymentMethod.findOne({ _id: paymentMethodId, userId: req.user._id }).lean()
+        ]);
+        if (!address) {
+            return res.status(400).json({ error: 'Geçerli bir teslimat adresi seçmelisiniz.' });
+        }
+        if (!paymentMethod) {
+            return res.status(400).json({ error: 'Geçerli bir ödeme yöntemi seçmelisiniz.' });
+        }
+
         // Decrement stock one product at a time with an atomic conditional
         // update (stock check + decrement in one op, so concurrent orders
         // can't both succeed against the same last unit). If a later item
@@ -186,6 +200,16 @@ exports.postOrder = async (req, res, next) => {
                 name: req.user.name,
                 email: req.user.email
             },
+            shippingAddress: {
+                title: address.title,
+                fullName: address.fullName,
+                phone: address.phone,
+                city: address.city,
+                district: address.district,
+                addressLine: address.addressLine,
+                postalCode: address.postalCode
+            },
+            paymentDisplay: `${paymentMethod.brand} •••• ${paymentMethod.last4}`,
             items: cartItems.map(p => ({
                 product: {
                     _id: p._id,

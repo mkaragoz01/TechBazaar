@@ -34,6 +34,28 @@ export type CartItem = {
   quantity: number;
 };
 
+export type Address = {
+  _id: string;
+  title: string;
+  fullName: string;
+  phone: string;
+  city: string;
+  district: string;
+  addressLine: string;
+  postalCode?: string;
+  isDefault: boolean;
+};
+
+export type PaymentMethod = {
+  _id: string;
+  cardHolderName: string;
+  last4: string;
+  brand: string;
+  expiryMonth: number;
+  expiryYear: number;
+  isDefault: boolean;
+};
+
 export type OrderItemProduct = {
   _id: string;
   name: string;
@@ -51,6 +73,16 @@ export type Order = {
     name: string;
     email: string;
   };
+  shippingAddress?: {
+    title?: string;
+    fullName: string;
+    phone: string;
+    city: string;
+    district: string;
+    addressLine: string;
+    postalCode?: string;
+  };
+  paymentDisplay?: string;
   items: {
     product: OrderItemProduct;
     quantity: number;

@@ -1,7 +1,7 @@
 import { serverFetch } from "./server-api";
-import type { Category, Brand, Product, CartItem, Order } from "./types";
+import type { Category, Brand, Product, CartItem, Order, Address, PaymentMethod } from "./types";
 
-export type { Category, Brand, Product, CartItem, Order };
+export type { Category, Brand, Product, CartItem, Order, Address, PaymentMethod };
 
 export type HomeData = {
   products: Product[];
@@ -106,4 +106,12 @@ export async function getAdminDashboard(): Promise<{ orders: Order[] }> {
 export async function getAdminOrders(status?: string): Promise<{ orders: Order[] }> {
   const query = status ? `?status=${encodeURIComponent(status)}` : "";
   return serverFetch(`/api/admin/orders${query}`);
+}
+
+export async function getAddresses(): Promise<{ addresses: Address[] }> {
+  return serverFetch(`/api/addresses`);
+}
+
+export async function getPaymentMethods(): Promise<{ paymentMethods: PaymentMethod[] }> {
+  return serverFetch(`/api/payment-methods`);
 }

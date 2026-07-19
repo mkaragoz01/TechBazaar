@@ -1,10 +1,10 @@
 import Image from "next/image";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCart } from "@/lib/api";
 import { productImageUrl, ApiError } from "@/lib/server-api";
 import { formatPriceNumber } from "@/lib/formatPrice";
 import RemoveFromCartButton from "@/components/RemoveFromCartButton";
-import CreateOrderButton from "@/components/CreateOrderButton";
 
 export default async function CartPage() {
   let items;
@@ -64,7 +64,12 @@ export default async function CartPage() {
           </div>
 
           <div>
-            <CreateOrderButton />
+            <Link
+              href="/checkout"
+              className="inline-block rounded-full bg-accent px-7 py-3.5 font-semibold text-accent-ink transition-opacity hover:opacity-90"
+            >
+              Siparişi Tamamla
+            </Link>
           </div>
         </div>
       )}

@@ -14,6 +14,7 @@ const errorController = require('./controllers/error')
 const adminRoutes = require("./routes/admin")
 const userRoutes = require('./routes/shop')
 const accountRoutes = require('./routes/account')
+const checkoutRoutes = require('./routes/checkout')
 const connectionString = process.env.MONGODB_URI || 'mongodb://localhost/node-app';
 
 const User = require("./models/user")
@@ -67,6 +68,7 @@ app.use('/api', requireApiClient)
 app.use(adminRoutes);
 app.use(userRoutes);
 app.use(accountRoutes);
+app.use(checkoutRoutes);
 app.use(errorController.get404Page);
 
 app.use((error, req, res, next) => {
