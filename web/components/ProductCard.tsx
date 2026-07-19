@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { Product } from "@/lib/types";
 import { productImageUrl } from "@/lib/server-api";
 import { formatPriceNumber } from "@/lib/formatPrice";
+import { stripHtml } from "@/lib/richText";
 
 export default function ProductCard({
   product,
@@ -40,7 +41,7 @@ export default function ProductCard({
 
       {product.description ? (
         <p className="line-clamp-2 font-body text-sm text-ink-muted">
-          {product.description}
+          {stripHtml(product.description)}
         </p>
       ) : null}
 

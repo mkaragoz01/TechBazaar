@@ -17,6 +17,12 @@ router.get('/api/admin/categories/:categoryid', apiIsAdmin, adminController.getC
 router.put('/api/admin/categories/:categoryid', apiIsAdmin, adminController.putEditCategory)
 router.delete('/api/admin/categories/:categoryid', apiIsAdmin, adminController.deleteCategory)
 
+router.get('/api/admin/brands', apiIsAdmin, adminController.getBrands)
+router.post('/api/admin/brands', apiIsAdmin, adminController.postAddBrand)
+router.get('/api/admin/brands/:brandid', apiIsAdmin, adminController.getBrand)
+router.put('/api/admin/brands/:brandid', apiIsAdmin, adminController.putEditBrand)
+router.delete('/api/admin/brands/:brandid', apiIsAdmin, adminController.deleteBrand)
+
 router.get('/api/admin/dashboard', apiIsAdmin, adminController.getDashboard)
 
 module.exports = router;

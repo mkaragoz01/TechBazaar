@@ -4,6 +4,12 @@ export type Category = {
   description?: string;
 };
 
+export type Brand = {
+  _id: string;
+  name: string;
+  description?: string;
+};
+
 export type Product = {
   _id: string;
   name: string;
@@ -11,7 +17,11 @@ export type Product = {
   description?: string;
   imgUrl?: string;
   stock?: number;
+  sku?: string;
+  isNewArrival?: boolean;
+  isFeatured?: boolean;
   isActive?: boolean;
+  brand?: string;
   categories: string[];
   date?: string;
 };

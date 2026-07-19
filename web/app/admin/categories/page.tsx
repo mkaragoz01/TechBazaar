@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getAdminCategories } from "@/lib/api";
 import DeleteButton from "@/components/admin/DeleteButton";
+import { stripHtml } from "@/lib/richText";
 
 export default async function AdminCategoriesPage() {
   const { categories } = await getAdminCategories();
@@ -35,7 +36,7 @@ export default async function AdminCategoriesPage() {
               <tr key={category._id} className="border-b border-border last:border-0">
                 <td className="px-4 py-3 text-ink">{category.name}</td>
                 <td className="max-w-md truncate px-4 py-3 text-ink-muted">
-                  {category.description}
+                  {stripHtml(category.description)}
                 </td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex justify-end gap-3">

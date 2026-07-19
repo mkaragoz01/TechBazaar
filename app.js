@@ -35,7 +35,11 @@ app.use(session({
     secret: process.env.SESSION_SECRET || 'mysecret',
     resave: false,
     saveUninitialized: false,
-    cookie: {maxAge: 3600000 },
+    cookie: {
+        maxAge: 3600000,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax'
+    },
     store: store
 })),
 app.use(express.static(path.join(__dirname,"public")));

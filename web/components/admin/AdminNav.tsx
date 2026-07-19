@@ -19,6 +19,9 @@ export default function AdminNav({ userName }: { userName: string }) {
             <Link href="/admin/categories" className="transition-colors hover:text-accent">
               Kategoriler
             </Link>
+            <Link href="/admin/brands" className="transition-colors hover:text-accent">
+              Markalar
+            </Link>
           </nav>
         </div>
         <div className="flex items-center gap-4 font-body text-sm">

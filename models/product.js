@@ -24,6 +24,20 @@ const productSchema = mongoose.Schema({
         default: 0,
         min: [0, 'Stok negatif olamaz.']
     },
+    sku: {
+        type: String,
+        trim: true,
+        unique: true,
+        sparse: true
+    },
+    isNewArrival: {
+        type: Boolean,
+        default: false
+    },
+    isFeatured: {
+        type: Boolean,
+        default: false
+    },
     date: {
         type: Date,
         default: Date.now
@@ -34,6 +48,10 @@ const productSchema = mongoose.Schema({
         required: true
     },
     isActive: Boolean,
+    brand: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Brand"
+    },
     categories: [
             {
             type: mongoose.Schema.Types.ObjectId,
@@ -47,5 +65,8 @@ productSchema.index({ name: 'text', description: 'text' }, { default_language: '
 productSchema.index({ categories: 1 })
 productSchema.index({ userId: 1 })
 productSchema.index({ isActive: 1 })
+productSchema.index({ brand: 1 })
+productSchema.index({ isNewArrival: 1 })
+productSchema.index({ isFeatured: 1 })
 
 module.exports = mongoose.model('Product', productSchema)

@@ -1,11 +1,18 @@
 const Product = require("../models/product")
 const Category = require("../models/category")
+const Brand = require("../models/brand")
 const Order = require("../models/order")
 const sorted_all = require("../public/js/sorted")
 
 exports.getCategoriesJson = (req,res,next) => {
     Category.find().lean()
         .then(categories => res.json({ categories }))
+        .catch(err => next(err));
+}
+
+exports.getBrandsJson = (req,res,next) => {
+    Brand.find().lean()
+        .then(brands => res.json({ brands }))
         .catch(err => next(err));
 }
 
@@ -28,21 +35,38 @@ exports.getIndex = (req,res,next) => {
 exports.getProducts = (req,res,next) => {
     const sortOption = req.query.sort || 'price_desc';
     const categoryId = req.query.category;
+    const brandId = req.query.brand;
+    const minPrice = req.query.minPrice ? Number(req.query.minPrice) : undefined;
+    const maxPrice = req.query.maxPrice ? Number(req.query.maxPrice) : undefined;
+    const q = req.query.q;
 
     const filter = { isActive: true };
     if (categoryId) {
         filter.categories = categoryId;
     }
+    if (brandId) {
+        filter.brand = brandId;
+    }
+    if (minPrice !== undefined || maxPrice !== undefined) {
+        filter.price = {};
+        if (minPrice !== undefined && !Number.isNaN(minPrice)) filter.price.$gte = Math.round(minPrice * 100);
+        if (maxPrice !== undefined && !Number.isNaN(maxPrice)) filter.price.$lte = Math.round(maxPrice * 100);
+    }
+    if (q) {
+        filter.$text = { $search: q };
+    }
 
-    Promise.all([Product.find(filter).lean(), Category.find().lean()])
-    .then(([products, categories]) => {
+    Promise.all([Product.find(filter).lean(), Category.find().lean(), Brand.find().lean()])
+    .then(([products, categories, brands]) => {
         const sortedProducts = sorted_all.sortProducts(products, sortOption);
 
         res.json({
             products: sortedProducts,
             categories: categories,
+            brands: brands,
             selectedSort: sortOption,
-            selectedCategory: categoryId || null
+            selectedCategory: categoryId || null,
+            selectedBrand: brandId || null
         });
     })
     .catch(err => next(err));
@@ -51,23 +75,37 @@ exports.getProducts = (req,res,next) => {
 exports.getProduct = (req,res,next) => {
     Product.findOne({_id: req.params.productid, isActive: true})
         .populate('categories')
+        .populate('brand')
         .then((product) => {
             if (!product) {
                 return res.status(404).json({ error: 'Ürün bulunamadı.' });
             }
 
-            res.json({
-                product: {
-                    _id: product._id,
-                    name: product.name,
-                    price: product.price,
-                    description: product.description,
-                    imgUrl: product.imgUrl,
-                    stock: product.stock,
-                    categories: product.categories.map(c => c._id),
-                },
-                categoryName: product.categories[0]?.name
-            });
+            const categoryIds = product.categories.map(c => c._id);
+
+            return Product.find({
+                _id: { $ne: product._id },
+                isActive: true,
+                categories: { $in: categoryIds }
+            })
+                .limit(8)
+                .lean()
+                .then(related => {
+                    res.json({
+                        product: {
+                            _id: product._id,
+                            name: product.name,
+                            price: product.price,
+                            description: product.description,
+                            imgUrl: product.imgUrl,
+                            stock: product.stock,
+                            categories: categoryIds,
+                        },
+                        categoryName: product.categories[0]?.name,
+                        brandName: product.brand?.name,
+                        relatedProducts: related
+                    });
+                });
         }).catch((err) => next(err));
 }
 
@@ -78,17 +116,25 @@ exports.getCart = (req,res,next) => {
         .catch(err => next(err));
 }
 
-exports.postCart = (req,res,next) => {
-    const productId = req.body.productId;
-    Product.findById(productId)
-        .then(product => {
-            if (!product) {
-                return res.status(404).json({ error: 'Ürün bulunamadı.' });
-            }
-            return req.user.addToCart(product);
-        })
-        .then(() => res.json({ ok: true }))
-        .catch(err => next(err));
+exports.postCart = async (req, res, next) => {
+    try {
+        const productId = req.body.productId;
+        const product = await Product.findById(productId);
+        if (!product) {
+            return res.status(404).json({ error: 'Ürün bulunamadı.' });
+        }
+
+        const existing = req.user.cart.items.find(i => i.productId.toString() === productId);
+        const nextQuantity = (existing ? existing.quantity : 0) + 1;
+        if (product.stock < nextQuantity) {
+            return res.status(409).json({ error: 'Ürün stokta yok.' });
+        }
+
+        await req.user.addToCart(product);
+        res.json({ ok: true });
+    } catch (err) {
+        next(err);
+    }
 }
 
 exports.postCartItemDelete = (req,res,next) => {
@@ -107,44 +153,63 @@ exports.getOrders = (req,res,next) => {
     .catch(err => next(err));
 }
 
-exports.postOrder = (req, res, next) => {
-    req.user
-        .getCart()
-        .then(products => {
-            if (!products || products.length === 0) {
-                return res.status(400).json({ error: 'Sepetinizde ürün bulunmamaktadır.' });
+exports.postOrder = async (req, res, next) => {
+    try {
+        const cartItems = await req.user.getCart();
+        if (!cartItems || cartItems.length === 0) {
+            return res.status(400).json({ error: 'Sepetinizde ürün bulunmamaktadır.' });
+        }
+
+        // Decrement stock one product at a time with an atomic conditional
+        // update (stock check + decrement in one op, so concurrent orders
+        // can't both succeed against the same last unit). If a later item
+        // turns out to be out of stock, undo the ones already decremented
+        // so a partially-failed order never leaves stock counts wrong.
+        const decremented = [];
+        for (const item of cartItems) {
+            const result = await Product.updateOne(
+                { _id: item._id, stock: { $gte: item.quantity } },
+                { $inc: { stock: -item.quantity } }
+            );
+            if (result.matchedCount === 0) {
+                for (const done of decremented) {
+                    await Product.updateOne({ _id: done._id }, { $inc: { stock: done.quantity } });
+                }
+                return res.status(409).json({ error: `"${item.name}" için yeterli stok yok.` });
             }
+            decremented.push(item);
+        }
 
-            const order = new Order({
-                user: {
-                    userId: req.user._id,
-                    name: req.user.name,
-                    email: req.user.email
+        const order = new Order({
+            user: {
+                userId: req.user._id,
+                name: req.user.name,
+                email: req.user.email
+            },
+            items: cartItems.map(p => ({
+                product: {
+                    _id: p._id,
+                    name: p.name,
+                    price: p.price,
+                    imgUrl: p.imgUrl
                 },
-                items: products.map(p => ({
-                    product: {
-                        _id: p._id,
-                        name: p.name,
-                        price: p.price,
-                        imgUrl: p.imgUrl
-                    },
-                    quantity: p.quantity,
-                    date: new Date()
-                }))
-            });
+                quantity: p.quantity,
+                date: new Date()
+            }))
+        });
 
-            return order.save()
-                .then(() => req.user.clearCart())
-                .then(() => res.json({ ok: true }));
-        })
-        .catch(err => next(err));
+        await order.save();
+        await req.user.clearCart();
+        res.json({ ok: true });
+    } catch (err) {
+        next(err);
+    }
 };
 
 exports.getNewestProducts = (req, res, next) => {
     Promise.all([
-        Product.find({ isActive: true })
+        Product.find({ isActive: true, isNewArrival: true })
             .sort({ date: -1 })
-            .limit(12)
             .lean(),
         Category.find().lean()
     ])
@@ -156,10 +221,7 @@ exports.getNewestProducts = (req, res, next) => {
 
 exports.getFavoriteProducts = (req, res, next) => {
     Promise.all([
-        Product.aggregate([
-            { $match: { isActive: true } },
-            { $sample: { size: 12 } }
-        ]),
+        Product.find({ isActive: true, isFeatured: true }).lean(),
         Category.find().lean()
     ])
     .then(([products, categories]) => {

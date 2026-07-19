@@ -4,7 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { clientFetch, ClientApiError } from "@/lib/client-api";
 
-export default function AddToCartButton({ productId }: { productId: string }) {
+export default function AddToCartButton({
+  productId,
+  outOfStock,
+}: {
+  productId: string;
+  outOfStock?: boolean;
+}) {
   const router = useRouter();
   const [status, setStatus] = useState<"idle" | "loading" | "done">("idle");
   const [error, setError] = useState<string | null>(null);
@@ -24,6 +30,18 @@ export default function AddToCartButton({ productId }: { productId: string }) {
       setError(err instanceof Error ? err.message : "Bir hata oluştu.");
       setStatus("idle");
     }
+  }
+
+  if (outOfStock) {
+    return (
+      <button
+        type="button"
+        disabled
+        className="rounded-full bg-border px-7 py-3.5 font-semibold text-ink-muted"
+      >
+        Stokta Yok
+      </button>
+    );
   }
 
   return (

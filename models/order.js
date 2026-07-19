@@ -21,16 +21,16 @@ const orderSchema = new mongoose.Schema({
     user:{
         userId: {
         type: mongoose.Types.ObjectId,
-        require: true,
+        required: true,
         ref: 'User'
         },
         name: {
             type: String,
-            require: true
+            required: true
         },
         email: {
             type: String,
-            require: true
+            required: true
         }
     },
     status: {
@@ -42,11 +42,11 @@ const orderSchema = new mongoose.Schema({
         {
             product: {
                 type: orderItemProductSchema,
-                require: true
+                required: true
             },
             quantity: {
                 type: Number,
-                require: true
+                required: true
             },
             date: {
                 type: Date,

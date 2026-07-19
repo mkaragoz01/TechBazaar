@@ -4,19 +4,27 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { clientFetch, ClientApiError } from "@/lib/client-api";
 import FormField from "@/components/FormField";
-import type { Category, Product } from "@/lib/types";
+import RichTextEditor from "@/components/admin/RichTextEditor";
+import type { Category, Brand, Product } from "@/lib/types";
 
 export default function ProductForm({
   categories,
+  brands,
   product,
 }: {
   categories: Category[];
+  brands: Brand[];
   product?: Product;
 }) {
   const router = useRouter();
   const [name, setName] = useState(product?.name ?? "");
   const [price, setPrice] = useState(product ? (product.price / 100).toFixed(2) : "");
   const [description, setDescription] = useState(product?.description ?? "");
+  const [sku, setSku] = useState(product?.sku ?? "");
+  const [stock, setStock] = useState(product ? String(product.stock ?? 0) : "0");
+  const [brand, setBrand] = useState(product?.brand ?? "");
+  const [isNewArrival, setIsNewArrival] = useState(product?.isNewArrival ?? false);
+  const [isFeatured, setIsFeatured] = useState(product?.isFeatured ?? false);
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
     product?.categories ?? []
   );
@@ -63,32 +71,67 @@ export default function ProductForm({
         value={name}
         onChange={(e) => setName(e.target.value)}
       />
+
+      <div className="grid grid-cols-2 gap-4">
+        <FormField
+          label="Fiyat (TL)"
+          name="price"
+          type="number"
+          step="0.01"
+          min="0"
+          required
+          value={price}
+          onChange={(e) => setPrice(e.target.value)}
+        />
+        <FormField
+          label="Stok"
+          name="stock"
+          type="number"
+          step="1"
+          min="0"
+          required
+          value={stock}
+          onChange={(e) => setStock(e.target.value)}
+        />
+      </div>
+
       <FormField
-        label="Fiyat (TL)"
-        name="price"
-        type="number"
-        step="0.01"
-        min="0"
-        required
-        value={price}
-        onChange={(e) => setPrice(e.target.value)}
+        label="SKU (opsiyonel)"
+        name="sku"
+        type="text"
+        value={sku}
+        onChange={(e) => setSku(e.target.value)}
       />
 
       <label className="flex flex-col gap-1">
-        <span className="font-data text-xs uppercase tracking-widest text-ink-muted">
+        <span className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+          Marka
+        </span>
+        <select
+          name="brand"
+          value={brand}
+          onChange={(e) => setBrand(e.target.value)}
+          className="rounded-xl border border-border bg-surface px-4 py-3 font-body text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-info"
+        >
+          <option value="">Marka seçilmedi</option>
+          {brands.map((b) => (
+            <option key={b._id} value={b._id}>
+              {b.name}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <label className="flex flex-col gap-1">
+        <span className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
           Açıklama
         </span>
-        <textarea
-          name="description"
-          rows={4}
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          className="border border-border bg-surface-2 px-3 py-2 font-body text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-info"
-        />
+        <input type="hidden" name="description" value={description} />
+        <RichTextEditor value={description} onChange={setDescription} />
       </label>
 
       <fieldset className="flex flex-col gap-2">
-        <legend className="font-data text-xs uppercase tracking-widest text-ink-muted">
+        <legend className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
           Kategoriler
         </legend>
         {categories.map((category) => (
@@ -105,8 +148,34 @@ export default function ProductForm({
         ))}
       </fieldset>
 
+      <fieldset className="flex flex-col gap-2">
+        <legend className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+          Vitrin Etiketleri
+        </legend>
+        <label className="flex items-center gap-2 font-body text-sm text-ink">
+          <input
+            type="checkbox"
+            name="isNewArrival"
+            value="true"
+            checked={isNewArrival}
+            onChange={(e) => setIsNewArrival(e.target.checked)}
+          />
+          Yeni
+        </label>
+        <label className="flex items-center gap-2 font-body text-sm text-ink">
+          <input
+            type="checkbox"
+            name="isFeatured"
+            value="true"
+            checked={isFeatured}
+            onChange={(e) => setIsFeatured(e.target.checked)}
+          />
+          Öne Çıkan
+        </label>
+      </fieldset>
+
       <label className="flex flex-col gap-1">
-        <span className="font-data text-xs uppercase tracking-widest text-ink-muted">
+        <span className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
           Görsel {product ? "(değiştirmek için seçin)" : ""}
         </span>
         <input

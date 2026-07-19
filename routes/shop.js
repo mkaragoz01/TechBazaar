@@ -5,6 +5,7 @@ const shopController = require("../controllers/shop")
 const apiAuthentication = require("../middleware/apiAuthentication")
 
 router.get('/api/categories', shopController.getCategoriesJson);
+router.get('/api/brands', shopController.getBrandsJson);
 
 router.get('/api/home', shopController.getIndex);
 router.get('/api/products', shopController.getProducts);

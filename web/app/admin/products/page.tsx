@@ -29,6 +29,9 @@ export default async function AdminProductsPage() {
                 Fiyat
               </th>
               <th className="px-4 py-3 font-data text-xs uppercase tracking-widest text-ink-muted">
+                Stok
+              </th>
+              <th className="px-4 py-3 font-data text-xs uppercase tracking-widest text-ink-muted">
                 Durum
               </th>
               <th className="px-4 py-3"></th>
@@ -40,6 +43,15 @@ export default async function AdminProductsPage() {
                 <td className="px-4 py-3 text-ink">{product.name}</td>
                 <td className="px-4 py-3 font-data tabular-nums text-ink">
                   {formatPriceNumber(product.price)} TL
+                </td>
+                <td className="px-4 py-3">
+                  {(product.stock ?? 0) > 0 ? (
+                    <span className="font-data tabular-nums text-ink">{product.stock}</span>
+                  ) : (
+                    <span className="bg-accent/15 px-2 py-1 font-data text-xs text-accent">
+                      Stokta Yok
+                    </span>
+                  )}
                 </td>
                 <td className="px-4 py-3">
                   {product.isActive === false ? (

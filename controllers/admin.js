@@ -1,4 +1,5 @@
 const Category = require("../models/category");
+const Brand = require("../models/brand");
 const Product = require("../models/product")
 const Order = require("../models/order");
 const fs = require("fs")
@@ -12,6 +13,17 @@ function validationMessage(err) {
 function asArray(value) {
     if (value === undefined) return [];
     return Array.isArray(value) ? value : [value];
+}
+
+function asBoolean(value) {
+    return value === 'true' || value === true || value === 'on';
+}
+
+// sku is unique+sparse: an empty string would still collide across products,
+// so a blank submission has to become "no field" rather than "".
+function asOptionalTrimmed(value) {
+    const trimmed = typeof value === 'string' ? value.trim() : '';
+    return trimmed === '' ? undefined : trimmed;
 }
 
 exports.getProducts = async (req, res, next) => {
@@ -57,6 +69,11 @@ exports.postAddProduct = async (req, res, next) => {
             imgUrl: image.filename,
             description: sanitizeDescription(description),
             categories: categoryIds,
+            brand: asOptionalTrimmed(req.body.brand),
+            sku: asOptionalTrimmed(req.body.sku),
+            stock: req.body.stock !== undefined ? Number(req.body.stock) : 0,
+            isNewArrival: asBoolean(req.body.isNewArrival),
+            isFeatured: asBoolean(req.body.isFeatured),
             userId: req.user._id,
             isActive: true
         });
@@ -65,6 +82,9 @@ exports.postAddProduct = async (req, res, next) => {
     } catch (err) {
         if (err.name === "ValidationError") {
             return res.status(400).json({ error: validationMessage(err) });
+        }
+        if (err.code === 11000) {
+            return res.status(409).json({ error: 'Bu SKU zaten kullanılıyor.' });
         }
         next(err);
     }
@@ -92,6 +112,13 @@ exports.putEditProduct = async (req, res, next) => {
         product.price = priceInKurus;
         product.description = sanitizeDescription(description);
         product.categories = categoryIds;
+        product.brand = asOptionalTrimmed(req.body.brand);
+        product.sku = asOptionalTrimmed(req.body.sku);
+        if (req.body.stock !== undefined) {
+            product.stock = Number(req.body.stock);
+        }
+        product.isNewArrival = asBoolean(req.body.isNewArrival);
+        product.isFeatured = asBoolean(req.body.isFeatured);
 
         if (image) {
             const oldImgUrl = product.imgUrl;
@@ -106,6 +133,9 @@ exports.putEditProduct = async (req, res, next) => {
     } catch (err) {
         if (err.name === "ValidationError") {
             return res.status(400).json({ error: validationMessage(err) });
+        }
+        if (err.code === 11000) {
+            return res.status(409).json({ error: 'Bu SKU zaten kullanılıyor.' });
         }
         next(err);
     }
@@ -197,6 +227,84 @@ exports.deleteCategory = async (req, res, next) => {
         const result = await Category.deleteOne({ _id: req.params.categoryid });
         if (result.deletedCount === 0) {
             return res.status(404).json({ error: 'Kategori bulunamadı.' });
+        }
+        res.json({ ok: true });
+    } catch (err) {
+        next(err);
+    }
+}
+
+exports.getBrands = async (req, res, next) => {
+    try {
+        const brands = await Brand.find().lean();
+        res.json({ brands });
+    } catch (err) {
+        next(err);
+    }
+}
+
+exports.getBrand = async (req, res, next) => {
+    try {
+        const brand = await Brand.findById(req.params.brandid).lean();
+        if (!brand) {
+            return res.status(404).json({ error: 'Marka bulunamadı.' });
+        }
+        res.json({ brand });
+    } catch (err) {
+        next(err);
+    }
+}
+
+exports.postAddBrand = async (req, res, next) => {
+    const name = req.body.name;
+    const description = req.body.description;
+
+    try {
+        const brand = new Brand({ name, description: sanitizeDescription(description) });
+        await brand.save();
+        res.status(201).json({ ok: true, brand });
+    } catch (err) {
+        if (err.name === "ValidationError") {
+            return res.status(400).json({ error: validationMessage(err) });
+        }
+        if (err.code === 11000) {
+            return res.status(409).json({ error: 'Bu isimde bir marka zaten var.' });
+        }
+        next(err);
+    }
+}
+
+exports.putEditBrand = async (req, res, next) => {
+    const id = req.params.brandid;
+    const name = req.body.name;
+    const description = req.body.description;
+
+    try {
+        const result = await Brand.updateOne(
+            { _id: id },
+            { $set: { name, description: sanitizeDescription(description) } },
+            { runValidators: true }
+        );
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ error: 'Marka bulunamadı.' });
+        }
+        res.json({ ok: true });
+    } catch (err) {
+        if (err.name === "ValidationError") {
+            return res.status(400).json({ error: validationMessage(err) });
+        }
+        if (err.code === 11000) {
+            return res.status(409).json({ error: 'Bu isimde bir marka zaten var.' });
+        }
+        next(err);
+    }
+}
+
+exports.deleteBrand = async (req, res, next) => {
+    try {
+        const result = await Brand.deleteOne({ _id: req.params.brandid });
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ error: 'Marka bulunamadı.' });
         }
         res.json({ ok: true });
     } catch (err) {

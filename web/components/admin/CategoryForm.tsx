@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { clientFetch, ClientApiError } from "@/lib/client-api";
 import FormField from "@/components/FormField";
+import RichTextEditor from "@/components/admin/RichTextEditor";
 import type { Category } from "@/lib/types";
 
 export default function CategoryForm({ category }: { category?: Category }) {
@@ -49,15 +50,10 @@ export default function CategoryForm({ category }: { category?: Category }) {
       />
 
       <label className="flex flex-col gap-1">
-        <span className="font-data text-xs uppercase tracking-widest text-ink-muted">
+        <span className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
           Açıklama
         </span>
-        <textarea
-          rows={3}
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          className="border border-border bg-surface-2 px-3 py-2 font-body text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-info"
-        />
+        <RichTextEditor value={description} onChange={setDescription} />
       </label>
 
       {error ? <p className="font-body text-sm text-accent">{error}</p> : null}

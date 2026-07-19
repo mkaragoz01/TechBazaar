@@ -1,7 +1,7 @@
 import { serverFetch } from "./server-api";
-import type { Category, Product, CartItem, Order } from "./types";
+import type { Category, Brand, Product, CartItem, Order } from "./types";
 
-export type { Category, Product, CartItem, Order };
+export type { Category, Brand, Product, CartItem, Order };
 
 export type HomeData = {
   products: Product[];
@@ -17,17 +17,27 @@ export async function getHomeData(sort?: string): Promise<HomeData> {
 export type ProductsData = {
   products: Product[];
   categories: Category[];
+  brands: Brand[];
   selectedSort: string;
   selectedCategory?: string;
+  selectedBrand?: string;
 };
 
 export async function getProducts(params: {
   sort?: string;
   category?: string;
+  brand?: string;
+  minPrice?: string;
+  maxPrice?: string;
+  q?: string;
 }): Promise<ProductsData> {
   const search = new URLSearchParams();
   if (params.sort) search.set("sort", params.sort);
   if (params.category) search.set("category", params.category);
+  if (params.brand) search.set("brand", params.brand);
+  if (params.minPrice) search.set("minPrice", params.minPrice);
+  if (params.maxPrice) search.set("maxPrice", params.maxPrice);
+  if (params.q) search.set("q", params.q);
   const qs = search.toString();
   return serverFetch<ProductsData>(`/api/products${qs ? `?${qs}` : ""}`);
 }
@@ -35,6 +45,8 @@ export async function getProducts(params: {
 export async function getProduct(productId: string): Promise<{
   product: Product;
   categoryName?: string;
+  brandName?: string;
+  relatedProducts: Product[];
 }> {
   return serverFetch(`/api/products/${productId}`);
 }
@@ -77,6 +89,14 @@ export async function getAdminCategories(): Promise<{ categories: Category[] }> 
 
 export async function getAdminCategory(categoryId: string): Promise<{ category: Category }> {
   return serverFetch(`/api/admin/categories/${categoryId}`);
+}
+
+export async function getAdminBrands(): Promise<{ brands: Brand[] }> {
+  return serverFetch(`/api/admin/brands`);
+}
+
+export async function getAdminBrand(brandId: string): Promise<{ brand: Brand }> {
+  return serverFetch(`/api/admin/brands/${brandId}`);
 }
 
 export async function getAdminDashboard(): Promise<{ orders: Order[] }> {
