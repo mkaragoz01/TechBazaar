@@ -2,11 +2,33 @@ const express = require("express")
 const router = express.Router()
 
 const adminController = require("../controllers/admin")
+const productImportController = require("../controllers/productImport")
 const apiIsAdmin = require("../middleware/apiIsAdmin")
 const upload = require("../middleware/upload")
+const uploadExcel = require("../middleware/uploadExcel")
 
 router.get('/api/admin/products', apiIsAdmin, adminController.getProducts)
 router.post('/api/admin/products', apiIsAdmin, upload.single('imgUrl'), adminController.postAddProduct)
+
+// Must be registered before the /:productid route below, otherwise Express
+// matches "export" as a productid and this never gets reached.
+router.get('/api/admin/products/export', apiIsAdmin, productImportController.getExportProducts)
+router.get('/api/admin/products/import/template', apiIsAdmin, productImportController.getImportTemplate)
+router.post(
+    '/api/admin/products/import/validate',
+    apiIsAdmin,
+    uploadExcel.single('file'),
+    productImportController.handleUploadError,
+    productImportController.postValidateImport
+)
+router.post(
+    '/api/admin/products/import/confirm',
+    apiIsAdmin,
+    uploadExcel.single('file'),
+    productImportController.handleUploadError,
+    productImportController.postConfirmImport
+)
+
 router.get('/api/admin/products/:productid', apiIsAdmin, adminController.getProduct)
 router.put('/api/admin/products/:productid', apiIsAdmin, upload.single('imgUrl'), adminController.putEditProduct)
 router.delete('/api/admin/products/:productid', apiIsAdmin, adminController.deleteProduct)
