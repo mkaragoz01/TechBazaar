@@ -1,3 +1,4 @@
+const mongoose = require("mongoose")
 const Product = require("../models/product")
 const Category = require("../models/category")
 const Brand = require("../models/brand")
@@ -49,10 +50,11 @@ exports.getProducts = (req,res,next) => {
     if (brandId) {
         filter.brand = brandId;
     }
-    if (minPrice !== undefined || maxPrice !== undefined) {
-        filter.price = {};
-        if (minPrice !== undefined && !Number.isNaN(minPrice)) filter.price.$gte = Math.round(minPrice * 100);
-        if (maxPrice !== undefined && !Number.isNaN(maxPrice)) filter.price.$lte = Math.round(maxPrice * 100);
+    const priceFilter = {};
+    if (minPrice !== undefined && !Number.isNaN(minPrice)) priceFilter.$gte = Math.round(minPrice * 100);
+    if (maxPrice !== undefined && !Number.isNaN(maxPrice)) priceFilter.$lte = Math.round(maxPrice * 100);
+    if (Object.keys(priceFilter).length > 0) {
+        filter.price = priceFilter;
     }
     if (q) {
         filter.$text = { $search: q };
@@ -163,6 +165,9 @@ exports.postOrder = async (req, res, next) => {
         }
 
         const { addressId, paymentMethodId } = req.body;
+        if (!mongoose.isValidObjectId(addressId) || !mongoose.isValidObjectId(paymentMethodId)) {
+            return res.status(400).json({ error: 'Geçerli bir teslimat adresi ve ödeme yöntemi seçmelisiniz.' });
+        }
         const [address, paymentMethod] = await Promise.all([
             Address.findOne({ _id: addressId, userId: req.user._id }).lean(),
             PaymentMethod.findOne({ _id: paymentMethodId, userId: req.user._id }).lean()

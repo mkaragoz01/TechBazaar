@@ -80,6 +80,13 @@ exports.postAddProduct = async (req, res, next) => {
         await product.save();
         res.status(201).json({ ok: true, product });
     } catch (err) {
+        // The image was already written to disk by multer before this
+        // handler ran — if the product itself never gets saved, that file
+        // would otherwise sit in public/img/ forever with nothing pointing
+        // to it.
+        fs.unlink(`public/img/${image.filename}`, (unlinkErr) => {
+            if (unlinkErr) console.log(unlinkErr);
+        });
         if (err.name === "ValidationError") {
             return res.status(400).json({ error: validationMessage(err) });
         }
@@ -102,9 +109,11 @@ exports.putEditProduct = async (req, res, next) => {
     try {
         const product = await Product.findOne({ _id: id, userId: req.user._id });
         if (!product) {
+            if (image) fs.unlink(`public/img/${image.filename}`, (err) => { if (err) console.log(err); });
             return res.status(404).json({ error: 'Ürün bulunamadı.' });
         }
         if (Number.isNaN(priceInKurus)) {
+            if (image) fs.unlink(`public/img/${image.filename}`, (err) => { if (err) console.log(err); });
             return res.status(400).json({ error: 'Lütfen geçerli bir fiyat girin.' });
         }
 
@@ -120,17 +129,29 @@ exports.putEditProduct = async (req, res, next) => {
         product.isNewArrival = asBoolean(req.body.isNewArrival);
         product.isFeatured = asBoolean(req.body.isFeatured);
 
+        const oldImgUrl = product.imgUrl;
         if (image) {
-            const oldImgUrl = product.imgUrl;
             product.imgUrl = image.filename;
+        }
+
+        await product.save();
+
+        // Only remove the old image once the save actually succeeded — the
+        // previous version deleted it upfront, so a failed save left the
+        // product pointing at an old file that no longer existed.
+        if (image && oldImgUrl) {
             fs.unlink(`public/img/${oldImgUrl}`, (err) => {
                 if (err) console.log(err);
             });
         }
 
-        await product.save();
         res.json({ ok: true, product });
     } catch (err) {
+        if (image) {
+            fs.unlink(`public/img/${image.filename}`, (unlinkErr) => {
+                if (unlinkErr) console.log(unlinkErr);
+            });
+        }
         if (err.name === "ValidationError") {
             return res.status(400).json({ error: validationMessage(err) });
         }

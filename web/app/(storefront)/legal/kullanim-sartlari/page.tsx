@@ -20,7 +20,7 @@ export default function TermsOfUsePage() {
         </p>
         <h3>Fikri Mülkiyet</h3>
         <p>
-          Sitedeki tüm içerik (logo, metin, görsel, tasarım) TechStore'a aittir ve izinsiz
+          Sitedeki tüm içerik (logo, metin, görsel, tasarım) TechStore&apos;a aittir ve izinsiz
           kullanılamaz.
         </p>
       </div>

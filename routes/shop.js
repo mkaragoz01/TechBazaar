@@ -3,13 +3,14 @@ const router = express.Router()
 
 const shopController = require("../controllers/shop")
 const apiAuthentication = require("../middleware/apiAuthentication")
+const validateObjectId = require("../middleware/validateObjectId")
 
 router.get('/api/categories', shopController.getCategoriesJson);
 router.get('/api/brands', shopController.getBrandsJson);
 
 router.get('/api/home', shopController.getIndex);
 router.get('/api/products', shopController.getProducts);
-router.get('/api/products/:productid', shopController.getProduct);
+router.get('/api/products/:productid', validateObjectId('productid'), shopController.getProduct);
 
 router.get('/api/cart', apiAuthentication, shopController.getCart);
 router.post('/api/cart', apiAuthentication, shopController.postCart);

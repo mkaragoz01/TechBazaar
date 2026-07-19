@@ -18,6 +18,9 @@ module.exports = [
     },
     eslintConfigPrettier,
     {
-        ignores: ['node_modules/**', 'public/**'],
+        // web/ is a separate Next.js/TypeScript app with its own ESLint
+        // config (web/eslint.config.mjs) — running the root JS config
+        // against it pulls in React/TSX files it isn't set up to parse.
+        ignores: ['node_modules/**', 'public/**', 'web/**'],
     },
 ];

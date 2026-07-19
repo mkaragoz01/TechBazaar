@@ -4,7 +4,7 @@ export default function DistanceSalesAgreementPage() {
       <h1 className="font-display text-3xl font-bold text-ink">Mesafeli Satış Sözleşmesi</h1>
       <div className="rich-content mt-6 font-body text-ink-muted">
         <p>
-          Bu sözleşme, TechStore ("Satıcı") ile siparişi veren müşteri ("Alıcı") arasında,
+          Bu sözleşme, TechStore (&quot;Satıcı&quot;) ile siparişi veren müşteri (&quot;Alıcı&quot;) arasında,
           alıcının elektronik ortamda satın aldığı ürünlerin satışı ve teslimi ile ilgili
           hükümleri düzenler.
         </p>

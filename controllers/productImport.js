@@ -117,6 +117,22 @@ async function parseWorkbook(buffer) {
         throw err;
     }
 
+    // A file that isn't really an .xlsx (e.g. plain text saved with a fake
+    // .xlsx extension/mime type) doesn't make XLSX.read throw — SheetJS
+    // falls back to treating it as CSV, producing a "sheet" with none of
+    // our expected columns. Without this check that silently proceeds as
+    // "0 rows to import" instead of surfacing the real problem.
+    const headerRow = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' })[0] || [];
+    const requiredHeaders = ['SKU', 'Ürün Adı', 'Kategori'];
+    const missingHeaders = requiredHeaders.filter(h => !headerRow.includes(h));
+    if (missingHeaders.length > 0) {
+        const err = new Error(
+            `Dosya beklenen sütun başlıklarını içermiyor (eksik: ${missingHeaders.join(', ')}). Lütfen şablonu kullanın.`
+        );
+        err.status = 400;
+        throw err;
+    }
+
     const rawRows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
     const { categoriesByName, brandsByName } = await loadLookups();
 
@@ -142,13 +158,6 @@ async function parseWorkbook(buffer) {
         return { rowNumber, ...parsed, action };
     });
 }
-
-exports.handleUploadError = (err, req, res, next) => {
-    if (err) {
-        return res.status(400).json({ error: err.message || 'Dosya yüklenemedi.' });
-    }
-    next();
-};
 
 exports.postValidateImport = async (req, res, next) => {
     try {

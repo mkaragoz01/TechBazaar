@@ -39,9 +39,14 @@ export default function ProductForm({
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setLoading(true);
     setError(null);
 
+    if (selectedCategories.length === 0) {
+      setError("Lütfen en az bir kategori seçin.");
+      return;
+    }
+
+    setLoading(true);
     const formData = new FormData(e.currentTarget);
 
     try {

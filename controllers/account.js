@@ -19,6 +19,14 @@ function validationMessage(err) {
     return Object.values(err.errors).map(e => e.message).join(' ');
 }
 
+// The stored password is a bcrypt hash, so a Mongoose minlength validator on
+// the schema field would only ever measure the ~60-char hash — this has to
+// run on the raw password, before hashing, in the controller.
+function isValidPassword(password) {
+    return typeof password === 'string' && password.length >= 6;
+}
+const PASSWORD_LENGTH_ERROR = 'Parola en az 6 karakter olmalıdır.';
+
 exports.getMe = (req, res) => {
     if (!req.session.isAuthenticated || !req.user) {
         return res.status(401).json({ error: 'Giriş yapılmamış.' });
@@ -81,6 +89,10 @@ exports.postRegister = (req, res, next) => {
     const name = req.body.name;
     const email = req.body.email;
     const password = req.body.password;
+
+    if (!isValidPassword(password)) {
+        return res.status(400).json({ error: PASSWORD_LENGTH_ERROR });
+    }
 
     User.findOne({ email })
         .then(user => {
@@ -188,6 +200,10 @@ exports.postNewPassword = (req, res, next) => {
     const userId = req.body.userId;
     const newPassword = req.body.password;
     const token = req.body.passwordToken;
+
+    if (!isValidPassword(newPassword)) {
+        return res.status(400).json({ error: PASSWORD_LENGTH_ERROR });
+    }
 
     User.findOne({
         resetToken: token,

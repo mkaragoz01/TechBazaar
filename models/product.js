@@ -52,13 +52,21 @@ const productSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Brand"
     },
-    categories: [
+    categories: {
+        type: [
             {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Category",
-            required: [true, 'Ürün kategorisi girmek zorunludur!'],
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Category"
             }
-        ]
+        ],
+        // required:true on the array element only validates elements that
+        // exist — it never rejected an empty array. Validating the array
+        // itself is what actually enforces "at least one category."
+        validate: {
+            validator: (value) => Array.isArray(value) && value.length > 0,
+            message: 'Ürün kategorisi girmek zorunludur!'
+        }
+    }
 })
 
 productSchema.index({ name: 'text', description: 'text' }, { default_language: 'turkish' })

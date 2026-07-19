@@ -4,7 +4,7 @@ export default function PrivacyPolicyPage() {
       <h1 className="font-display text-3xl font-bold text-ink">KVKK ve Gizlilik Politikası</h1>
       <div className="rich-content mt-6 font-body text-ink-muted">
         <p>
-          6698 sayılı Kişisel Verilerin Korunması Kanunu ("KVKK") uyarınca, TechStore olarak
+          6698 sayılı Kişisel Verilerin Korunması Kanunu (&quot;KVKK&quot;) uyarınca, TechStore olarak
           kişisel verilerinizin güvenliğine önem veriyoruz.
         </p>
         <h3>Toplanan Veriler</h3>
@@ -22,7 +22,7 @@ export default function PrivacyPolicyPage() {
         </ul>
         <h3>Haklarınız</h3>
         <p>
-          KVKK'nın 11. maddesi kapsamında verilerinize erişme, düzeltilmesini veya silinmesini
+          KVKK&apos;nın 11. maddesi kapsamında verilerinize erişme, düzeltilmesini veya silinmesini
           talep etme hakkına sahipsiniz. Talepleriniz için İletişim sayfasındaki kanalları
           kullanabilirsiniz.
         </p>
