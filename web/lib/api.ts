@@ -9,9 +9,10 @@ import type {
   Address,
   PaymentMethod,
   Campaign,
+  DashboardData,
 } from "./types";
 
-export type { Category, Brand, Product, CartItem, CartDiscount, Order, Address, PaymentMethod, Campaign };
+export type { Category, Brand, Product, CartItem, CartDiscount, Order, Address, PaymentMethod, Campaign, DashboardData };
 
 export type HomeData = {
   products: Product[];
@@ -110,7 +111,7 @@ export async function getAdminBrand(brandId: string): Promise<{ brand: Brand }> 
   return serverFetch(`/api/admin/brands/${brandId}`);
 }
 
-export async function getAdminDashboard(): Promise<{ orders: Order[] }> {
+export async function getAdminDashboard(): Promise<DashboardData> {
   return serverFetch(`/api/admin/dashboard`);
 }
 

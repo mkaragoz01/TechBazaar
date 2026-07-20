@@ -129,3 +129,45 @@ export type CurrentUser = {
   email: string;
   isAdmin: boolean;
 };
+
+export type DashboardKpis = {
+  totalRevenue: number; // kuruş
+  totalRevenueDeltaPct: number | null;
+  totalOrders: number;
+  orderCountDelta: number;
+  avgOrderValue: number; // kuruş
+  avgOrderValueDeltaPct: number | null;
+  pendingCount: number;
+  oldestPendingHours: number | null;
+};
+
+export type ChartPoint = { label: string; value: number }; // value in TL
+
+export type DashboardChartData = {
+  day: ChartPoint[];
+  week: ChartPoint[];
+  month: ChartPoint[];
+  year: ChartPoint[];
+};
+
+export type DashboardTopProduct = {
+  _id: string;
+  name: string;
+  totalQuantity: number;
+  totalRevenue: number; // kuruş
+};
+
+export type DashboardLowStockProduct = {
+  _id: string;
+  name: string;
+  stock: number;
+};
+
+export type DashboardData = {
+  kpis: DashboardKpis;
+  chart: DashboardChartData;
+  topProducts: DashboardTopProduct[];
+  recentOrders: Order[];
+  lowStockProducts: DashboardLowStockProduct[];
+  pendingOrders: Order[];
+};

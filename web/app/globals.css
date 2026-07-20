@@ -10,6 +10,7 @@
   --accent-ink: #ffffff;
   --info: #3b6ea5;
   --success: #3f7d55;
+  --warning: #b3720b;
   --border: #ececea;
 }
 
@@ -24,6 +25,7 @@
     --accent-ink: #17171a;
     --info: #7fa8d6;
     --success: #6cb583;
+    --warning: #e0a949;
     --border: #2b2b2f;
   }
 }
@@ -38,6 +40,7 @@
   --color-accent-ink: var(--accent-ink);
   --color-info: var(--info);
   --color-success: var(--success);
+  --color-warning: var(--warning);
   --color-border: var(--border);
 
   --font-display: var(--font-instrument-sans);

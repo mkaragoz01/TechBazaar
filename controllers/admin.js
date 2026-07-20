@@ -6,6 +6,9 @@ const Order = require("../models/order");
 const fs = require("fs")
 const sanitizeDescription = require("../utility/sanitizeDescription")
 const { parsePriceToKurus } = require("../utility/formatPrice")
+const { bucketOrders, computeKpis } = require("../utility/dashboardStats")
+
+const LOW_STOCK_THRESHOLD = 3
 
 function validationMessage(err) {
     return Object.values(err.errors).map(e => e.message).join(' ');
@@ -339,8 +342,66 @@ exports.deleteBrand = async (req, res, next) => {
 
 exports.getDashboard = async (req, res, next) => {
     try {
-        const orders = await Order.find().sort({ createdAt: -1 }).lean();
-        res.json({ orders });
+        // The per-order revenue math (summing embedded item arrays, netting
+        // out discounts) happens here in the DB rather than by pulling every
+        // order's full item list into Node to loop over — see
+        // utility/dashboardStats.js for the bucketing/comparison logic that
+        // runs on this already-slim result.
+        const orderSummaries = await Order.aggregate([
+            {
+                $project: {
+                    createdAt: 1,
+                    status: 1,
+                    netTotal: {
+                        $subtract: [
+                            {
+                                $sum: {
+                                    $map: {
+                                        input: '$items',
+                                        as: 'item',
+                                        in: { $multiply: ['$$item.product.price', '$$item.quantity'] }
+                                    }
+                                }
+                            },
+                            { $ifNull: ['$discountAmount', 0] }
+                        ]
+                    }
+                }
+            }
+        ]);
+
+        const kpis = computeKpis(orderSummaries);
+        const chart = {
+            day: bucketOrders(orderSummaries, 'day', 7),
+            week: bucketOrders(orderSummaries, 'week', 8),
+            month: bucketOrders(orderSummaries, 'month', 6),
+            year: bucketOrders(orderSummaries, 'year', 3)
+        };
+
+        const [topProducts, recentOrders, lowStockProducts, pendingOrders] = await Promise.all([
+            Order.aggregate([
+                { $unwind: '$items' },
+                {
+                    $group: {
+                        _id: '$items.product._id',
+                        name: { $first: '$items.product.name' },
+                        totalQuantity: { $sum: '$items.quantity' },
+                        totalRevenue: { $sum: { $multiply: ['$items.product.price', '$items.quantity'] } }
+                    }
+                },
+                { $sort: { totalQuantity: -1 } },
+                { $limit: 5 }
+            ]),
+            Order.find().sort({ createdAt: -1 }).limit(5).lean(),
+            Product.find({ isActive: true, stock: { $lte: LOW_STOCK_THRESHOLD } })
+                .select('name stock')
+                .sort({ stock: 1 })
+                .limit(5)
+                .lean(),
+            Order.find({ status: 'pending' }).sort({ createdAt: 1 }).limit(5).lean()
+        ]);
+
+        res.json({ kpis, chart, topProducts, recentOrders, lowStockProducts, pendingOrders });
     } catch (err) {
         next(err);
     }

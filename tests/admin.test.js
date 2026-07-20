@@ -159,4 +159,47 @@ describe('admin (controllers/admin.js)', () => {
             expect(updated.status).toBe('shipped');
         });
     });
+
+    describe('dashboard', () => {
+        it('aggregates KPIs, chart buckets, top products, and alerts from real orders/products', async () => {
+            const { agent, user } = await loginAgent(app, { email: 'dashboardadmin@example.com', isAdmin: true });
+
+            await Order.create({
+                user: { userId: user._id, name: user.name, email: user.email },
+                status: 'pending',
+                shippingAddress: { fullName: 'X', phone: '555', city: 'A', district: 'B', addressLine: 'C' },
+                paymentDisplay: 'Visa •••• 0000',
+                discountAmount: 1000,
+                items: [{ product: { _id: user._id, name: 'Dashboard Ürünü', price: 50000 }, quantity: 2 }]
+            });
+
+            const category = await createCategory('DashboardKategori');
+            await require('../models/product').create({
+                name: 'Az Stoklu Ürün',
+                price: 10000,
+                stock: 1,
+                isActive: true,
+                userId: user._id,
+                categories: [category._id],
+                description: 'Yeterince uzun aciklama'
+            });
+
+            const res = await agent.get('/api/admin/dashboard');
+            expect(res.status).toBe(200);
+
+            expect(res.body.kpis.totalOrders).toBeGreaterThanOrEqual(1);
+            expect(res.body.kpis.totalRevenue).toBeGreaterThanOrEqual(99000); // (50000*2 - 1000) = 99000
+            expect(res.body.kpis.pendingCount).toBeGreaterThanOrEqual(1);
+
+            expect(res.body.chart).toHaveProperty('day');
+            expect(res.body.chart).toHaveProperty('week');
+            expect(res.body.chart).toHaveProperty('month');
+            expect(res.body.chart).toHaveProperty('year');
+            expect(res.body.chart.week.length).toBe(8);
+
+            expect(res.body.topProducts.some(p => p.name === 'Dashboard Ürünü')).toBe(true);
+            expect(res.body.lowStockProducts.some(p => p.name === 'Az Stoklu Ürün')).toBe(true);
+            expect(res.body.pendingOrders.length).toBeGreaterThanOrEqual(1);
+        });
+    });
 });
