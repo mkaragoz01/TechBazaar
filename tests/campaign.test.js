@@ -76,6 +76,23 @@ describe('campaigns (controllers/admin.js + controllers/shop.js)', () => {
             const res = await agent.get('/api/admin/campaigns/not-a-valid-id');
             expect(res.status).toBe(404);
         });
+
+        // Regression: an end date before the start date used to save
+        // successfully, producing a campaign that could never be active at
+        // any point in time — no error, just a silently dead campaign.
+        it('rejects an end date before the start date', async () => {
+            const { agent } = await loginAgent(app, { email: 'campaignadmin4@example.com', isAdmin: true });
+            const res = await agent.post('/api/admin/campaigns').set(xhr).send({
+                name: 'Ters Tarih Aralığı',
+                conditions: [{ type: 'cartTotal', operator: 'gte', value: 0 }],
+                discountType: 'percentage',
+                discountValue: 10,
+                appliesTo: 'cartTotal',
+                startDate: '2026-08-19',
+                endDate: '2026-07-31'
+            });
+            expect(res.status).toBe(400);
+        });
     });
 
     describe('storefront: cart discount + code application', () => {

@@ -137,6 +137,11 @@ export default function CampaignForm({
       return;
     }
 
+    if (startDate && endDate && endDate < startDate) {
+      setError("Bitiş tarihi başlangıç tarihinden önce olamaz.");
+      return;
+    }
+
     setLoading(true);
 
     const body = {

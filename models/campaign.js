@@ -73,7 +73,19 @@ const campaignSchema = new mongoose.Schema({
         default: 'cartTotal'
     },
     startDate: Date,
-    endDate: Date,
+    endDate: {
+        type: Date,
+        validate: {
+            // Nothing previously stopped saving an impossible range (end
+            // before start) — the campaign would then silently never match,
+            // with no error to explain why.
+            validator: function (value) {
+                if (!value || !this.startDate) return true;
+                return value >= this.startDate;
+            },
+            message: 'Bitiş tarihi başlangıç tarihinden önce olamaz.'
+        }
+    },
     isActive: {
         type: Boolean,
         default: true
