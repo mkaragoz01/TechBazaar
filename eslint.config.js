@@ -16,6 +16,14 @@ module.exports = [
             'no-unused-vars': ['warn', { args: 'none' }],
         },
     },
+    {
+        files: ['tests/**/*.js'],
+        languageOptions: {
+            globals: {
+                ...globals.jest,
+            },
+        },
+    },
     eslintConfigPrettier,
     {
         // web/ is a separate Next.js/TypeScript app with its own ESLint

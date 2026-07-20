@@ -4,10 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon app.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon server.js",
+    "test": "jest",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "prepare": "husky"
   },
   "keywords": [],
   "author": "",
@@ -40,6 +41,11 @@
     "eslint": "^10.7.0",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.7.0",
-    "prettier": "^3.9.5"
+    "husky": "^9.1.7",
+    "jest": "^30.4.2",
+    "lint-staged": "^17.1.0",
+    "mongodb-memory-server": "^11.2.0",
+    "prettier": "^3.9.5",
+    "supertest": "^7.2.2"
   }
 }
