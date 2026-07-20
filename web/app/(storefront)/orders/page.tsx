@@ -32,10 +32,11 @@ export default async function OrdersPage() {
       ) : (
         <div className="flex flex-col gap-6">
           {orders.map((order) => {
-            const total = order.items.reduce(
+            const subtotal = order.items.reduce(
               (sum, item) => sum + item.product.price * item.quantity,
               0
             );
+            const total = subtotal - (order.discountAmount ?? 0);
 
             return (
               <div key={order._id} className="rounded-2xl bg-surface p-6 shadow-sm">
@@ -90,11 +91,21 @@ export default async function OrdersPage() {
                   ))}
                 </div>
 
-                <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
-                  <span className="font-body text-sm text-ink-muted">Toplam</span>
-                  <span className="font-data text-lg font-semibold tabular-nums text-ink">
-                    {formatPriceNumber(total)} TL
-                  </span>
+                <div className="mt-4 flex flex-col gap-1 border-t border-border pt-3">
+                  {order.discountAmount ? (
+                    <div className="flex items-center justify-between font-body text-sm text-success">
+                      <span>{order.campaignName}</span>
+                      <span className="font-data tabular-nums">
+                        -{formatPriceNumber(order.discountAmount)} TL
+                      </span>
+                    </div>
+                  ) : null}
+                  <div className="flex items-center justify-between">
+                    <span className="font-body text-sm text-ink-muted">Toplam</span>
+                    <span className="font-data text-lg font-semibold tabular-nums text-ink">
+                      {formatPriceNumber(total)} TL
+                    </span>
+                  </div>
                 </div>
               </div>
             );

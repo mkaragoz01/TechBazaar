@@ -34,6 +34,36 @@ export type CartItem = {
   quantity: number;
 };
 
+export type CartDiscount = {
+  campaignName: string;
+  amount: number; // kuruş
+  code?: string;
+};
+
+export type CampaignConditionType = "product" | "user" | "cartTotal";
+
+export type CampaignCondition = {
+  type: CampaignConditionType;
+  field?: "sku" | "category" | "brand";
+  operator: "in" | "gte" | "lte";
+  values?: string[];
+  value?: number; // kuruş, for cartTotal
+};
+
+export type Campaign = {
+  _id: string;
+  name: string;
+  description?: string;
+  code?: string;
+  conditions: CampaignCondition[];
+  discountType: "percentage" | "fixed";
+  discountValue: number;
+  appliesTo: "matchingItems" | "cartTotal";
+  startDate?: string;
+  endDate?: string;
+  isActive: boolean;
+};
+
 export type Address = {
   _id: string;
   title: string;
@@ -83,6 +113,8 @@ export type Order = {
     postalCode?: string;
   };
   paymentDisplay?: string;
+  discountAmount?: number; // kuruş
+  campaignName?: string;
   items: {
     product: OrderItemProduct;
     quantity: number;

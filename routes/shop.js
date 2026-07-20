@@ -15,6 +15,8 @@ router.get('/api/products/:productid', validateObjectId('productid'), shopContro
 router.get('/api/cart', apiAuthentication, shopController.getCart);
 router.post('/api/cart', apiAuthentication, shopController.postCart);
 router.post('/api/cart/delete-item', apiAuthentication, shopController.postCartItemDelete);
+router.post('/api/cart/apply-code', apiAuthentication, shopController.postApplyCampaignCode);
+router.post('/api/cart/remove-code', apiAuthentication, shopController.postRemoveCampaignCode);
 
 router.get('/api/orders', apiAuthentication, shopController.getOrders);
 router.post('/api/orders', apiAuthentication, shopController.postOrder);

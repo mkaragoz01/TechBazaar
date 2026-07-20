@@ -79,7 +79,7 @@ userSchema.methods.getCart = function() {
                 $in: ids
             }
         })
-        .select("name price imgUrl")
+        .select("name price imgUrl sku categories brand")
         .then(products => {
             // Sepetteki geçersiz ürünleri temizle
             const validProductIds = products.map(p => p._id.toString());
@@ -103,6 +103,9 @@ userSchema.methods.getCart = function() {
                     imgUrl: p.imgUrl,
                     name: p.name,
                     price: p.price,
+                    sku: p.sku,
+                    categories: p.categories,
+                    brand: p.brand,
                     quantity: this.cart.items.find(i => {
                         return i.productId.toString() === p._id.toString()
                     }).quantity

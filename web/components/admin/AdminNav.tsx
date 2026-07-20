@@ -25,6 +25,9 @@ export default function AdminNav({ userName }: { userName: string }) {
             <Link href="/admin/orders" className="transition-colors hover:text-accent">
               Siparişler
             </Link>
+            <Link href="/admin/campaigns" className="transition-colors hover:text-accent">
+              Kampanyalar
+            </Link>
           </nav>
         </div>
         <div className="flex items-center gap-4 font-body text-sm">

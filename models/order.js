@@ -66,6 +66,11 @@ const orderSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    discountAmount: {
+        type: Number,
+        default: 0
+    },
+    campaignName: String,
     items: [
         {
             product: {

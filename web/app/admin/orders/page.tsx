@@ -78,10 +78,11 @@ export default async function AdminOrdersPage({
           </thead>
           <tbody>
             {orders.map((order) => {
-              const total = order.items.reduce(
+              const subtotal = order.items.reduce(
                 (sum, item) => sum + item.product.price * item.quantity,
                 0
               );
+              const total = subtotal - (order.discountAmount ?? 0);
               return (
                 <tr key={order._id} className="border-b border-border last:border-0">
                   <td className="px-4 py-3 font-data text-xs text-ink-muted">
@@ -111,6 +112,11 @@ export default async function AdminOrdersPage({
                   </td>
                   <td className="px-4 py-3 font-data tabular-nums text-ink">
                     {formatPriceNumber(total)} TL
+                    {order.discountAmount ? (
+                      <div className="text-xs text-success">
+                        -{formatPriceNumber(order.discountAmount)} {order.campaignName}
+                      </div>
+                    ) : null}
                   </td>
                   <td className="px-4 py-3">
                     <OrderStatusSelect orderId={order._id} status={order.status} />

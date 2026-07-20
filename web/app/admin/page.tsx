@@ -49,6 +49,9 @@ export default async function AdminDashboardPage() {
         });
       }
     }
+    // Discounts are order-level (a campaign, not per-product), so they're
+    // subtracted here rather than attributed to any single product's stats.
+    totalRevenue -= order.discountAmount ?? 0;
   }
 
   const topProducts = [...productStatsMap.values()]
@@ -71,10 +74,9 @@ export default async function AdminDashboardPage() {
       const created = new Date(order.createdAt);
       if (created >= weekStart && created < weekEnd) {
         orderCount++;
-        revenue += order.items.reduce(
-          (sum, item) => sum + item.product.price * item.quantity,
-          0
-        );
+        revenue +=
+          order.items.reduce((sum, item) => sum + item.product.price * item.quantity, 0) -
+          (order.discountAmount ?? 0);
       }
     }
     weeks.push({ label: `${4 - i}. Hafta`, orders: orderCount, revenue: revenue / 100 });
@@ -164,10 +166,9 @@ export default async function AdminDashboardPage() {
               </thead>
               <tbody>
                 {recentOrders.map((order) => {
-                  const total = order.items.reduce(
-                    (sum, item) => sum + item.product.price * item.quantity,
-                    0
-                  );
+                  const total =
+                    order.items.reduce((sum, item) => sum + item.product.price * item.quantity, 0) -
+                    (order.discountAmount ?? 0);
                   return (
                     <tr key={order._id} className="border-b border-border last:border-0">
                       <td className="px-4 py-3 font-data text-xs text-ink-muted">

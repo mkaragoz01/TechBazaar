@@ -52,4 +52,10 @@ router.get('/api/admin/dashboard', apiIsAdmin, adminController.getDashboard)
 router.get('/api/admin/orders', apiIsAdmin, adminController.getOrders)
 router.put('/api/admin/orders/:orderid/status', apiIsAdmin, validateObjectId('orderid'), adminController.putOrderStatus)
 
+router.get('/api/admin/campaigns', apiIsAdmin, adminController.getCampaigns)
+router.post('/api/admin/campaigns', apiIsAdmin, adminController.postAddCampaign)
+router.get('/api/admin/campaigns/:campaignid', apiIsAdmin, validateObjectId('campaignid'), adminController.getCampaign)
+router.put('/api/admin/campaigns/:campaignid', apiIsAdmin, validateObjectId('campaignid'), adminController.putEditCampaign)
+router.delete('/api/admin/campaigns/:campaignid', apiIsAdmin, validateObjectId('campaignid'), adminController.deleteCampaign)
+
 module.exports = router;

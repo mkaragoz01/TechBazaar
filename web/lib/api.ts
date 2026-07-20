@@ -1,12 +1,23 @@
 import { serverFetch } from "./server-api";
-import type { Category, Brand, Product, CartItem, Order, Address, PaymentMethod } from "./types";
+import type {
+  Category,
+  Brand,
+  Product,
+  CartItem,
+  CartDiscount,
+  Order,
+  Address,
+  PaymentMethod,
+  Campaign,
+} from "./types";
 
-export type { Category, Brand, Product, CartItem, Order, Address, PaymentMethod };
+export type { Category, Brand, Product, CartItem, CartDiscount, Order, Address, PaymentMethod, Campaign };
 
 export type HomeData = {
   products: Product[];
   categories: Category[];
   selectedSort: string;
+  campaign: { name: string; description?: string } | null;
 };
 
 export async function getHomeData(sort?: string): Promise<HomeData> {
@@ -51,7 +62,7 @@ export async function getProduct(productId: string): Promise<{
   return serverFetch(`/api/products/${productId}`);
 }
 
-export async function getCart(): Promise<{ items: CartItem[] }> {
+export async function getCart(): Promise<{ items: CartItem[]; discount: CartDiscount | null }> {
   return serverFetch(`/api/cart`);
 }
 
@@ -114,4 +125,12 @@ export async function getAddresses(): Promise<{ addresses: Address[] }> {
 
 export async function getPaymentMethods(): Promise<{ paymentMethods: PaymentMethod[] }> {
   return serverFetch(`/api/payment-methods`);
+}
+
+export async function getAdminCampaigns(): Promise<{ campaigns: Campaign[] }> {
+  return serverFetch(`/api/admin/campaigns`);
+}
+
+export async function getAdminCampaign(campaignId: string): Promise<{ campaign: Campaign }> {
+  return serverFetch(`/api/admin/campaigns/${campaignId}`);
 }

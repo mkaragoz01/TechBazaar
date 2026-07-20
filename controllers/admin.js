@@ -1,5 +1,6 @@
 const Category = require("../models/category");
 const Brand = require("../models/brand");
+const Campaign = require("../models/campaign");
 const Product = require("../models/product")
 const Order = require("../models/order");
 const fs = require("fs")
@@ -370,6 +371,90 @@ exports.putOrderStatus = async (req, res, next) => {
         const result = await Order.updateOne({ _id: req.params.orderid }, { $set: { status } });
         if (result.matchedCount === 0) {
             return res.status(404).json({ error: 'Sipariş bulunamadı.' });
+        }
+        res.json({ ok: true });
+    } catch (err) {
+        next(err);
+    }
+}
+
+function campaignFieldsFromBody(body) {
+    return {
+        name: body.name,
+        description: body.description,
+        code: asOptionalTrimmed(body.code),
+        conditions: body.conditions,
+        discountType: body.discountType,
+        discountValue: Number(body.discountValue),
+        appliesTo: body.appliesTo,
+        startDate: body.startDate || undefined,
+        endDate: body.endDate || undefined,
+        isActive: asBoolean(body.isActive)
+    };
+}
+
+exports.getCampaigns = async (req, res, next) => {
+    try {
+        const campaigns = await Campaign.find().sort({ createdAt: -1 }).lean();
+        res.json({ campaigns });
+    } catch (err) {
+        next(err);
+    }
+}
+
+exports.getCampaign = async (req, res, next) => {
+    try {
+        const campaign = await Campaign.findById(req.params.campaignid).lean();
+        if (!campaign) {
+            return res.status(404).json({ error: 'Kampanya bulunamadı.' });
+        }
+        res.json({ campaign });
+    } catch (err) {
+        next(err);
+    }
+}
+
+exports.postAddCampaign = async (req, res, next) => {
+    try {
+        const campaign = new Campaign(campaignFieldsFromBody(req.body));
+        await campaign.save();
+        res.status(201).json({ ok: true, campaign });
+    } catch (err) {
+        if (err.name === "ValidationError") {
+            return res.status(400).json({ error: validationMessage(err) });
+        }
+        if (err.code === 11000) {
+            return res.status(409).json({ error: 'Bu kampanya kodu zaten kullanılıyor.' });
+        }
+        next(err);
+    }
+}
+
+exports.putEditCampaign = async (req, res, next) => {
+    try {
+        const campaign = await Campaign.findById(req.params.campaignid);
+        if (!campaign) {
+            return res.status(404).json({ error: 'Kampanya bulunamadı.' });
+        }
+        Object.assign(campaign, campaignFieldsFromBody(req.body));
+        await campaign.save();
+        res.json({ ok: true, campaign });
+    } catch (err) {
+        if (err.name === "ValidationError") {
+            return res.status(400).json({ error: validationMessage(err) });
+        }
+        if (err.code === 11000) {
+            return res.status(409).json({ error: 'Bu kampanya kodu zaten kullanılıyor.' });
+        }
+        next(err);
+    }
+}
+
+exports.deleteCampaign = async (req, res, next) => {
+    try {
+        const result = await Campaign.deleteOne({ _id: req.params.campaignid });
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ error: 'Kampanya bulunamadı.' });
         }
         res.json({ ok: true });
     } catch (err) {

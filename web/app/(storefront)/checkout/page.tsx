@@ -5,8 +5,9 @@ import CheckoutForm from "@/components/checkout/CheckoutForm";
 
 export default async function CheckoutPage() {
   let items;
+  let discount;
   try {
-    ({ items } = await getCart());
+    ({ items, discount } = await getCart());
   } catch (err) {
     if (err instanceof ApiError && err.status === 401) {
       redirect("/login?redirectTo=/checkout");
@@ -28,6 +29,7 @@ export default async function CheckoutPage() {
       <h1 className="mb-6 font-display text-3xl font-bold text-ink">Siparişi Tamamla</h1>
       <CheckoutForm
         cartItems={items}
+        discount={discount}
         initialAddresses={addresses}
         initialPaymentMethods={paymentMethods}
       />

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { clientFetch, ClientApiError } from "@/lib/client-api";
 import { formatPriceNumber } from "@/lib/formatPrice";
 import FormField from "@/components/FormField";
-import type { Address, PaymentMethod, CartItem } from "@/lib/types";
+import type { Address, PaymentMethod, CartItem, CartDiscount } from "@/lib/types";
 
 const CARD_BRANDS = ["Visa", "Mastercard", "Diğer"];
 const CURRENT_YEAR = new Date().getFullYear();
@@ -13,10 +13,12 @@ const EXPIRY_YEARS = Array.from({ length: 10 }, (_, i) => CURRENT_YEAR + i);
 
 export default function CheckoutForm({
   cartItems,
+  discount,
   initialAddresses,
   initialPaymentMethods,
 }: {
   cartItems: CartItem[];
+  discount: CartDiscount | null;
   initialAddresses: Address[];
   initialPaymentMethods: PaymentMethod[];
 }) {
@@ -138,7 +140,8 @@ export default function CheckoutForm({
     }
   }
 
-  const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const total = subtotal - (discount?.amount ?? 0);
   const canPlaceOrder = !!selectedAddressId && !!selectedPaymentMethodId && !placingOrder;
 
   return (
@@ -407,11 +410,19 @@ export default function CheckoutForm({
       </section>
 
       <section className="rounded-2xl bg-surface p-6 shadow-sm">
-        <div className="flex items-center justify-between border-b border-border pb-4">
-          <span className="font-body text-ink-muted">Toplam</span>
-          <span className="font-data text-xl font-semibold tabular-nums text-ink">
-            {formatPriceNumber(total)} TL
-          </span>
+        <div className="flex flex-col gap-2 border-b border-border pb-4">
+          {discount ? (
+            <div className="flex items-center justify-between font-body text-sm text-success">
+              <span>{discount.campaignName}</span>
+              <span className="font-data tabular-nums">-{formatPriceNumber(discount.amount)} TL</span>
+            </div>
+          ) : null}
+          <div className="flex items-center justify-between">
+            <span className="font-body text-ink-muted">Toplam</span>
+            <span className="font-data text-xl font-semibold tabular-nums text-ink">
+              {formatPriceNumber(total)} TL
+            </span>
+          </div>
         </div>
         {orderError ? <p className="mt-4 font-body text-sm text-accent">{orderError}</p> : null}
         <button

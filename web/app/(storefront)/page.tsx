@@ -10,7 +10,7 @@ export default async function HomePage({
   searchParams: Promise<{ sort?: string }>;
 }) {
   const { sort } = await searchParams;
-  const { products, categories, selectedSort } = await getHomeData(sort);
+  const { products, categories, selectedSort, campaign } = await getHomeData(sort);
   const featured = products[0];
 
   return (
@@ -77,23 +77,22 @@ export default async function HomePage({
           basePath="/"
         />
 
-        <div className="mt-14 flex flex-wrap items-center justify-between gap-6 rounded-[24px] bg-ink px-10 py-11 text-bg">
-          <div>
-            <h3 className="font-display text-2xl font-bold">
-              Öğrenci ve öğretmenlere özel indirim
-            </h3>
-            <p className="mt-1 max-w-[46ch] text-ink-muted">
-              Geçerli bir öğrenci belgesiyle seçili bilgisayar ve tabletlerde
-              %10&apos;a varan indirim.
-            </p>
+        {campaign ? (
+          <div className="mt-14 flex flex-wrap items-center justify-between gap-6 rounded-[24px] bg-ink px-10 py-11 text-bg">
+            <div>
+              <h3 className="font-display text-2xl font-bold">{campaign.name}</h3>
+              {campaign.description ? (
+                <p className="mt-1 max-w-[46ch] text-ink-muted">{campaign.description}</p>
+              ) : null}
+            </div>
+            <Link
+              href="/products"
+              className="whitespace-nowrap rounded-full bg-accent px-6 py-3 font-semibold text-accent-ink"
+            >
+              Detayları Gör
+            </Link>
           </div>
-          <Link
-            href="/products"
-            className="whitespace-nowrap rounded-full bg-accent px-6 py-3 font-semibold text-accent-ink"
-          >
-            Detayları Gör
-          </Link>
-        </div>
+        ) : null}
       </div>
     </main>
   );

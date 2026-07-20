@@ -5,11 +5,13 @@ import { getCart } from "@/lib/api";
 import { productImageUrl, ApiError } from "@/lib/server-api";
 import { formatPriceNumber } from "@/lib/formatPrice";
 import RemoveFromCartButton from "@/components/RemoveFromCartButton";
+import CampaignCodeForm from "@/components/CampaignCodeForm";
 
 export default async function CartPage() {
   let items;
+  let discount;
   try {
-    ({ items } = await getCart());
+    ({ items, discount } = await getCart());
   } catch (err) {
     if (err instanceof ApiError && err.status === 401) {
       redirect("/login?redirectTo=/cart");
@@ -17,7 +19,8 @@ export default async function CartPage() {
     throw err;
   }
 
-  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const total = subtotal - (discount?.amount ?? 0);
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-10">
@@ -56,11 +59,21 @@ export default async function CartPage() {
             </div>
           ))}
 
-          <div className="flex items-center justify-between border-t border-border pt-4">
-            <span className="font-body text-ink-muted">Toplam</span>
-            <span className="font-data text-xl font-semibold tabular-nums text-ink">
-              {formatPriceNumber(total)} TL
-            </span>
+          <CampaignCodeForm discount={discount} />
+
+          <div className="flex flex-col gap-2 border-t border-border pt-4">
+            {discount ? (
+              <div className="flex items-center justify-between font-body text-sm text-success">
+                <span>{discount.campaignName}</span>
+                <span className="font-data tabular-nums">-{formatPriceNumber(discount.amount)} TL</span>
+              </div>
+            ) : null}
+            <div className="flex items-center justify-between">
+              <span className="font-body text-ink-muted">Toplam</span>
+              <span className="font-data text-xl font-semibold tabular-nums text-ink">
+                {formatPriceNumber(total)} TL
+              </span>
+            </div>
           </div>
 
           <div>
