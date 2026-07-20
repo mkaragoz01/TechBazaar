@@ -1,0 +1,28 @@
+version: 2
+updates:
+  # Backend (Express API) — root package.json
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    groups:
+      dev-dependencies:
+        dependency-type: "development"
+
+  # Frontend (Next.js) — web/package.json, tracked separately since it's a
+  # distinct app with its own dependency tree and ESLint config.
+  - package-ecosystem: "npm"
+    directory: "/web"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    groups:
+      dev-dependencies:
+        dependency-type: "development"
+
+  # CI workflow's own actions/setup-node, actions/checkout, etc.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
