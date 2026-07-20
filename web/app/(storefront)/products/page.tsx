@@ -1,6 +1,12 @@
+import type { Metadata } from "next";
 import { getProducts } from "@/lib/api";
 import ProductGrid from "@/components/ProductGrid";
 import ProductFilters from "@/components/ProductFilters";
+
+export const metadata: Metadata = {
+  title: "Tüm Ürünler",
+  description: "Telefon, bilgisayar ve aksesuarlarda tüm ürünler — TechStore'da net fiyat, net spesifikasyon.",
+};
 
 export default async function ProductsPage({
   searchParams,

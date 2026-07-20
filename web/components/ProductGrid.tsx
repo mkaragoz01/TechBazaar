@@ -30,6 +30,7 @@ export default function ProductGrid({
           <div className="flex gap-2 text-sm font-semibold">
             <Link
               href={sortHref("price_asc")}
+              aria-current={selectedSort === "price_asc" ? "true" : undefined}
               className={
                 selectedSort === "price_asc"
                   ? "rounded-full bg-ink px-4 py-2 text-bg"
@@ -40,6 +41,7 @@ export default function ProductGrid({
             </Link>
             <Link
               href={sortHref("price_desc")}
+              aria-current={selectedSort === "price_desc" ? "true" : undefined}
               className={
                 selectedSort === "price_desc"
                   ? "rounded-full bg-ink px-4 py-2 text-bg"

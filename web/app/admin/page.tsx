@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getAdminDashboard } from "@/lib/api";
 import { formatPriceNumber } from "@/lib/formatPrice";
 import RevenueChart from "@/components/admin/RevenueChart";
+import Card from "@/components/Card";
 import type { OrderStatus } from "@/lib/types";
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
@@ -117,7 +118,7 @@ export default async function AdminDashboardPage() {
       <div className="mb-7 grid gap-4 lg:grid-cols-[1.6fr_1fr]">
         <RevenueChart chart={chart} />
 
-        <div id="attention" className="rounded-3xl bg-surface p-6 shadow-sm">
+        <Card id="attention">
           <h2 className="font-display text-base font-bold text-ink">Dikkat Gerektirenler</h2>
           <p className="mt-0.5 font-body text-xs text-ink-muted">Şu an harekete geçilmesi gerekenler</p>
 
@@ -166,12 +167,12 @@ export default async function AdminDashboardPage() {
               </p>
             ) : null}
           </div>
-        </div>
+        </Card>
       </div>
 
       {/* Tables */}
       <div className="grid gap-4 lg:grid-cols-[1.15fr_1.5fr]">
-        <div className="rounded-3xl bg-surface p-6 shadow-sm">
+        <Card>
           <h2 className="font-display text-base font-bold text-ink">En Çok Satanlar</h2>
           <p className="mt-0.5 font-body text-xs text-ink-muted">Tüm zamanlar, adet bazında</p>
 
@@ -206,9 +207,9 @@ export default async function AdminDashboardPage() {
               ))}
             </div>
           )}
-        </div>
+        </Card>
 
-        <div className="rounded-3xl bg-surface p-6 shadow-sm">
+        <Card>
           <div className="flex items-baseline justify-between gap-3">
             <h2 className="font-display text-base font-bold text-ink">Son Siparişler</h2>
             <Link href="/admin/orders" className="font-data text-xs font-semibold text-info hover:text-accent">
@@ -264,7 +265,7 @@ export default async function AdminDashboardPage() {
               </table>
             </div>
           )}
-        </div>
+        </Card>
       </div>
     </div>
   );

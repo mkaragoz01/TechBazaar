@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { clientFetch, ClientApiError } from "@/lib/client-api";
 import FormField from "@/components/FormField";
 import RichTextEditor from "@/components/admin/RichTextEditor";
+import AdminButton from "@/components/admin/AdminButton";
 import type { Brand } from "@/lib/types";
 
 export default function BrandForm({ brand }: { brand?: Brand }) {
@@ -58,13 +59,9 @@ export default function BrandForm({ brand }: { brand?: Brand }) {
 
       {error ? <p className="font-body text-sm text-accent">{error}</p> : null}
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="bg-accent px-6 py-3 font-data text-xs uppercase tracking-widest text-accent-ink disabled:opacity-60"
-      >
+      <AdminButton type="submit" disabled={loading}>
         {brand ? "Kaydet" : "Marka Ekle"}
-      </button>
+      </AdminButton>
     </form>
   );
 }

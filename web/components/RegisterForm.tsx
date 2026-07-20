@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { clientFetch, ClientApiError } from "@/lib/client-api";
 import FormField from "./FormField";
+import Button from "./Button";
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -55,13 +56,9 @@ export default function RegisterForm() {
         onChange={(e) => setPassword(e.target.value)}
       />
       {error ? <p className="font-body text-sm text-accent">{error}</p> : null}
-      <button
-        type="submit"
-        disabled={loading}
-        className="rounded-full bg-accent px-7 py-3.5 font-semibold text-accent-ink transition-opacity hover:opacity-90 disabled:opacity-60"
-      >
+      <Button type="submit" disabled={loading}>
         Kayıt Ol
-      </button>
+      </Button>
       <Link href="/login" className="font-body text-sm text-ink-muted hover:text-accent">
         Zaten hesabın var mı? Giriş yap
       </Link>

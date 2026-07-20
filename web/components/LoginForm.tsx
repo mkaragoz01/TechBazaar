@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { clientFetch, ClientApiError } from "@/lib/client-api";
 import FormField from "./FormField";
+import Button from "./Button";
 
 export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
   const router = useRouter();
@@ -44,13 +45,9 @@ export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
         onChange={(e) => setPassword(e.target.value)}
       />
       {error ? <p className="font-body text-sm text-accent">{error}</p> : null}
-      <button
-        type="submit"
-        disabled={loading}
-        className="rounded-full bg-accent px-7 py-3.5 font-semibold text-accent-ink transition-opacity hover:opacity-90 disabled:opacity-60"
-      >
+      <Button type="submit" disabled={loading}>
         Giriş Yap
-      </button>
+      </Button>
       <div className="flex justify-between font-body text-sm text-ink-muted">
         <Link href="/register" className="hover:text-accent">
           Hesabın yok mu? Kayıt ol

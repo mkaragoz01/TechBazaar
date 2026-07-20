@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { clientFetch, ClientApiError } from "@/lib/client-api";
 import FormField from "./FormField";
+import Button from "./Button";
 
 export default function ResetRequestForm() {
   const [email, setEmail] = useState("");
@@ -41,13 +42,9 @@ export default function ResetRequestForm() {
         onChange={(e) => setEmail(e.target.value)}
       />
       {error ? <p className="font-body text-sm text-accent">{error}</p> : null}
-      <button
-        type="submit"
-        disabled={loading}
-        className="rounded-full bg-accent px-7 py-3.5 font-semibold text-accent-ink transition-opacity hover:opacity-90 disabled:opacity-60"
-      >
+      <Button type="submit" disabled={loading}>
         Sıfırlama Bağlantısı Gönder
-      </button>
+      </Button>
     </form>
   );
 }

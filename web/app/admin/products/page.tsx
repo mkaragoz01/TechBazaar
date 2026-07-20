@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getAdminProducts } from "@/lib/api";
 import { formatPriceNumber } from "@/lib/formatPrice";
 import DeleteButton from "@/components/admin/DeleteButton";
+import AdminButton from "@/components/admin/AdminButton";
 
 export default async function AdminProductsPage() {
   const { products } = await getAdminProducts();
@@ -23,12 +24,9 @@ export default async function AdminProductsPage() {
           >
             İçe Aktar
           </Link>
-          <Link
-            href="/admin/products/new"
-            className="bg-accent px-4 py-2 font-data text-xs uppercase tracking-widest text-accent-ink"
-          >
+          <AdminButton size="sm" href="/admin/products/new">
             Yeni Ürün
-          </Link>
+          </AdminButton>
         </div>
       </div>
 
@@ -89,6 +87,7 @@ export default async function AdminProductsPage() {
                     <DeleteButton
                       url={`/api/admin/products/${product._id}`}
                       confirmMessage="Bu ürünü pasif hale getirmek istediğinize emin misiniz?"
+                      itemLabel={product.name}
                     />
                   </div>
                 </td>

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { clientFetch, ClientApiError } from "@/lib/client-api";
 import { formatPriceNumber } from "@/lib/formatPrice";
 import FormField from "@/components/FormField";
+import Button from "@/components/Button";
 import type { Address, PaymentMethod, CartItem, CartDiscount } from "@/lib/types";
 
 const CARD_BRANDS = ["Visa", "Mastercard", "Diğer"];
@@ -425,14 +426,9 @@ export default function CheckoutForm({
           </div>
         </div>
         {orderError ? <p className="mt-4 font-body text-sm text-accent">{orderError}</p> : null}
-        <button
-          type="button"
-          onClick={handlePlaceOrder}
-          disabled={!canPlaceOrder}
-          className="mt-4 w-full rounded-full bg-accent px-7 py-3.5 font-semibold text-accent-ink transition-opacity hover:opacity-90 disabled:opacity-60"
-        >
+        <Button onClick={handlePlaceOrder} disabled={!canPlaceOrder} className="mt-4 w-full">
           Siparişi Onayla
-        </button>
+        </Button>
       </section>
     </div>
   );

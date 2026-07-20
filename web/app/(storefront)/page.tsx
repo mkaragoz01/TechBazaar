@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getHomeData } from "@/lib/api";
 import { productImageUrl } from "@/lib/server-api";
 import ProductGrid from "@/components/ProductGrid";
+import Button from "@/components/Button";
 
 export default async function HomePage({
   searchParams,
@@ -28,12 +29,9 @@ export default async function HomePage({
               Telefon, bilgisayar ve aksesuarlarda en yeniler — geniş bir nefes
               alanında, kendi ışığında.
             </p>
-            <Link
-              href="/products"
-              className="mt-7 inline-flex items-center gap-2 rounded-full bg-accent px-7 py-3.5 font-semibold text-accent-ink transition-opacity hover:opacity-90"
-            >
+            <Button href="/products" className="mt-7">
               Ürünleri Keşfet →
-            </Link>
+            </Button>
           </div>
           <div className="product-spotlight relative hidden h-full min-h-[360px] sm:block">
             {featured?.imgUrl ? (

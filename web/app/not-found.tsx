@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Button from "@/components/Button";
 
 export default function NotFound() {
   return (
@@ -8,12 +8,9 @@ export default function NotFound() {
       <p className="mt-3 font-body text-ink-muted">
         Aradığınız sayfa taşınmış ya da hiç var olmamış olabilir.
       </p>
-      <Link
-        href="/"
-        className="mt-6 rounded-full bg-accent px-7 py-3.5 font-semibold text-accent-ink transition-opacity hover:opacity-90"
-      >
+      <Button href="/" className="mt-6">
         Ana Sayfaya Dön
-      </Link>
+      </Button>
     </main>
   );
 }

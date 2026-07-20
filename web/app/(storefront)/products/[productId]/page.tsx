@@ -1,10 +1,38 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { getProduct } from "@/lib/api";
 import { productImageUrl, ApiError } from "@/lib/server-api";
 import { formatPrice } from "@/lib/formatPrice";
+import { stripHtml } from "@/lib/richText";
 import AddToCartButton from "@/components/AddToCartButton";
 import ProductCard from "@/components/ProductCard";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ productId: string }>;
+}): Promise<Metadata> {
+  const { productId } = await params;
+
+  try {
+    const { product, brandName } = await getProduct(productId);
+    const description = stripHtml(product.description).slice(0, 160) || undefined;
+    const imageUrl = product.imgUrl ? productImageUrl(product.imgUrl) : undefined;
+
+    return {
+      title: brandName ? `${product.name} — ${brandName}` : product.name,
+      description,
+      openGraph: {
+        title: product.name,
+        description,
+        images: imageUrl ? [{ url: imageUrl }] : undefined,
+      },
+    };
+  } catch {
+    return {};
+  }
+}
 
 export default async function ProductDetailPage({
   params,
@@ -26,7 +54,29 @@ export default async function ProductDetailPage({
   const { product, categoryName, brandName, relatedProducts } = data;
   const outOfStock = (product.stock ?? 0) <= 0;
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: stripHtml(product.description) || undefined,
+    image: product.imgUrl ? [productImageUrl(product.imgUrl)] : undefined,
+    brand: brandName ? { "@type": "Brand", name: brandName } : undefined,
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "TRY",
+      price: (product.price / 100).toFixed(2),
+      availability: outOfStock
+        ? "https://schema.org/OutOfStock"
+        : "https://schema.org/InStock",
+    },
+  };
+
   return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
     <main className="mx-auto max-w-6xl px-6 py-10">
       <div className="grid gap-8 sm:grid-cols-2">
         <div className="product-spotlight relative h-80 rounded-[28px] sm:h-full">
@@ -85,5 +135,6 @@ export default async function ProductDetailPage({
         </section>
       ) : null}
     </main>
+    </>
   );
 }

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getAdminCampaigns } from "@/lib/api";
 import DeleteButton from "@/components/admin/DeleteButton";
+import AdminButton from "@/components/admin/AdminButton";
 import { formatPriceNumber } from "@/lib/formatPrice";
 
 export default async function AdminCampaignsPage() {
@@ -10,12 +11,9 @@ export default async function AdminCampaignsPage() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold text-ink">Kampanyalar</h1>
-        <Link
-          href="/admin/campaigns/new"
-          className="bg-accent px-4 py-2 font-data text-xs uppercase tracking-widest text-accent-ink"
-        >
+        <AdminButton size="sm" href="/admin/campaigns/new">
           Yeni Kampanya
-        </Link>
+        </AdminButton>
       </div>
 
       <div className="overflow-x-auto border border-border">
@@ -57,6 +55,7 @@ export default async function AdminCampaignsPage() {
                     <DeleteButton
                       url={`/api/admin/campaigns/${campaign._id}`}
                       confirmMessage="Bu kampanyayı silmek istediğinize emin misiniz?"
+                      itemLabel={campaign.name}
                     />
                   </div>
                 </td>

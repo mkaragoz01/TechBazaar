@@ -1,11 +1,12 @@
 import Image from "next/image";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCart } from "@/lib/api";
 import { productImageUrl, ApiError } from "@/lib/server-api";
 import { formatPriceNumber } from "@/lib/formatPrice";
 import RemoveFromCartButton from "@/components/RemoveFromCartButton";
 import CampaignCodeForm from "@/components/CampaignCodeForm";
+import Button from "@/components/Button";
+import Card from "@/components/Card";
 
 export default async function CartPage() {
   let items;
@@ -31,10 +32,7 @@ export default async function CartPage() {
       ) : (
         <div className="flex flex-col gap-4">
           {items.map((item) => (
-            <div
-              key={item._id}
-              className="flex items-center gap-4 rounded-2xl bg-surface p-4 shadow-sm"
-            >
+            <Card key={item._id} size="sm" className="flex items-center gap-4">
               <div className="product-spotlight relative h-16 w-16 shrink-0 rounded-xl">
                 {item.imgUrl ? (
                   <Image
@@ -56,7 +54,7 @@ export default async function CartPage() {
                 {formatPriceNumber(item.price * item.quantity)} TL
               </p>
               <RemoveFromCartButton productId={item._id} />
-            </div>
+            </Card>
           ))}
 
           <CampaignCodeForm discount={discount} />
@@ -77,12 +75,7 @@ export default async function CartPage() {
           </div>
 
           <div>
-            <Link
-              href="/checkout"
-              className="inline-block rounded-full bg-accent px-7 py-3.5 font-semibold text-accent-ink transition-opacity hover:opacity-90"
-            >
-              Siparişi Tamamla
-            </Link>
+            <Button href="/checkout">Siparişi Tamamla</Button>
           </div>
         </div>
       )}

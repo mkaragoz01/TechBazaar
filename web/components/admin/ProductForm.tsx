@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { clientFetch, ClientApiError } from "@/lib/client-api";
 import FormField from "@/components/FormField";
 import RichTextEditor from "@/components/admin/RichTextEditor";
+import AdminButton from "@/components/admin/AdminButton";
 import type { Category, Brand, Product } from "@/lib/types";
 
 export default function ProductForm({
@@ -210,13 +211,9 @@ export default function ProductForm({
 
       {error ? <p className="font-body text-sm text-accent">{error}</p> : null}
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="bg-accent px-6 py-3 font-data text-xs uppercase tracking-widest text-accent-ink disabled:opacity-60"
-      >
+      <AdminButton type="submit" disabled={loading}>
         {product ? "Kaydet" : "Ürünü Ekle"}
-      </button>
+      </AdminButton>
     </form>
   );
 }

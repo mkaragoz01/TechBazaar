@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { DashboardChartData, ChartPoint } from "@/lib/types";
 import { formatPriceNumber } from "@/lib/formatPrice";
+import Card from "@/components/Card";
 
 const VIEW_W = 640;
 const VIEW_H = 220;
@@ -39,7 +40,7 @@ export default function RevenueChart({ chart }: { chart: DashboardChartData }) {
   const last = coords[coords.length - 1];
 
   return (
-    <div className="rounded-3xl bg-surface p-6 shadow-sm">
+    <Card>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="font-display text-base font-bold text-ink">{meta.title}</h2>
@@ -115,6 +116,6 @@ export default function RevenueChart({ chart }: { chart: DashboardChartData }) {
         <span className="inline-block h-2 w-2 rounded-full bg-accent" />
         Net gelir ({formatPriceNumber(Math.round(points.reduce((s, p) => s + p.value, 0) * 100))} TL toplam)
       </div>
-    </div>
+    </Card>
   );
 }

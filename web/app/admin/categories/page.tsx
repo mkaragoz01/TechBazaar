@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getAdminCategories } from "@/lib/api";
 import DeleteButton from "@/components/admin/DeleteButton";
+import AdminButton from "@/components/admin/AdminButton";
 import { stripHtml } from "@/lib/richText";
 
 export default async function AdminCategoriesPage() {
@@ -10,12 +11,9 @@ export default async function AdminCategoriesPage() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold text-ink">Kategoriler</h1>
-        <Link
-          href="/admin/categories/new"
-          className="bg-accent px-4 py-2 font-data text-xs uppercase tracking-widest text-accent-ink"
-        >
+        <AdminButton size="sm" href="/admin/categories/new">
           Yeni Kategori
-        </Link>
+        </AdminButton>
       </div>
 
       <div className="overflow-x-auto border border-border">
@@ -49,6 +47,7 @@ export default async function AdminCategoriesPage() {
                     <DeleteButton
                       url={`/api/admin/categories/${category._id}`}
                       confirmMessage="Bu kategoriyi silmek istediğinize emin misiniz?"
+                      itemLabel={category.name}
                     />
                   </div>
                 </td>

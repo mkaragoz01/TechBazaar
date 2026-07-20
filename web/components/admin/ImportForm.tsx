@@ -4,6 +4,8 @@ import { useState, type ChangeEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { clientFetch, ClientApiError } from "@/lib/client-api";
+import AdminButton from "@/components/admin/AdminButton";
+import Card from "@/components/Card";
 
 type RowAction = "create" | "update" | "error";
 
@@ -94,7 +96,7 @@ export default function ImportForm() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center gap-4 rounded-2xl bg-surface p-4 shadow-sm">
+      <Card size="sm" className="flex flex-wrap items-center gap-4">
         <a
           href="/api/admin/products/import/template"
           className="font-data text-xs uppercase tracking-widest text-info hover:text-accent"
@@ -115,7 +117,7 @@ export default function ImportForm() {
         >
           {validating ? "Doğrulanıyor..." : "Doğrula"}
         </button>
-      </div>
+      </Card>
 
       {error ? <p className="font-body text-sm text-accent">{error}</p> : null}
 
@@ -165,14 +167,9 @@ export default function ImportForm() {
             </table>
           </div>
 
-          <button
-            type="button"
-            onClick={handleConfirm}
-            disabled={!canConfirm || confirming}
-            className="w-fit bg-accent px-6 py-3 font-data text-xs uppercase tracking-widest text-accent-ink disabled:opacity-60"
-          >
+          <AdminButton onClick={handleConfirm} disabled={!canConfirm || confirming} className="w-fit">
             {confirming ? "İçe Aktarılıyor..." : "Onayla ve İçe Aktar"}
-          </button>
+          </AdminButton>
         </div>
       ) : null}
 

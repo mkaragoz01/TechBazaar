@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getAdminBrands } from "@/lib/api";
 import DeleteButton from "@/components/admin/DeleteButton";
+import AdminButton from "@/components/admin/AdminButton";
 import { stripHtml } from "@/lib/richText";
 
 export default async function AdminBrandsPage() {
@@ -10,12 +11,9 @@ export default async function AdminBrandsPage() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold text-ink">Markalar</h1>
-        <Link
-          href="/admin/brands/new"
-          className="bg-accent px-4 py-2 font-data text-xs uppercase tracking-widest text-accent-ink"
-        >
+        <AdminButton size="sm" href="/admin/brands/new">
           Yeni Marka
-        </Link>
+        </AdminButton>
       </div>
 
       <div className="overflow-x-auto border border-border">
@@ -49,6 +47,7 @@ export default async function AdminBrandsPage() {
                     <DeleteButton
                       url={`/api/admin/brands/${brand._id}`}
                       confirmMessage="Bu markayı silmek istediğinize emin misiniz?"
+                      itemLabel={brand.name}
                     />
                   </div>
                 </td>

@@ -1,6 +1,24 @@
+import type { Metadata } from "next";
 import { getProducts } from "@/lib/api";
 import ProductGrid from "@/components/ProductGrid";
 import ProductFilters from "@/components/ProductFilters";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ categoryId: string }>;
+}): Promise<Metadata> {
+  const { categoryId } = await params;
+  const { categories } = await getProducts({ category: categoryId });
+  const categoryName = categories.find((c) => c._id === categoryId)?.name;
+
+  if (!categoryName) return {};
+
+  return {
+    title: categoryName,
+    description: `${categoryName} kategorisindeki tüm ürünler — TechStore'da net fiyat, net spesifikasyon.`,
+  };
+}
 
 export default async function CategoryPage({
   params,

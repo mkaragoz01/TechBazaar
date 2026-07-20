@@ -1,6 +1,7 @@
 import { getAdminOrders } from "@/lib/api";
 import { formatPriceNumber } from "@/lib/formatPrice";
 import OrderStatusSelect from "@/components/admin/OrderStatusSelect";
+import AdminButton from "@/components/admin/AdminButton";
 import type { OrderStatus } from "@/lib/types";
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
@@ -44,12 +45,9 @@ export default async function AdminOrdersPage({
             ))}
           </select>
         </label>
-        <button
-          type="submit"
-          className="bg-accent px-4 py-2 font-data text-xs uppercase tracking-widest text-accent-ink"
-        >
+        <AdminButton size="sm" type="submit">
           Filtrele
-        </button>
+        </AdminButton>
       </form>
 
       <div className="overflow-x-auto border border-border">
