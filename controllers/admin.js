@@ -75,7 +75,7 @@ exports.postAddProduct = async (req, res, next) => {
             isNewArrival: asBoolean(req.body.isNewArrival),
             isFeatured: asBoolean(req.body.isFeatured),
             userId: req.user._id,
-            isActive: true
+            isActive: req.body.isActive !== undefined ? asBoolean(req.body.isActive) : true
         });
         await product.save();
         res.status(201).json({ ok: true, product });
@@ -128,6 +128,9 @@ exports.putEditProduct = async (req, res, next) => {
         }
         product.isNewArrival = asBoolean(req.body.isNewArrival);
         product.isFeatured = asBoolean(req.body.isFeatured);
+        if (req.body.isActive !== undefined) {
+            product.isActive = asBoolean(req.body.isActive);
+        }
 
         const oldImgUrl = product.imgUrl;
         if (image) {

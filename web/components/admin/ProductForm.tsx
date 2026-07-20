@@ -25,6 +25,7 @@ export default function ProductForm({
   const [brand, setBrand] = useState(product?.brand ?? "");
   const [isNewArrival, setIsNewArrival] = useState(product?.isNewArrival ?? false);
   const [isFeatured, setIsFeatured] = useState(product?.isFeatured ?? false);
+  const [isActive, setIsActive] = useState(product?.isActive ?? true);
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
     product?.categories ?? []
   );
@@ -176,6 +177,21 @@ export default function ProductForm({
             onChange={(e) => setIsFeatured(e.target.checked)}
           />
           Öne Çıkan
+        </label>
+      </fieldset>
+
+      <fieldset className="flex flex-col gap-2">
+        <legend className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+          Durum
+        </legend>
+        <input type="hidden" name="isActive" value={isActive ? "true" : "false"} />
+        <label className="flex items-center gap-2 font-body text-sm text-ink">
+          <input
+            type="checkbox"
+            checked={isActive}
+            onChange={(e) => setIsActive(e.target.checked)}
+          />
+          Aktif (mağazada görünür)
         </label>
       </fieldset>
 
