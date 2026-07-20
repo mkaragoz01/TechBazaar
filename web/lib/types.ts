@@ -40,14 +40,19 @@ export type CartDiscount = {
   code?: string;
 };
 
-export type CampaignConditionType = "product" | "user" | "cartTotal";
+export type CampaignConditionType = "product" | "productName" | "user" | "cartTotal";
 
 export type CampaignCondition = {
   type: CampaignConditionType;
   field?: "sku" | "category" | "brand";
-  operator: "in" | "gte" | "lte";
+  operator: "in" | "gte" | "lte" | "contains";
   values?: string[];
   value?: number; // kuruş, for cartTotal
+  text?: string; // for productName/contains
+};
+
+export type CampaignConditionGroup = {
+  conditions: CampaignCondition[];
 };
 
 export type Campaign = {
@@ -55,7 +60,12 @@ export type Campaign = {
   name: string;
   description?: string;
   code?: string;
-  conditions: CampaignCondition[];
+  // Gruplardan biri tamamen sağlanırsa kampanya uygulanır (VEYA); bir
+  // grubun içindeki tüm koşullar sağlanmalıdır (VE). Bu alandan önceki
+  // (migrasyondan geçmemiş) kampanyalarda `conditionGroups` yerine düz bir
+  // `conditions` dizisi bulunabilir — API bunu ham haliyle döndürür.
+  conditionGroups?: CampaignConditionGroup[];
+  conditions?: CampaignCondition[];
   discountType: "percentage" | "fixed";
   discountValue: number;
   appliesTo: "matchingItems" | "cartTotal";

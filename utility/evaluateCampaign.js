@@ -1,9 +1,14 @@
 // Pure functions — no DB access — so they're easy to unit test and reuse
 // between the cart preview, checkout, and order-placement code paths.
 //
-// MVP scope (see PROJECT_ANALYSIS.md Faz D madde 11/11a): a campaign's
-// conditions are a single implicit AND group. The OR-of-ANDs layer and the
-// productName/contains condition type are deferred to a follow-up pass.
+// Second pass (see PROJECT_ANALYSIS.md Faz D madde 11/11a): a campaign's
+// conditionGroups are OR'd together, and each group's conditions are AND'd.
+// Campaign documents saved before this pass may still carry the old flat
+// `conditions` array (single implicit AND group, no `conditionGroups`) —
+// `groupsFor` treats that shape as a single-group campaign so old data
+// keeps evaluating exactly as it did before, with no DB migration required
+// for correctness (a one-off migration script still normalizes the shape
+// for editing in the admin UI).
 
 function cartTotal(cartItems) {
     return cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -27,6 +32,11 @@ function evaluateCondition(condition, context) {
                 }
                 return false;
             });
+        case 'productName': {
+            const needle = String(condition.text || '').trim().toLowerCase();
+            if (!needle) return false;
+            return cartItems.some(item => item.name && item.name.toLowerCase().includes(needle));
+        }
         case 'user':
             if (!user) return false;
             return condition.values.includes(String(user._id)) || condition.values.includes(user.email);
@@ -47,28 +57,56 @@ function isWithinDateRange(campaign, now) {
     return true;
 }
 
+// Normalizes a campaign's condition shape to an array of groups, regardless
+// of whether it uses the current `conditionGroups` field or the pre-second-
+// pass flat `conditions` field.
+function groupsFor(campaign) {
+    if (Array.isArray(campaign.conditionGroups) && campaign.conditionGroups.length > 0) {
+        return campaign.conditionGroups;
+    }
+    if (Array.isArray(campaign.conditions)) {
+        return [{ conditions: campaign.conditions }];
+    }
+    return [];
+}
+
+// The first group (in declaration order) whose conditions are ALL satisfied
+// — or null if no group matches, the campaign is inactive, or it's outside
+// its date range. Returning the group (not just a boolean) lets callers know
+// *which* product/productName conditions actually triggered the match, for
+// `appliesTo: 'matchingItems'`.
+function matchingGroupFor(campaign, context, now = new Date()) {
+    if (!campaign.isActive) return null;
+    if (!isWithinDateRange(campaign, now)) return null;
+    return groupsFor(campaign).find(group => group.conditions.every(c => evaluateCondition(c, context))) || null;
+}
+
 // Does this campaign apply to this cart/user right now, ignoring whether a
 // code was entered? (Callers decide separately whether a code is required.)
 function campaignMatches(campaign, context, now = new Date()) {
-    if (!campaign.isActive) return false;
-    if (!isWithinDateRange(campaign, now)) return false;
-    return campaign.conditions.every(condition => evaluateCondition(condition, context));
+    return matchingGroupFor(campaign, context, now) !== null;
 }
 
-function itemsMatchingProductConditions(campaign, cartItems) {
-    const productConditions = campaign.conditions.filter(c => c.type === 'product');
-    if (productConditions.length === 0) {
+function itemsMatchingProductConditions(group, cartItems) {
+    const productLikeConditions = (group ? group.conditions : []).filter(
+        c => c.type === 'product' || c.type === 'productName'
+    );
+    if (productLikeConditions.length === 0) {
         return cartItems;
     }
     return cartItems.filter(item =>
-        productConditions.some(condition => evaluateCondition(condition, { cartItems: [item] }))
+        productLikeConditions.some(condition => evaluateCondition(condition, { cartItems: [item] }))
     );
 }
 
-// Discount amount in kuruş for a campaign already known to match.
-function computeDiscountAmount(campaign, cartItems) {
+// Discount amount in kuruş for a campaign already known to match. `group`
+// should be the group returned by `matchingGroupFor` for this context —
+// when omitted (e.g. a caller that already confirmed a match some other
+// way), falls back to the campaign's first group.
+function computeDiscountAmount(campaign, cartItems, group) {
+    const resolvedGroup = group || groupsFor(campaign)[0] || null;
     const base = campaign.appliesTo === 'matchingItems'
-        ? cartTotal(itemsMatchingProductConditions(campaign, cartItems))
+        ? cartTotal(itemsMatchingProductConditions(resolvedGroup, cartItems))
         : cartTotal(cartItems);
 
     if (base <= 0) return 0;
@@ -88,9 +126,10 @@ function pickBestAutomaticCampaign(campaigns, context, now = new Date()) {
 
     for (const campaign of campaigns) {
         if (campaign.code) continue;
-        if (!campaignMatches(campaign, context, now)) continue;
+        const group = matchingGroupFor(campaign, context, now);
+        if (!group) continue;
 
-        const amount = computeDiscountAmount(campaign, context.cartItems);
+        const amount = computeDiscountAmount(campaign, context.cartItems, group);
         if (amount > bestAmount) {
             best = campaign;
             bestAmount = amount;
@@ -107,9 +146,12 @@ function findCampaignByCode(campaigns, code, context, now = new Date()) {
     if (!normalized) return null;
 
     const campaign = campaigns.find(c => c.code === normalized);
-    if (!campaign || !campaignMatches(campaign, context, now)) return null;
+    if (!campaign) return null;
 
-    return { campaign, amount: computeDiscountAmount(campaign, context.cartItems) };
+    const group = matchingGroupFor(campaign, context, now);
+    if (!group) return null;
+
+    return { campaign, amount: computeDiscountAmount(campaign, context.cartItems, group) };
 }
 
 // For the home page banner, which has no cart/user context yet — shown
@@ -125,6 +167,7 @@ module.exports = {
     cartTotal,
     evaluateCondition,
     campaignMatches,
+    matchingGroupFor,
     computeDiscountAmount,
     pickBestAutomaticCampaign,
     findCampaignByCode,

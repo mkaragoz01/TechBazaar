@@ -444,7 +444,7 @@ function campaignFieldsFromBody(body) {
         name: body.name,
         description: body.description,
         code: asOptionalTrimmed(body.code),
-        conditions: body.conditions,
+        conditionGroups: body.conditionGroups,
         discountType: body.discountType,
         discountValue: Number(body.discountValue),
         appliesTo: body.appliesTo,

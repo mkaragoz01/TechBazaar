@@ -1,6 +1,7 @@
 const {
     evaluateCondition,
     campaignMatches,
+    matchingGroupFor,
     computeDiscountAmount,
     pickBestAutomaticCampaign,
     findCampaignByCode,
@@ -54,6 +55,18 @@ describe('evaluateCondition', () => {
         expect(evaluateCondition({ type: 'cartTotal', operator: 'gte', value: 40000 }, { cartItems: items })).toBe(false);
         expect(evaluateCondition({ type: 'cartTotal', operator: 'lte', value: 40000 }, { cartItems: items })).toBe(true);
     });
+
+    it('matches a product name substring, case-insensitively', () => {
+        const condition = { type: 'productName', operator: 'contains', text: 'pro' };
+        expect(evaluateCondition(condition, { cartItems: [item({ name: 'iPhone Pro' })] })).toBe(true);
+        expect(evaluateCondition(condition, { cartItems: [item({ name: 'PRODUCT X' })] })).toBe(true);
+        expect(evaluateCondition(condition, { cartItems: [item({ name: 'Basic Model' })] })).toBe(false);
+    });
+
+    it('never matches an empty productName text', () => {
+        const condition = { type: 'productName', operator: 'contains', text: '' };
+        expect(evaluateCondition(condition, { cartItems: [item({ name: 'Anything' })] })).toBe(false);
+    });
 });
 
 describe('campaignMatches', () => {
@@ -84,6 +97,41 @@ describe('campaignMatches', () => {
         expect(campaignMatches(c, { cartItems: [item()] }, new Date('2026-07-01'))).toBe(false);
         expect(campaignMatches(c, { cartItems: [item()] }, new Date('2026-05-01'))).toBe(false);
     });
+
+    it('matches if ANY conditionGroup matches (OR), requiring ALL conditions within a group (AND)', () => {
+        const c = campaign({
+            conditions: undefined,
+            conditionGroups: [
+                { conditions: [{ type: 'cartTotal', operator: 'gte', value: 999999 }, { type: 'product', field: 'sku', operator: 'in', values: ['SKU-1'] }] },
+                { conditions: [{ type: 'productName', operator: 'contains', text: 'pro' }] }
+            ]
+        });
+        // First group: cartTotal fails even though the sku matches (AND) — no match via group 1.
+        // Second group: productName matches on its own — campaign matches via group 2 (OR).
+        expect(campaignMatches(c, { cartItems: [item({ name: 'iPhone Pro' })] })).toBe(true);
+        // Neither group's conditions are satisfied.
+        expect(campaignMatches(c, { cartItems: [item({ name: 'Basic', sku: 'OTHER' })] })).toBe(false);
+    });
+
+    it('matchingGroupFor returns the specific group that matched', () => {
+        const c = campaign({
+            conditions: undefined,
+            conditionGroups: [
+                { conditions: [{ type: 'cartTotal', operator: 'gte', value: 999999 }] },
+                { conditions: [{ type: 'productName', operator: 'contains', text: 'pro' }] }
+            ]
+        });
+        const group = matchingGroupFor(c, { cartItems: [item({ name: 'iPhone Pro' })] });
+        expect(group).toBe(c.conditionGroups[1]);
+        expect(matchingGroupFor(c, { cartItems: [item({ name: 'Basic' })] })).toBeNull();
+    });
+
+    it('still evaluates a pre-second-pass campaign that only has a flat `conditions` field', () => {
+        const c = campaign({ conditions: [{ type: 'cartTotal', operator: 'gte', value: 5000 }] });
+        expect(c.conditionGroups).toBeUndefined();
+        expect(campaignMatches(c, { cartItems: [item({ price: 10000, quantity: 1 })] })).toBe(true);
+        expect(campaignMatches(c, { cartItems: [item({ price: 1000, quantity: 1 })] })).toBe(false);
+    });
 });
 
 describe('computeDiscountAmount', () => {
@@ -112,6 +160,29 @@ describe('computeDiscountAmount', () => {
         ];
         // Only item 'a' (brand1) counts toward the discount base.
         expect(computeDiscountAmount(c, items)).toBe(5000);
+    });
+
+    it('with a group argument, only that group\'s product-like conditions decide matching items', () => {
+        const c = campaign({
+            conditions: undefined,
+            discountType: 'percentage',
+            discountValue: 50,
+            appliesTo: 'matchingItems',
+            conditionGroups: [
+                // This group would match brand2 items, but it's not the group
+                // that actually matched this cart/user context.
+                { conditions: [{ type: 'product', field: 'brand', operator: 'in', values: ['brand2'] }] },
+                { conditions: [{ type: 'productName', operator: 'contains', text: 'pro' }] }
+            ]
+        });
+        const items = [
+            item({ _id: 'a', name: 'iPhone Pro', price: 10000, quantity: 1, brand: 'brand2' }),
+            item({ _id: 'b', name: 'Basic Model', price: 10000, quantity: 1, brand: 'brand2' })
+        ];
+        const matchedGroup = c.conditionGroups[1];
+        // Only item 'a' (name contains "pro") counts — item 'b' would satisfy
+        // group 1's brand condition, but group 1 isn't the one that matched.
+        expect(computeDiscountAmount(c, items, matchedGroup)).toBe(5000);
     });
 });
 

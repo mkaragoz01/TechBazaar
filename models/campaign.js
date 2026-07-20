@@ -1,14 +1,16 @@
 const mongoose = require('mongoose')
 
-// MVP scope (see PROJECT_ANALYSIS.md Faz D madde 11/11a): a single implicit
-// AND group — every condition must match for the campaign to apply. The
-// OR-of-ANDs layer (multiple condition groups) and the productName/contains
-// condition type are deliberately deferred to a follow-up pass, per the
-// documented phased rollout.
+// Second pass (see PROJECT_ANALYSIS.md Faz D madde 11/11a): conditions are
+// grouped as OR-of-ANDs — a campaign applies if ANY conditionGroup matches,
+// and a group matches only if ALL of its conditions match. This is the same
+// disjunctive-normal-form pattern real coupon systems (e.g. WooCommerce)
+// use: any boolean expression can be written this way, while the admin UI
+// stays a flat two-level list ("add group" + "add condition inside a
+// group") instead of an arbitrary rule tree.
 const conditionSchema = new mongoose.Schema({
     type: {
         type: String,
-        enum: ['product', 'user', 'cartTotal'],
+        enum: ['product', 'productName', 'user', 'cartTotal'],
         required: true
     },
     // Only meaningful for type: 'product'.
@@ -18,13 +20,25 @@ const conditionSchema = new mongoose.Schema({
     },
     operator: {
         type: String,
-        enum: ['in', 'gte', 'lte'],
+        enum: ['in', 'gte', 'lte', 'contains'],
         required: true
     },
     // 'in' operator (product sku/category/brand values, or user ids/emails).
     values: [String],
     // gte/lte operator (cartTotal, in kuruş).
-    value: Number
+    value: Number,
+    // 'contains' operator (productName — matches against the product name).
+    text: String
+}, { _id: false })
+
+const conditionGroupSchema = new mongoose.Schema({
+    conditions: {
+        type: [conditionSchema],
+        validate: {
+            validator: (value) => Array.isArray(value) && value.length > 0,
+            message: 'Her grupta en az bir koşul olmalıdır.'
+        }
+    }
 }, { _id: false })
 
 const campaignSchema = new mongoose.Schema({
@@ -47,11 +61,16 @@ const campaignSchema = new mongoose.Schema({
         unique: true,
         sparse: true
     },
-    conditions: {
-        type: [conditionSchema],
+    // Gruplardan HERHANGİ BİRİ tamamen sağlanırsa kampanya uygulanır (VEYA);
+    // bir grubun İÇİNDEKİ tüm koşullar sağlanmalıdır (VE). Bu alandan önceki
+    // sürümde düz bir `conditions` dizisi vardı (tek örtük VE grubu);
+    // `utility/evaluateCampaign.js` eski belgeleri okurken bunu tek elemanlı
+    // bir grup gibi ele alarak geriye uyumluluğu koruyor.
+    conditionGroups: {
+        type: [conditionGroupSchema],
         validate: {
             validator: (value) => Array.isArray(value) && value.length > 0,
-            message: 'En az bir koşul girmelisiniz.'
+            message: 'En az bir koşul grubu girmelisiniz.'
         }
     },
     discountType: {

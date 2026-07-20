@@ -35,7 +35,7 @@ describe('campaigns (controllers/admin.js + controllers/shop.js)', () => {
 
             const createRes = await agent.post('/api/admin/campaigns').set(xhr).send({
                 name: 'Test Kampanya',
-                conditions: [{ type: 'cartTotal', operator: 'gte', value: 10000 }],
+                conditionGroups: [{ conditions: [{ type: 'cartTotal', operator: 'gte', value: 10000 }] }],
                 discountType: 'percentage',
                 discountValue: 10,
                 appliesTo: 'cartTotal',
@@ -45,7 +45,7 @@ describe('campaigns (controllers/admin.js + controllers/shop.js)', () => {
 
             const noConditionRes = await agent.post('/api/admin/campaigns').set(xhr).send({
                 name: 'Kosulsuz',
-                conditions: [],
+                conditionGroups: [],
                 discountType: 'percentage',
                 discountValue: 10,
                 appliesTo: 'cartTotal'
@@ -59,7 +59,7 @@ describe('campaigns (controllers/admin.js + controllers/shop.js)', () => {
             const body = {
                 name: 'Kodlu Kampanya',
                 code: 'DUPTEST',
-                conditions: [{ type: 'cartTotal', operator: 'gte', value: 0 }],
+                conditionGroups: [{ conditions: [{ type: 'cartTotal', operator: 'gte', value: 0 }] }],
                 discountType: 'fixed',
                 discountValue: 1000,
                 appliesTo: 'cartTotal'
@@ -84,7 +84,7 @@ describe('campaigns (controllers/admin.js + controllers/shop.js)', () => {
             const { agent } = await loginAgent(app, { email: 'campaignadmin4@example.com', isAdmin: true });
             const res = await agent.post('/api/admin/campaigns').set(xhr).send({
                 name: 'Ters Tarih Aralığı',
-                conditions: [{ type: 'cartTotal', operator: 'gte', value: 0 }],
+                conditionGroups: [{ conditions: [{ type: 'cartTotal', operator: 'gte', value: 0 }] }],
                 discountType: 'percentage',
                 discountValue: 10,
                 appliesTo: 'cartTotal',
@@ -104,7 +104,7 @@ describe('campaigns (controllers/admin.js + controllers/shop.js)', () => {
             const Campaign = require('../models/campaign');
             await Campaign.create({
                 name: 'Otomatik %10',
-                conditions: [{ type: 'cartTotal', operator: 'gte', value: 10000 }],
+                conditionGroups: [{ conditions: [{ type: 'cartTotal', operator: 'gte', value: 10000 }] }],
                 discountType: 'percentage',
                 discountValue: 10,
                 appliesTo: 'cartTotal',
@@ -126,7 +126,7 @@ describe('campaigns (controllers/admin.js + controllers/shop.js)', () => {
             await Campaign.create({
                 name: 'Kodlu Indirim',
                 code: 'SHOPPER2CODE',
-                conditions: [{ type: 'cartTotal', operator: 'gte', value: 0 }],
+                conditionGroups: [{ conditions: [{ type: 'cartTotal', operator: 'gte', value: 0 }] }],
                 discountType: 'fixed',
                 discountValue: 2000,
                 appliesTo: 'cartTotal',
@@ -154,6 +154,76 @@ describe('campaigns (controllers/admin.js + controllers/shop.js)', () => {
             expect(cartAfterRemove.body.discount?.code).toBeUndefined();
         });
 
+        it('applies a campaign via a second OR-ed group when the first group does not match', async () => {
+            const { agent, user } = await loginAgent(app, { email: 'shopper4@example.com' });
+            const category = await createCategory('Kategori4');
+            const product = await createProduct({
+                name: 'Test Pro Ürün',
+                price: 40000,
+                stock: 5,
+                categories: [category._id],
+                userId: user._id
+            });
+
+            // This suite shares one in-memory MongoDB across every `it` in this
+            // file with no per-test reset, so earlier tests' automatic (no-code)
+            // campaigns (e.g. the 10%-off ones above) are still active here too.
+            // Using a dominant discountValue — the same pattern the home-banner
+            // test below already relies on — ensures pickBestAutomaticCampaign
+            // picks *this* campaign regardless of what else lingers in the DB.
+            const Campaign = require('../models/campaign');
+            await Campaign.create({
+                name: 'Grup Kampanyası',
+                conditionGroups: [
+                    // First group requires an unreachable cart total — never matches.
+                    { conditions: [{ type: 'cartTotal', operator: 'gte', value: 999999999 }] },
+                    // Second group matches via a productName/contains condition.
+                    { conditions: [{ type: 'productName', operator: 'contains', text: 'pro' }] }
+                ],
+                discountType: 'percentage',
+                discountValue: 90,
+                appliesTo: 'cartTotal',
+                isActive: true
+            });
+
+            await agent.post('/api/cart').set(xhr).send({ productId: product._id.toString() });
+            const cartRes = await agent.get('/api/cart');
+            expect(cartRes.body.discount).not.toBeNull();
+            expect(cartRes.body.discount.amount).toBe(36000);
+        });
+
+        it('applies a pre-second-pass campaign that still has a flat `conditions` field instead of conditionGroups', async () => {
+            const { agent, user } = await loginAgent(app, { email: 'shopper5@example.com' });
+            const category = await createCategory('Kategori5');
+            const product = await createProduct({
+                price: 60000,
+                stock: 5,
+                categories: [category._id],
+                userId: user._id,
+                sku: 'SHOPPER5-ONLY-SKU'
+            });
+
+            // Bypasses the Mongoose model (and its current schema) to write the
+            // pre-migration document shape directly, the way an untouched old
+            // campaign document actually looks in the database. Scoped to this
+            // test's own SKU (rather than e.g. cartTotal >= 0) so it can't leak
+            // into and skew other tests sharing this file's in-memory DB.
+            const Campaign = require('../models/campaign');
+            await Campaign.collection.insertOne({
+                name: 'Eski Şekilli Kampanya',
+                conditions: [{ type: 'product', field: 'sku', operator: 'in', values: ['SHOPPER5-ONLY-SKU'] }],
+                discountType: 'percentage',
+                discountValue: 95,
+                appliesTo: 'cartTotal',
+                isActive: true
+            });
+
+            await agent.post('/api/cart').set(xhr).send({ productId: product._id.toString() });
+            const cartRes = await agent.get('/api/cart');
+            expect(cartRes.body.discount).not.toBeNull();
+            expect(cartRes.body.discount.amount).toBe(57000);
+        });
+
         it('snapshots the discount onto the placed order', async () => {
             const { agent, user } = await loginAgent(app, { email: 'shopper3@example.com' });
             const category = await createCategory('Kategori3');
@@ -169,7 +239,9 @@ describe('campaigns (controllers/admin.js + controllers/shop.js)', () => {
             const Campaign = require('../models/campaign');
             await Campaign.create({
                 name: 'Marka Indirimi',
-                conditions: [{ type: 'product', field: 'brand', operator: 'in', values: [brand._id.toString()] }],
+                conditionGroups: [
+                    { conditions: [{ type: 'product', field: 'brand', operator: 'in', values: [brand._id.toString()] }] }
+                ],
                 discountType: 'percentage',
                 discountValue: 20,
                 appliesTo: 'matchingItems',
@@ -204,7 +276,7 @@ describe('campaigns (controllers/admin.js + controllers/shop.js)', () => {
             await Campaign.create({
                 name: 'Vitrin Kampanyası',
                 description: 'Test banner açıklaması',
-                conditions: [{ type: 'cartTotal', operator: 'gte', value: 0 }],
+                conditionGroups: [{ conditions: [{ type: 'cartTotal', operator: 'gte', value: 0 }] }],
                 discountType: 'percentage',
                 discountValue: 99,
                 appliesTo: 'cartTotal',

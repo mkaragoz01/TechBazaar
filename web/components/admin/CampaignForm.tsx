@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import { clientFetch, ClientApiError } from "@/lib/client-api";
 import FormField from "@/components/FormField";
 import AdminButton from "@/components/admin/AdminButton";
-import type { Campaign, CampaignCondition, Category, Brand } from "@/lib/types";
+import type { Campaign, CampaignCondition, CampaignConditionGroup, Category, Brand } from "@/lib/types";
 
-type ConditionType = "product" | "user" | "cartTotal";
+type ConditionType = "product" | "productName" | "user" | "cartTotal";
 
 // UI-only shape — kept flat and string-based for form inputs, converted
 // to/from the API's CampaignCondition on load/submit.
@@ -18,33 +18,42 @@ type ConditionRow = {
   textValues: string; // comma-separated: SKUs or user ids/emails
   selectedIds: string[]; // for field: category/brand
   amountTl: string; // for cartTotal
+  nameText: string; // for productName
 };
 
 function emptyRow(): ConditionRow {
-  return { type: "product", field: "sku", operator: "gte", textValues: "", selectedIds: [], amountTl: "" };
+  return {
+    type: "product",
+    field: "sku",
+    operator: "gte",
+    textValues: "",
+    selectedIds: [],
+    amountTl: "",
+    nameText: "",
+  };
 }
 
 function conditionToRow(condition: CampaignCondition): ConditionRow {
   if (condition.type === "product") {
     const field = condition.field ?? "sku";
     return {
+      ...emptyRow(),
       type: "product",
       field,
-      operator: "gte",
       textValues: field === "sku" ? (condition.values ?? []).join(", ") : "",
       selectedIds: field !== "sku" ? condition.values ?? [] : [],
-      amountTl: "",
     };
   }
+  if (condition.type === "productName") {
+    return { ...emptyRow(), type: "productName", nameText: condition.text ?? "" };
+  }
   if (condition.type === "user") {
-    return { type: "user", field: "sku", operator: "gte", textValues: (condition.values ?? []).join(", "), selectedIds: [], amountTl: "" };
+    return { ...emptyRow(), type: "user", textValues: (condition.values ?? []).join(", ") };
   }
   return {
+    ...emptyRow(),
     type: "cartTotal",
-    field: "sku",
     operator: condition.operator === "lte" ? "lte" : "gte",
-    textValues: "",
-    selectedIds: [],
     amountTl: condition.value !== undefined ? (condition.value / 100).toFixed(2) : "",
   };
 }
@@ -61,6 +70,9 @@ function rowToCondition(row: ConditionRow): CampaignCondition {
     }
     return { type: "product", field: row.field, operator: "in", values: row.selectedIds };
   }
+  if (row.type === "productName") {
+    return { type: "productName", operator: "contains", text: row.nameText.trim() };
+  }
   if (row.type === "user") {
     return {
       type: "user",
@@ -73,6 +85,21 @@ function rowToCondition(row: ConditionRow): CampaignCondition {
     operator: row.operator,
     value: Math.round(parseFloat(row.amountTl || "0") * 100),
   };
+}
+
+// A campaign saved before the OR-of-groups pass may still carry the old flat
+// `conditions` field instead of `conditionGroups` — treat that as a single
+// group so editing an old campaign still shows its conditions correctly.
+function initialGroups(campaign?: Campaign): ConditionRow[][] {
+  if (campaign?.conditionGroups && campaign.conditionGroups.length > 0) {
+    return campaign.conditionGroups.map((group) =>
+      group.conditions.length > 0 ? group.conditions.map(conditionToRow) : [emptyRow()]
+    );
+  }
+  if (campaign?.conditions && campaign.conditions.length > 0) {
+    return [campaign.conditions.map(conditionToRow)];
+  }
+  return [[emptyRow()]];
 }
 
 export default function CampaignForm({
@@ -96,47 +123,60 @@ export default function CampaignForm({
   const [startDate, setStartDate] = useState(campaign?.startDate?.slice(0, 10) ?? "");
   const [endDate, setEndDate] = useState(campaign?.endDate?.slice(0, 10) ?? "");
   const [isActive, setIsActive] = useState(campaign?.isActive ?? true);
-  const [conditions, setConditions] = useState<ConditionRow[]>(
-    campaign && campaign.conditions.length > 0 ? campaign.conditions.map(conditionToRow) : [emptyRow()]
-  );
+  const [groups, setGroups] = useState<ConditionRow[][]>(initialGroups(campaign));
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  function updateCondition(index: number, patch: Partial<ConditionRow>) {
-    setConditions((prev) => prev.map((row, i) => (i === index ? { ...row, ...patch } : row)));
-  }
-
-  function toggleConditionCategory(index: number, id: string) {
-    setConditions((prev) =>
-      prev.map((row, i) =>
-        i === index
-          ? {
-              ...row,
-              selectedIds: row.selectedIds.includes(id)
-                ? row.selectedIds.filter((c) => c !== id)
-                : [...row.selectedIds, id],
-            }
-          : row
+  function updateCondition(groupIndex: number, rowIndex: number, patch: Partial<ConditionRow>) {
+    setGroups((prev) =>
+      prev.map((group, g) =>
+        g === groupIndex
+          ? group.map((row, i) => (i === rowIndex ? { ...row, ...patch } : row))
+          : group
       )
     );
   }
 
-  function addCondition() {
-    setConditions((prev) => [...prev, emptyRow()]);
+  function toggleConditionCategory(groupIndex: number, rowIndex: number, id: string) {
+    setGroups((prev) =>
+      prev.map((group, g) =>
+        g === groupIndex
+          ? group.map((row, i) =>
+              i === rowIndex
+                ? {
+                    ...row,
+                    selectedIds: row.selectedIds.includes(id)
+                      ? row.selectedIds.filter((c) => c !== id)
+                      : [...row.selectedIds, id],
+                  }
+                : row
+            )
+          : group
+      )
+    );
   }
 
-  function removeCondition(index: number) {
-    setConditions((prev) => prev.filter((_, i) => i !== index));
+  function addCondition(groupIndex: number) {
+    setGroups((prev) => prev.map((group, g) => (g === groupIndex ? [...group, emptyRow()] : group)));
+  }
+
+  function removeCondition(groupIndex: number, rowIndex: number) {
+    setGroups((prev) =>
+      prev.map((group, g) => (g === groupIndex ? group.filter((_, i) => i !== rowIndex) : group))
+    );
+  }
+
+  function addGroup() {
+    setGroups((prev) => [...prev, [emptyRow()]]);
+  }
+
+  function removeGroup(groupIndex: number) {
+    setGroups((prev) => prev.filter((_, g) => g !== groupIndex));
   }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
-
-    if (conditions.length === 0) {
-      setError("Lütfen en az bir koşul ekleyin.");
-      return;
-    }
 
     if (startDate && endDate && endDate < startDate) {
       setError("Bitiş tarihi başlangıç tarihinden önce olamaz.");
@@ -145,11 +185,15 @@ export default function CampaignForm({
 
     setLoading(true);
 
+    const conditionGroups: CampaignConditionGroup[] = groups.map((rows) => ({
+      conditions: rows.map(rowToCondition),
+    }));
+
     const body = {
       name,
       description,
       code: code.trim() || undefined,
-      conditions: conditions.map(rowToCondition),
+      conditionGroups,
       discountType,
       discountValue: Number(discountValue),
       appliesTo,
@@ -196,112 +240,181 @@ export default function CampaignForm({
         placeholder="örn. YAZ2026"
       />
 
-      <fieldset className="flex flex-col gap-3 rounded-xl border border-border p-4">
-        <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
-          Koşullar (hepsi sağlanmalı)
-        </legend>
+      <div className="flex flex-col gap-3">
+        <span className="px-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+          Koşul Grupları (gruplardan biri sağlanırsa yeterli — VEYA)
+        </span>
 
-        {conditions.map((row, index) => (
-          <div key={index} className="flex flex-col gap-3 rounded-xl bg-surface-2 p-4">
-            <div className="flex items-center justify-between">
-              <select
-                value={row.type}
-                onChange={(e) => updateCondition(index, { type: e.target.value as ConditionType })}
-                className="rounded-xl border border-border bg-surface px-3 py-2 font-body text-sm text-ink"
-              >
-                <option value="product">Ürün eşleşmesi</option>
-                <option value="user">Belirli kullanıcı(lar)</option>
-                <option value="cartTotal">Sepet toplamı</option>
-              </select>
-              {conditions.length > 1 ? (
-                <button
-                  type="button"
-                  onClick={() => removeCondition(index)}
-                  className="font-data text-xs uppercase tracking-widest text-accent"
-                >
-                  Kaldır
-                </button>
-              ) : null}
-            </div>
-
-            {row.type === "product" ? (
-              <>
-                <select
-                  value={row.field}
-                  onChange={(e) => updateCondition(index, { field: e.target.value as ConditionRow["field"] })}
-                  className="rounded-xl border border-border bg-surface px-3 py-2 font-body text-sm text-ink"
-                >
-                  <option value="sku">SKU</option>
-                  <option value="category">Kategori</option>
-                  <option value="brand">Marka</option>
-                </select>
-                {row.field === "sku" ? (
-                  <input
-                    type="text"
-                    placeholder="SKU-1, SKU-2, ..."
-                    value={row.textValues}
-                    onChange={(e) => updateCondition(index, { textValues: e.target.value })}
-                    className="rounded-xl border border-border bg-surface px-4 py-2 font-body text-sm text-ink"
-                  />
-                ) : (
-                  <div className="flex flex-wrap gap-3">
-                    {(row.field === "category" ? categories : brands).map((option) => (
-                      <label key={option._id} className="flex items-center gap-1.5 font-body text-sm text-ink">
-                        <input
-                          type="checkbox"
-                          checked={row.selectedIds.includes(option._id)}
-                          onChange={() => toggleConditionCategory(index, option._id)}
-                        />
-                        {option.name}
-                      </label>
-                    ))}
-                  </div>
-                )}
-              </>
-            ) : null}
-
-            {row.type === "user" ? (
-              <input
-                type="text"
-                placeholder="kullanici@example.com, ..."
-                value={row.textValues}
-                onChange={(e) => updateCondition(index, { textValues: e.target.value })}
-                className="rounded-xl border border-border bg-surface px-4 py-2 font-body text-sm text-ink"
-              />
-            ) : null}
-
-            {row.type === "cartTotal" ? (
-              <div className="flex gap-3">
-                <select
-                  value={row.operator}
-                  onChange={(e) => updateCondition(index, { operator: e.target.value as "gte" | "lte" })}
-                  className="rounded-xl border border-border bg-surface px-3 py-2 font-body text-sm text-ink"
-                >
-                  <option value="gte">en az</option>
-                  <option value="lte">en fazla</option>
-                </select>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="Tutar (TL)"
-                  value={row.amountTl}
-                  onChange={(e) => updateCondition(index, { amountTl: e.target.value })}
-                  className="w-full rounded-xl border border-border bg-surface px-4 py-2 font-body text-sm text-ink"
-                />
+        {groups.map((rows, groupIndex) => (
+          <div key={groupIndex}>
+            {groupIndex > 0 ? (
+              <div className="my-2 flex items-center gap-3">
+                <div className="h-px flex-1 bg-border" />
+                <span className="font-data text-xs font-semibold uppercase tracking-widest text-ink-muted">
+                  VEYA
+                </span>
+                <div className="h-px flex-1 bg-border" />
               </div>
             ) : null}
+
+            <fieldset className="flex flex-col gap-3 rounded-xl border border-border p-4">
+              <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+                Grup {groupIndex + 1} (içindeki koşulların hepsi sağlanmalı — VE)
+              </legend>
+
+              {rows.map((row, rowIndex) => (
+                <div key={rowIndex} className="flex flex-col gap-3 rounded-xl bg-surface-2 p-4">
+                  <div className="flex items-center justify-between">
+                    <select
+                      value={row.type}
+                      onChange={(e) =>
+                        updateCondition(groupIndex, rowIndex, { type: e.target.value as ConditionType })
+                      }
+                      className="rounded-xl border border-border bg-surface px-3 py-2 font-body text-sm text-ink"
+                    >
+                      <option value="product">Ürün eşleşmesi</option>
+                      <option value="productName">Ürün adı eşleşmesi</option>
+                      <option value="user">Belirli kullanıcı(lar)</option>
+                      <option value="cartTotal">Sepet toplamı</option>
+                    </select>
+                    {rows.length > 1 ? (
+                      <button
+                        type="button"
+                        onClick={() => removeCondition(groupIndex, rowIndex)}
+                        className="font-data text-xs uppercase tracking-widest text-accent"
+                      >
+                        Kaldır
+                      </button>
+                    ) : null}
+                  </div>
+
+                  {row.type === "product" ? (
+                    <>
+                      <select
+                        value={row.field}
+                        onChange={(e) =>
+                          updateCondition(groupIndex, rowIndex, {
+                            field: e.target.value as ConditionRow["field"],
+                          })
+                        }
+                        className="rounded-xl border border-border bg-surface px-3 py-2 font-body text-sm text-ink"
+                      >
+                        <option value="sku">SKU</option>
+                        <option value="category">Kategori</option>
+                        <option value="brand">Marka</option>
+                      </select>
+                      {row.field === "sku" ? (
+                        <input
+                          type="text"
+                          placeholder="SKU-1, SKU-2, ..."
+                          value={row.textValues}
+                          onChange={(e) =>
+                            updateCondition(groupIndex, rowIndex, { textValues: e.target.value })
+                          }
+                          className="rounded-xl border border-border bg-surface px-4 py-2 font-body text-sm text-ink"
+                        />
+                      ) : (
+                        <div className="flex flex-wrap gap-3">
+                          {(row.field === "category" ? categories : brands).map((option) => (
+                            <label
+                              key={option._id}
+                              className="flex items-center gap-1.5 font-body text-sm text-ink"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={row.selectedIds.includes(option._id)}
+                                onChange={() => toggleConditionCategory(groupIndex, rowIndex, option._id)}
+                              />
+                              {option.name}
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  ) : null}
+
+                  {row.type === "productName" ? (
+                    <input
+                      type="text"
+                      placeholder="örn. Pro"
+                      value={row.nameText}
+                      onChange={(e) => updateCondition(groupIndex, rowIndex, { nameText: e.target.value })}
+                      className="rounded-xl border border-border bg-surface px-4 py-2 font-body text-sm text-ink"
+                    />
+                  ) : null}
+
+                  {row.type === "user" ? (
+                    <input
+                      type="text"
+                      placeholder="kullanici@example.com, ..."
+                      value={row.textValues}
+                      onChange={(e) =>
+                        updateCondition(groupIndex, rowIndex, { textValues: e.target.value })
+                      }
+                      className="rounded-xl border border-border bg-surface px-4 py-2 font-body text-sm text-ink"
+                    />
+                  ) : null}
+
+                  {row.type === "cartTotal" ? (
+                    <div className="flex gap-3">
+                      <select
+                        value={row.operator}
+                        onChange={(e) =>
+                          updateCondition(groupIndex, rowIndex, {
+                            operator: e.target.value as "gte" | "lte",
+                          })
+                        }
+                        className="rounded-xl border border-border bg-surface px-3 py-2 font-body text-sm text-ink"
+                      >
+                        <option value="gte">en az</option>
+                        <option value="lte">en fazla</option>
+                      </select>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="Tutar (TL)"
+                        value={row.amountTl}
+                        onChange={(e) =>
+                          updateCondition(groupIndex, rowIndex, { amountTl: e.target.value })
+                        }
+                        className="w-full rounded-xl border border-border bg-surface px-4 py-2 font-body text-sm text-ink"
+                      />
+                    </div>
+                  ) : null}
+                </div>
+              ))}
+
+              <div className="flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => addCondition(groupIndex)}
+                  className="w-fit font-data text-xs uppercase tracking-widest text-info hover:text-accent"
+                >
+                  + Koşul Ekle
+                </button>
+                {groups.length > 1 ? (
+                  <button
+                    type="button"
+                    onClick={() => removeGroup(groupIndex)}
+                    className="font-data text-xs uppercase tracking-widest text-accent"
+                  >
+                    Grubu Kaldır
+                  </button>
+                ) : null}
+              </div>
+            </fieldset>
           </div>
         ))}
 
         <button
           type="button"
-          onClick={addCondition}
+          onClick={addGroup}
           className="w-fit font-data text-xs uppercase tracking-widest text-info hover:text-accent"
         >
-          + Koşul Ekle
+          + Grup Ekle (VEYA)
         </button>
-      </fieldset>
+      </div>
 
       <fieldset className="flex flex-col gap-3 rounded-xl border border-border p-4">
         <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">Etki</legend>
