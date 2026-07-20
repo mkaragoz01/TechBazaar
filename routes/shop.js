@@ -10,6 +10,9 @@ router.get('/api/brands', shopController.getBrandsJson);
 
 router.get('/api/home', shopController.getIndex);
 router.get('/api/products', shopController.getProducts);
+// Must be registered before the /:productid route below, otherwise Express
+// matches "search-suggestions" as a productid and this never gets reached.
+router.get('/api/products/search-suggestions', shopController.getProductSearchSuggestions);
 router.get('/api/products/:productid', validateObjectId('productid'), shopController.getProduct);
 
 router.get('/api/cart', apiAuthentication, shopController.getCart);

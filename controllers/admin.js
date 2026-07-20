@@ -171,12 +171,14 @@ exports.putEditProduct = async (req, res, next) => {
 
 exports.deleteProduct = async (req, res, next) => {
     try {
-        const result = await Product.updateOne(
-            { _id: req.params.productid, userId: req.user._id },
-            { isActive: false }
-        );
-        if (result.matchedCount === 0) {
+        const product = await Product.findOneAndDelete({ _id: req.params.productid, userId: req.user._id });
+        if (!product) {
             return res.status(404).json({ error: 'Ürün bulunamadı.' });
+        }
+        if (product.imgUrl) {
+            fs.unlink(`public/img/${product.imgUrl}`, (err) => {
+                if (err) console.log(err);
+            });
         }
         res.json({ ok: true });
     } catch (err) {
@@ -450,7 +452,8 @@ function campaignFieldsFromBody(body) {
         appliesTo: body.appliesTo,
         startDate: body.startDate || undefined,
         endDate: body.endDate || undefined,
-        isActive: asBoolean(body.isActive)
+        isActive: asBoolean(body.isActive),
+        priority: body.priority !== undefined ? Number(body.priority) : 0
     };
 }
 

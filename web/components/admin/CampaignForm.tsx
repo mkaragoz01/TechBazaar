@@ -123,6 +123,7 @@ export default function CampaignForm({
   const [startDate, setStartDate] = useState(campaign?.startDate?.slice(0, 10) ?? "");
   const [endDate, setEndDate] = useState(campaign?.endDate?.slice(0, 10) ?? "");
   const [isActive, setIsActive] = useState(campaign?.isActive ?? true);
+  const [priority, setPriority] = useState(campaign ? String(campaign.priority ?? 0) : "0");
   const [groups, setGroups] = useState<ConditionRow[][]>(initialGroups(campaign));
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -200,6 +201,7 @@ export default function CampaignForm({
       startDate: startDate || undefined,
       endDate: endDate || undefined,
       isActive,
+      priority: Number(priority) || 0,
     };
 
     try {
@@ -463,15 +465,23 @@ export default function CampaignForm({
         <FormField label="Bitiş (opsiyonel)" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
       </div>
 
+      <FormField
+        label="Banner Sırası (yüksek olan ana sayfa banner'ında öncelikli gösterilir)"
+        type="number"
+        step="1"
+        value={priority}
+        onChange={(e) => setPriority(e.target.value)}
+      />
+
       <label className="flex items-center gap-2 font-body text-sm text-ink">
         <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />
         Aktif
       </label>
 
-      {error ? <p className="font-body text-sm text-accent">{error}</p> : null}
+      {error ? <p className="font-body text-sm text-danger">{error}</p> : null}
 
       <AdminButton type="submit" disabled={loading}>
-        {campaign ? "Kaydet" : "Kampanya Ekle"}
+        {loading ? "Kaydediliyor..." : campaign ? "Kaydet" : "Kampanya Ekle"}
       </AdminButton>
     </form>
   );

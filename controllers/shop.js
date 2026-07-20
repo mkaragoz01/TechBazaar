@@ -111,6 +111,20 @@ exports.getProducts = (req,res,next) => {
     .catch(err => next(err));
 }
 
+exports.getProductSearchSuggestions = (req, res, next) => {
+    const q = String(req.query.q || '').trim();
+    if (!q) {
+        return res.json({ products: [] });
+    }
+
+    Product.find({ isActive: true, $text: { $search: q } })
+        .select('name imgUrl price')
+        .limit(5)
+        .lean()
+        .then(products => res.json({ products }))
+        .catch(err => next(err));
+}
+
 exports.getProduct = (req,res,next) => {
     Product.findOne({_id: req.params.productid, isActive: true})
         .populate('categories')

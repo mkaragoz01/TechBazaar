@@ -108,6 +108,13 @@ const campaignSchema = new mongoose.Schema({
     isActive: {
         type: Boolean,
         default: true
+    },
+    // Which active, no-code campaign wins the home page banner slot when
+    // more than one qualifies — higher wins. Defaults to 0 so existing
+    // campaigns (all equal) fall back to the old discountValue-based pick.
+    priority: {
+        type: Number,
+        default: 0
     }
 }, { timestamps: true })
 

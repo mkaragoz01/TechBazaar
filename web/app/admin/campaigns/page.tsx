@@ -24,6 +24,7 @@ export default async function AdminCampaignsPage() {
               <th className="px-4 py-3 font-data text-xs uppercase tracking-widest text-ink-muted">Kod</th>
               <th className="px-4 py-3 font-data text-xs uppercase tracking-widest text-ink-muted">İndirim</th>
               <th className="px-4 py-3 font-data text-xs uppercase tracking-widest text-ink-muted">Durum</th>
+              <th className="px-4 py-3 font-data text-xs uppercase tracking-widest text-ink-muted">Sıra</th>
               <th className="px-4 py-3"></th>
             </tr>
           </thead>
@@ -44,8 +45,9 @@ export default async function AdminCampaignsPage() {
                     <span className="bg-ink-muted/20 px-2 py-1 font-data text-xs text-ink-muted">Pasif</span>
                   )}
                 </td>
+                <td className="px-4 py-3 font-data tabular-nums text-ink-muted">{campaign.priority ?? 0}</td>
                 <td className="px-4 py-3 text-right">
-                  <div className="flex justify-end gap-3">
+                  <div className="flex items-center justify-end gap-3">
                     <Link
                       href={`/admin/campaigns/${campaign._id}`}
                       className="font-data text-xs uppercase tracking-widest text-info hover:text-accent"

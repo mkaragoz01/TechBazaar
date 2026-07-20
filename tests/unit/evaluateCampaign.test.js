@@ -226,4 +226,16 @@ describe('pickBestMarketingCampaign', () => {
     it('returns null when no campaign is currently active/in range', () => {
         expect(pickBestMarketingCampaign([campaign({ isActive: false })])).toBeNull();
     });
+
+    it('prefers a higher explicit priority over a higher discountValue', () => {
+        const highDiscountLowPriority = campaign({ discountValue: 90, priority: 1 });
+        const lowDiscountHighPriority = campaign({ discountValue: 5, priority: 10 });
+        expect(pickBestMarketingCampaign([highDiscountLowPriority, lowDiscountHighPriority])).toBe(lowDiscountHighPriority);
+    });
+
+    it('falls back to discountValue when priorities are equal (including the default 0)', () => {
+        const low = campaign({ discountValue: 5 });
+        const high = campaign({ discountValue: 20 });
+        expect(pickBestMarketingCampaign([low, high])).toBe(high);
+    });
 });

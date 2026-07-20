@@ -72,6 +72,9 @@ export type Campaign = {
   startDate?: string;
   endDate?: string;
   isActive: boolean;
+  // Ana sayfa banner'ında hangi kampanyanın gösterileceğini belirler (yüksek
+  // olan kazanır); eşitlikte discountValue'ya göre karar verilir.
+  priority?: number;
 };
 
 export type Address = {

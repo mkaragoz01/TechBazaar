@@ -156,11 +156,19 @@ function findCampaignByCode(campaigns, code, context, now = new Date()) {
 
 // For the home page banner, which has no cart/user context yet — shown
 // purely based on isActive/date range, not condition matching. Code-based
-// campaigns are excluded since they're not meant to be broadcast.
+// campaigns are excluded since they're not meant to be broadcast. Admin-set
+// `priority` (higher wins) decides which campaign gets the banner slot;
+// campaigns without an explicit priority default to 0, so among those the
+// old discountValue-based tiebreak still applies unchanged.
 function pickBestMarketingCampaign(campaigns, now = new Date()) {
     const eligible = campaigns.filter(c => c.isActive && !c.code && isWithinDateRange(c, now));
     if (eligible.length === 0) return null;
-    return eligible.reduce((best, c) => (c.discountValue > best.discountValue ? c : best));
+    return eligible.reduce((best, c) => {
+        const bestPriority = best.priority || 0;
+        const cPriority = c.priority || 0;
+        if (cPriority !== bestPriority) return cPriority > bestPriority ? c : best;
+        return c.discountValue > best.discountValue ? c : best;
+    });
 }
 
 module.exports = {
