@@ -77,7 +77,7 @@ export default async function AdminProductsPage() {
                   )}
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <div className="flex justify-end gap-3">
+                  <div className="flex items-center justify-end gap-3">
                     <Link
                       href={`/admin/products/${product._id}`}
                       className="font-data text-xs uppercase tracking-widest text-info hover:text-accent"
@@ -86,7 +86,7 @@ export default async function AdminProductsPage() {
                     </Link>
                     <DeleteButton
                       url={`/api/admin/products/${product._id}`}
-                      confirmMessage="Bu ürünü pasif hale getirmek istediğinize emin misiniz?"
+                      confirmMessage="Bu ürünü silmek istediğinize emin misiniz? Bu işlem geri alınamaz."
                       itemLabel={product.name}
                     />
                   </div>

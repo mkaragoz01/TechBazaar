@@ -15,9 +15,11 @@ import type {
   AuditLogEntry,
   ErrorLogEntry,
   LogType,
+  CategoryAttribute,
+  ProductVariant,
 } from "./types";
 
-export type { Category, Brand, Product, CartItem, CartDiscount, Order, Address, PaymentMethod, Campaign, DashboardData, AdminUser, Role, AuditLogEntry, ErrorLogEntry, LogType };
+export type { Category, Brand, Product, CartItem, CartDiscount, Order, Address, PaymentMethod, Campaign, DashboardData, AdminUser, Role, AuditLogEntry, ErrorLogEntry, LogType, CategoryAttribute, ProductVariant };
 
 export type HomeData = {
   products: Product[];
@@ -38,6 +40,7 @@ export type ProductsData = {
   selectedSort: string;
   selectedCategory?: string;
   selectedBrand?: string;
+  selectedAttributes?: Record<string, string | string[]>;
 };
 
 export async function getProducts(params: {
@@ -47,6 +50,8 @@ export async function getProducts(params: {
   minPrice?: string;
   maxPrice?: string;
   q?: string;
+  // attributeId -> selected value(s) — turns into ?attr[id]=v1&attr[id]=v2
+  attr?: Record<string, string[]>;
 }): Promise<ProductsData> {
   const search = new URLSearchParams();
   if (params.sort) search.set("sort", params.sort);
@@ -55,6 +60,13 @@ export async function getProducts(params: {
   if (params.minPrice) search.set("minPrice", params.minPrice);
   if (params.maxPrice) search.set("maxPrice", params.maxPrice);
   if (params.q) search.set("q", params.q);
+  if (params.attr) {
+    for (const [attributeId, values] of Object.entries(params.attr)) {
+      for (const value of values) {
+        search.append(`attr[${attributeId}]`, value);
+      }
+    }
+  }
   const qs = search.toString();
   return serverFetch<ProductsData>(`/api/products${qs ? `?${qs}` : ""}`);
 }
@@ -64,6 +76,7 @@ export async function getProduct(productId: string): Promise<{
   categoryName?: string;
   brandName?: string;
   relatedProducts: Product[];
+  variants: ProductVariant[];
 }> {
   return serverFetch(`/api/products/${productId}`);
 }
@@ -196,4 +209,23 @@ export async function getAdminLogs(params: {
   if (params.to) search.set("to", params.to);
   if (params.page) search.set("page", String(params.page));
   return serverFetch(`/api/admin/logs?${search.toString()}`);
+}
+
+export async function getAdminCategoryAttributes(categoryId?: string): Promise<{ attributes: CategoryAttribute[] }> {
+  const qs = categoryId ? `?category=${encodeURIComponent(categoryId)}` : "";
+  return serverFetch(`/api/admin/category-attributes${qs}`);
+}
+
+export async function getAdminCategoryAttribute(attributeId: string): Promise<{ attribute: CategoryAttribute }> {
+  return serverFetch(`/api/admin/category-attributes/${attributeId}`);
+}
+
+// Public — only the filterable attributes for this category, used by the
+// storefront's FilterPanel.
+export async function getCategoryAttributes(categoryId: string): Promise<{ attributes: CategoryAttribute[] }> {
+  return serverFetch(`/api/categories/${categoryId}/attributes`);
+}
+
+export async function getAdminProductVariants(productId: string): Promise<{ variants: ProductVariant[] }> {
+  return serverFetch(`/api/admin/products/${productId}/variants`);
 }

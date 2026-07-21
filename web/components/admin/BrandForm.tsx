@@ -57,10 +57,10 @@ export default function BrandForm({ brand }: { brand?: Brand }) {
         <RichTextEditor value={description} onChange={setDescription} />
       </label>
 
-      {error ? <p className="font-body text-sm text-accent">{error}</p> : null}
+      {error ? <p className="font-body text-sm text-danger">{error}</p> : null}
 
       <AdminButton type="submit" disabled={loading}>
-        {brand ? "Kaydet" : "Marka Ekle"}
+        {loading ? "Kaydediliyor..." : brand ? "Kaydet" : "Marka Ekle"}
       </AdminButton>
     </form>
   );

@@ -59,7 +59,7 @@ export default function OrderStatusSelect({
           </option>
         ))}
       </select>
-      {error ? <p className="font-body text-xs text-accent">{error}</p> : null}
+      {error ? <p className="font-body text-xs text-danger">{error}</p> : null}
     </div>
   );
 }

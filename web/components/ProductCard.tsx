@@ -55,7 +55,16 @@ export default function ProductCard({
         <span className="font-display text-lg font-bold tabular-nums text-ink">
           {formatPriceNumber(product.price)} TL
         </span>
-        <AddToCartButton productId={product._id} outOfStock={outOfStock} />
+        {product.hasVariants ? (
+          <Link
+            href={`/products/${product._id}`}
+            className="rounded-full border border-border px-5 py-3.5 font-semibold text-ink transition-colors hover:border-ink"
+          >
+            Seçenekleri Gör
+          </Link>
+        ) : (
+          <AddToCartButton productId={product._id} outOfStock={outOfStock} />
+        )}
       </div>
     </div>
   );

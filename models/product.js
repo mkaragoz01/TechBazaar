@@ -66,6 +66,28 @@ const productSchema = mongoose.Schema({
             validator: (value) => Array.isArray(value) && value.length > 0,
             message: 'Ürün kategorisi girmek zorunludur!'
         }
+    },
+    // Kategori özelliklerinin bu ürüne atanmış değerleri — hem düz filtre
+    // özellikleri (örn. RAM: "16GB") hem de varyant-ekseni özelliklerin
+    // (örn. Renk) bu üründe görülen değerlerinin union'ı burada tutulur.
+    // İkincisi ProductVariant belgelerinden denormalize edilir (bkz.
+    // controllers/admin.js'in varyant CRUD'u) — getProducts filtrelemesi
+    // sadece bu koleksiyonu sorguluyor, ProductVariant'a hiç dokunmuyor.
+    attributes: {
+        type: [
+            {
+                attribute: { type: mongoose.Schema.Types.ObjectId, ref: 'CategoryAttribute', required: true },
+                value: { type: String, required: true }
+            }
+        ],
+        default: [],
+        _id: false
+    },
+    // Varyant admin controller'ı tarafından tutulan denormalize bayrak —
+    // varyantsız ürünlerin okuma/yazma yolunu hiç değiştirmemek için.
+    hasVariants: {
+        type: Boolean,
+        default: false
     }
 })
 
@@ -76,5 +98,6 @@ productSchema.index({ isActive: 1 })
 productSchema.index({ brand: 1 })
 productSchema.index({ isNewArrival: 1 })
 productSchema.index({ isFeatured: 1 })
+productSchema.index({ 'attributes.attribute': 1, 'attributes.value': 1 })
 
 module.exports = mongoose.model('Product', productSchema)

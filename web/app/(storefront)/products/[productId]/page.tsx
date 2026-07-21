@@ -3,9 +3,8 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getProduct } from "@/lib/api";
 import { productImageUrl, ApiError } from "@/lib/server-api";
-import { formatPrice } from "@/lib/formatPrice";
 import { stripHtml } from "@/lib/richText";
-import ProductDetailAddToCart from "@/components/ProductDetailAddToCart";
+import ProductPurchasePanel from "@/components/ProductPurchasePanel";
 import ProductCard from "@/components/ProductCard";
 
 export async function generateMetadata({
@@ -51,8 +50,10 @@ export default async function ProductDetailPage({
     throw err;
   }
 
-  const { product, categoryName, brandName, relatedProducts } = data;
-  const outOfStock = (product.stock ?? 0) <= 0;
+  const { product, categoryName, brandName, relatedProducts, variants } = data;
+  const outOfStock = product.hasVariants
+    ? !variants.some((v) => v.stock > 0)
+    : (product.stock ?? 0) <= 0;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -113,12 +114,7 @@ export default async function ProductDetailPage({
               dangerouslySetInnerHTML={{ __html: product.description }}
             />
           ) : null}
-          <p className="mt-6 font-display text-2xl font-semibold tabular-nums text-ink">
-            {formatPrice(product.price)}
-          </p>
-          <div className="mt-6">
-            <ProductDetailAddToCart productId={product._id} stock={product.stock} />
-          </div>
+          <ProductPurchasePanel product={product} variants={variants} />
         </div>
       </div>
 

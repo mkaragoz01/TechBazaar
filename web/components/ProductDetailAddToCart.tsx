@@ -7,9 +7,11 @@ import Button from "./Button";
 
 export default function ProductDetailAddToCart({
   productId,
+  variantId,
   stock,
 }: {
   productId: string;
+  variantId?: string;
   stock?: number;
 }) {
   const router = useRouter();
@@ -37,7 +39,7 @@ export default function ProductDetailAddToCart({
     setStatus("loading");
     setError(null);
     try {
-      await clientFetch("/api/cart", { method: "POST", body: { productId, quantity: qty } });
+      await clientFetch("/api/cart", { method: "POST", body: { productId, variantId, quantity: qty } });
       setStatus("done");
       router.refresh();
     } catch (err) {

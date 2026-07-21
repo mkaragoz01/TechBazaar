@@ -119,7 +119,7 @@ export default function ImportForm() {
         </button>
       </Card>
 
-      {error ? <p className="font-body text-sm text-accent">{error}</p> : null}
+      {error ? <p className="font-body text-sm text-danger">{error}</p> : null}
 
       {validateResult && !confirmResult ? (
         <div className="flex flex-col gap-4">

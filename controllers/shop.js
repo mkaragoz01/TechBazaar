@@ -6,6 +6,8 @@ const Order = require("../models/order")
 const Address = require("../models/address")
 const PaymentMethod = require("../models/paymentMethod")
 const Campaign = require("../models/campaign")
+const CategoryAttribute = require("../models/categoryAttribute")
+const ProductVariant = require("../models/productVariant")
 const sorted_all = require("../public/js/sorted")
 const { pickBestAutomaticCampaign, findCampaignByCode, pickBestMarketingCampaign } = require("../utility/evaluateCampaign")
 
@@ -45,6 +47,17 @@ exports.getCategoriesJson = (req,res,next) => {
 exports.getBrandsJson = (req,res,next) => {
     Brand.find().lean()
         .then(brands => res.json({ brands }))
+        .catch(err => next(err));
+}
+
+// Only the filterable attributes for this category — the storefront's
+// FilterPanel builds its checkbox groups from this, never from admin's
+// full (unfiltered) attribute list.
+exports.getCategoryAttributes = (req, res, next) => {
+    CategoryAttribute.find({ category: req.params.categoryid, isFilterable: true })
+        .sort({ sortOrder: 1, name: 1 })
+        .lean()
+        .then(attributes => res.json({ attributes }))
         .catch(err => next(err));
 }
 
@@ -95,6 +108,31 @@ exports.getProducts = (req,res,next) => {
         filter.$text = { $search: q };
     }
 
+    // ?attr[<attributeId>]=<value>&attr[<attributeId>]=<value2> — Express's
+    // query parser turns this into an object, `{ "<id>": "value" | ["v1","v2"] }`.
+    // Each attribute gets its own $elemMatch clause inside $and (AND across
+    // different attributes; OR across a single attribute's own selected
+    // values via $in) — a plain object can only hold one `attributes` key,
+    // so a second selected attribute would otherwise silently clobber the
+    // first instead of combining with it. Still a single Product.find —
+    // no aggregation.
+    const attrQuery = req.query.attr;
+    if (attrQuery && typeof attrQuery === 'object') {
+        const clauses = Object.entries(attrQuery)
+            .filter(([attributeId]) => mongoose.isValidObjectId(attributeId))
+            .map(([attributeId, rawValue]) => ({
+                attributes: {
+                    $elemMatch: {
+                        attribute: new mongoose.Types.ObjectId(attributeId),
+                        value: { $in: Array.isArray(rawValue) ? rawValue : [rawValue] }
+                    }
+                }
+            }));
+        if (clauses.length > 0) {
+            filter.$and = clauses;
+        }
+    }
+
     Promise.all([Product.find(filter).lean(), Category.find().lean(), Brand.find().lean()])
     .then(([products, categories, brands]) => {
         const sortedProducts = sorted_all.sortProducts(products, sortOption);
@@ -105,7 +143,8 @@ exports.getProducts = (req,res,next) => {
             brands: brands,
             selectedSort: sortOption,
             selectedCategory: categoryId || null,
-            selectedBrand: brandId || null
+            selectedBrand: brandId || null,
+            selectedAttributes: attrQuery && typeof attrQuery === 'object' ? attrQuery : {}
         });
     })
     .catch(err => next(err));
@@ -125,41 +164,49 @@ exports.getProductSearchSuggestions = (req, res, next) => {
         .catch(err => next(err));
 }
 
-exports.getProduct = (req,res,next) => {
-    Product.findOne({_id: req.params.productid, isActive: true})
-        .populate('categories')
-        .populate('brand')
-        .then((product) => {
-            if (!product) {
-                return res.status(404).json({ error: 'Ürün bulunamadı.' });
-            }
+exports.getProduct = async (req, res, next) => {
+    try {
+        const product = await Product.findOne({ _id: req.params.productid, isActive: true })
+            .populate('categories')
+            .populate('brand');
+        if (!product) {
+            return res.status(404).json({ error: 'Ürün bulunamadı.' });
+        }
 
-            const categoryIds = product.categories.map(c => c._id);
+        const categoryIds = product.categories.map(c => c._id);
 
-            return Product.find({
+        const [related, variants] = await Promise.all([
+            Product.find({
                 _id: { $ne: product._id },
                 isActive: true,
                 categories: { $in: categoryIds }
-            })
-                .limit(8)
-                .lean()
-                .then(related => {
-                    res.json({
-                        product: {
-                            _id: product._id,
-                            name: product.name,
-                            price: product.price,
-                            description: product.description,
-                            imgUrl: product.imgUrl,
-                            stock: product.stock,
-                            categories: categoryIds,
-                        },
-                        categoryName: product.categories[0]?.name,
-                        brandName: product.brand?.name,
-                        relatedProducts: related
-                    });
-                });
-        }).catch((err) => next(err));
+            }).limit(8).lean(),
+            product.hasVariants
+                ? ProductVariant.find({ product: product._id, isActive: true })
+                    .populate('attributes.attribute')
+                    .lean()
+                : Promise.resolve([])
+        ]);
+
+        res.json({
+            product: {
+                _id: product._id,
+                name: product.name,
+                price: product.price,
+                description: product.description,
+                imgUrl: product.imgUrl,
+                stock: product.stock,
+                categories: categoryIds,
+                hasVariants: product.hasVariants
+            },
+            categoryName: product.categories[0]?.name,
+            brandName: product.brand?.name,
+            relatedProducts: related,
+            variants
+        });
+    } catch (err) {
+        next(err);
+    }
 }
 
 exports.getCart = async (req, res, next) => {
@@ -205,6 +252,7 @@ exports.postRemoveCampaignCode = (req, res) => {
 exports.postCart = async (req, res, next) => {
     try {
         const productId = req.body.productId;
+        const variantId = req.body.variantId || undefined;
         // Optional — the listing-card "add" button never sends this, so it
         // keeps behaving as a plain +1; the product-detail page's quantity
         // input sends an explicit amount to add in one call.
@@ -217,14 +265,29 @@ exports.postCart = async (req, res, next) => {
         if (!product) {
             return res.status(404).json({ error: 'Ürün bulunamadı.' });
         }
+        if (product.hasVariants && !variantId) {
+            return res.status(400).json({ error: 'Lütfen bir seçenek belirleyin.' });
+        }
 
-        const existing = req.user.cart.items.find(i => i.productId.toString() === productId);
+        let stockSource = product;
+        if (variantId) {
+            const variant = await ProductVariant.findOne({ _id: variantId, product: product._id, isActive: true });
+            if (!variant) {
+                return res.status(404).json({ error: 'Seçenek bulunamadı.' });
+            }
+            stockSource = variant;
+        }
+
+        const existing = req.user.cart.items.find(i =>
+            i.productId.toString() === productId &&
+            (i.variantId ? i.variantId.toString() : null) === (variantId || null)
+        );
         const nextQuantity = (existing ? existing.quantity : 0) + addQuantity;
-        if (product.stock < nextQuantity) {
+        if (stockSource.stock < nextQuantity) {
             return res.status(409).json({ error: 'Yeterli stok yok.' });
         }
 
-        await req.user.addToCart(product, addQuantity);
+        await req.user.addToCart(product, addQuantity, variantId);
         res.json({ ok: true });
     } catch (err) {
         next(err);
@@ -233,8 +296,9 @@ exports.postCart = async (req, res, next) => {
 
 exports.postCartItemDelete = (req,res,next) => {
     const productid = req.body.productid;
+    const variantId = req.body.variantId || undefined;
     req.user
-        .deleteCartItem(productid)
+        .deleteCartItem(productid, variantId)
         .then(() => res.json({ ok: true }))
         .catch(err => next(err));
 }
@@ -242,22 +306,25 @@ exports.postCartItemDelete = (req,res,next) => {
 exports.putCartItemQuantity = async (req, res, next) => {
     try {
         const productId = req.body.productId;
+        const variantId = req.body.variantId || undefined;
         const quantity = Number(req.body.quantity);
         if (!Number.isInteger(quantity) || quantity < 0) {
             return res.status(400).json({ error: 'Geçerli bir adet giriniz.' });
         }
 
         if (quantity > 0) {
-            const product = await Product.findById(productId);
-            if (!product) {
-                return res.status(404).json({ error: 'Ürün bulunamadı.' });
+            const stockSource = variantId
+                ? await ProductVariant.findById(variantId)
+                : await Product.findById(productId);
+            if (!stockSource) {
+                return res.status(404).json({ error: variantId ? 'Seçenek bulunamadı.' : 'Ürün bulunamadı.' });
             }
-            if (product.stock < quantity) {
+            if (stockSource.stock < quantity) {
                 return res.status(409).json({ error: 'Yeterli stok yok.' });
             }
         }
 
-        await req.user.setCartItemQuantity(productId, quantity);
+        await req.user.setCartItemQuantity(productId, quantity, variantId);
         res.json({ ok: true });
     } catch (err) {
         next(err);
@@ -300,20 +367,24 @@ exports.postOrder = async (req, res, next) => {
 
         const discount = await computeCartDiscount(req, cartItems);
 
-        // Decrement stock one product at a time with an atomic conditional
-        // update (stock check + decrement in one op, so concurrent orders
-        // can't both succeed against the same last unit). If a later item
-        // turns out to be out of stock, undo the ones already decremented
-        // so a partially-failed order never leaves stock counts wrong.
+        // Decrement stock one product (or variant) at a time with an atomic
+        // conditional update (stock check + decrement in one op, so
+        // concurrent orders can't both succeed against the same last
+        // unit). If a later item turns out to be out of stock, undo the
+        // ones already decremented so a partially-failed order never
+        // leaves stock counts wrong.
         const decremented = [];
         for (const item of cartItems) {
-            const result = await Product.updateOne(
-                { _id: item._id, stock: { $gte: item.quantity } },
+            const Model = item.variantId ? ProductVariant : Product;
+            const targetId = item.variantId || item._id;
+            const result = await Model.updateOne(
+                { _id: targetId, stock: { $gte: item.quantity } },
                 { $inc: { stock: -item.quantity } }
             );
             if (result.matchedCount === 0) {
                 for (const done of decremented) {
-                    await Product.updateOne({ _id: done._id }, { $inc: { stock: done.quantity } });
+                    const DoneModel = done.variantId ? ProductVariant : Product;
+                    await DoneModel.updateOne({ _id: done.variantId || done._id }, { $inc: { stock: done.quantity } });
                 }
                 return res.status(409).json({ error: `"${item.name}" için yeterli stok yok.` });
             }
@@ -345,6 +416,7 @@ exports.postOrder = async (req, res, next) => {
                     price: p.price,
                     imgUrl: p.imgUrl
                 },
+                variant: p.variantId ? { _id: p.variantId, sku: p.sku, label: p.variantLabel } : undefined,
                 quantity: p.quantity,
                 date: new Date()
             }))

@@ -6,10 +6,12 @@ import { clientFetch, ClientApiError } from "@/lib/client-api";
 
 export default function CartQuantityStepper({
   productId,
+  variantId,
   quantity,
   stock,
 }: {
   productId: string;
+  variantId?: string;
   quantity: number;
   stock?: number;
 }) {
@@ -32,7 +34,7 @@ export default function CartQuantityStepper({
     try {
       await clientFetch("/api/cart/item", {
         method: "PUT",
-        body: { productId, quantity: next },
+        body: { productId, variantId, quantity: next },
       });
       setValue(next);
       setInputValue(String(next));

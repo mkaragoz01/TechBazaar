@@ -37,7 +37,7 @@ export default async function AdminBrandsPage() {
                   {stripHtml(brand.description)}
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <div className="flex justify-end gap-3">
+                  <div className="flex items-center justify-end gap-3">
                     <Link
                       href={`/admin/brands/${brand._id}`}
                       className="font-data text-xs uppercase tracking-widest text-info hover:text-accent"

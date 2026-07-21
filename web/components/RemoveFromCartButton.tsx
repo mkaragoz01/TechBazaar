@@ -4,7 +4,13 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { clientFetch } from "@/lib/client-api";
 
-export default function RemoveFromCartButton({ productId }: { productId: string }) {
+export default function RemoveFromCartButton({
+  productId,
+  variantId,
+}: {
+  productId: string;
+  variantId?: string;
+}) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -12,7 +18,7 @@ export default function RemoveFromCartButton({ productId }: { productId: string 
     setLoading(true);
     await clientFetch("/api/cart/delete-item", {
       method: "POST",
-      body: { productid: productId },
+      body: { productid: productId, variantId },
     });
     router.refresh();
   }

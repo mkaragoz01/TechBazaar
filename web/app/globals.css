@@ -11,6 +11,7 @@
   --info: #3b6ea5;
   --success: #3f7d55;
   --warning: #b3720b;
+  --danger: #b3261e;
   --border: #ececea;
 }
 
@@ -26,6 +27,7 @@
     --info: #7fa8d6;
     --success: #6cb583;
     --warning: #e0a949;
+    --danger: #e2685e;
     --border: #2b2b2f;
   }
 }
@@ -41,6 +43,7 @@
   --color-info: var(--info);
   --color-success: var(--success);
   --color-warning: var(--warning);
+  --color-danger: var(--danger);
   --color-border: var(--border);
 
   --font-display: var(--font-instrument-sans);

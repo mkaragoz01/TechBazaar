@@ -57,10 +57,10 @@ export default function CategoryForm({ category }: { category?: Category }) {
         <RichTextEditor value={description} onChange={setDescription} />
       </label>
 
-      {error ? <p className="font-body text-sm text-accent">{error}</p> : null}
+      {error ? <p className="font-body text-sm text-danger">{error}</p> : null}
 
       <AdminButton type="submit" disabled={loading}>
-        {category ? "Kaydet" : "Kategori Ekle"}
+        {loading ? "Kaydediliyor..." : category ? "Kaydet" : "Kategori Ekle"}
       </AdminButton>
     </form>
   );

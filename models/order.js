@@ -17,6 +17,18 @@ const orderItemProductSchema = new mongoose.Schema({
     imgUrl: String
 })
 
+// A denormalized snapshot — same reasoning as orderItemProductSchema above:
+// order history must stay accurate even if the variant is later edited or
+// deleted.
+const orderItemVariantSchema = new mongoose.Schema({
+    _id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'ProductVariant'
+    },
+    sku: String,
+    label: String // e.g. "Renk: Kırmızı, Depolama: 128GB"
+}, { _id: false })
+
 const orderSchema = new mongoose.Schema({
     user:{
         userId: {
@@ -77,6 +89,7 @@ const orderSchema = new mongoose.Schema({
                 type: orderItemProductSchema,
                 required: true
             },
+            variant: orderItemVariantSchema,
             quantity: {
                 type: Number,
                 required: true

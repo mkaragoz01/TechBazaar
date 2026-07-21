@@ -33,7 +33,7 @@ export default async function CartPage() {
       ) : (
         <div className="flex flex-col gap-4">
           {items.map((item) => (
-            <Card key={item._id} size="sm" className="flex items-center gap-4">
+            <Card key={`${item._id}-${item.variantId ?? ""}`} size="sm" className="flex items-center gap-4">
               <div className="product-spotlight relative h-16 w-16 shrink-0 rounded-xl">
                 {item.imgUrl ? (
                   <Image
@@ -47,13 +47,21 @@ export default async function CartPage() {
               </div>
               <div className="flex-1">
                 <p className="font-display font-bold text-ink">{item.name}</p>
+                {item.variantLabel ? (
+                  <p className="font-body text-xs text-ink-muted">{item.variantLabel}</p>
+                ) : null}
                 <p className="font-data text-xs text-ink-muted">{formatPriceNumber(item.price)} TL / adet</p>
               </div>
-              <CartQuantityStepper productId={item._id} quantity={item.quantity} stock={item.stock} />
+              <CartQuantityStepper
+                productId={item._id}
+                variantId={item.variantId}
+                quantity={item.quantity}
+                stock={item.stock}
+              />
               <p className="w-24 text-right font-data font-semibold tabular-nums text-ink">
                 {formatPriceNumber(item.price * item.quantity)} TL
               </p>
-              <RemoveFromCartButton productId={item._id} />
+              <RemoveFromCartButton productId={item._id} variantId={item.variantId} />
             </Card>
           ))}
 

@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Product = require("./product");
+const ProductVariant = require("./productVariant");
 const {isEmail} = require("validator");
 
 const userSchema = mongoose.Schema({
@@ -40,6 +41,13 @@ const userSchema = mongoose.Schema({
                     ref: "Product",
                     required: true
                 },
+                // Absent for a non-variant product. A cart line is keyed by
+                // BOTH fields together — "Kırmızı/128GB" and "Mavi/128GB"
+                // are different lines even though productId is the same.
+                variantId: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: "ProductVariant"
+                },
                 quantity: {
                     type: Number,
                     required: true
@@ -50,10 +58,20 @@ const userSchema = mongoose.Schema({
 
 }, { timestamps: true })
 
-userSchema.methods.addToCart = function(product, addQuantity = 1) {
-    const index = this.cart.items.findIndex(cp => {
-        return cp.productId.toString() === product._id.toString()
-    })
+function sameOptionalId(a, b) {
+    const aStr = a ? a.toString() : null;
+    const bStr = b ? b.toString() : null;
+    return aStr === bStr;
+}
+
+function findCartItemIndex(items, productId, variantId) {
+    return items.findIndex(cp =>
+        cp.productId.toString() === productId.toString() && sameOptionalId(cp.variantId, variantId)
+    );
+}
+
+userSchema.methods.addToCart = function(product, addQuantity = 1, variantId = undefined) {
+    const index = findCartItemIndex(this.cart.items, product._id, variantId);
 
     const updatedCartItems = [...this.cart.items]
 
@@ -67,6 +85,7 @@ userSchema.methods.addToCart = function(product, addQuantity = 1) {
     else{
         updatedCartItems.push({
             productId: product._id,
+            variantId,
             quantity: itemQuantity
         })
     }
@@ -81,12 +100,12 @@ userSchema.methods.addToCart = function(product, addQuantity = 1) {
 // Sets (not increments) a cart line's quantity — used by the +/- stepper
 // and the manual number input on the cart page. quantity<=0 removes the
 // line, matching deleteCartItem's own behavior for consistency.
-userSchema.methods.setCartItemQuantity = function(productId, quantity) {
+userSchema.methods.setCartItemQuantity = function(productId, quantity, variantId = undefined) {
     if (quantity <= 0) {
-        return this.deleteCartItem(productId);
+        return this.deleteCartItem(productId, variantId);
     }
 
-    const index = this.cart.items.findIndex(cp => cp.productId.toString() === productId.toString());
+    const index = findCartItemIndex(this.cart.items, productId, variantId);
     if (index < 0) {
         return this.save();
     }
@@ -96,55 +115,69 @@ userSchema.methods.setCartItemQuantity = function(productId, quantity) {
 }
 
 userSchema.methods.getCart = function() {
-    const ids = this.cart.items.map(i => i.productId);
+    const productIds = this.cart.items.map(i => i.productId);
+    const variantIds = this.cart.items.filter(i => i.variantId).map(i => i.variantId);
 
-    return Product
-        .find({
-            _id: {
-                $in: ids
-            }
-        })
-        .select("name price imgUrl sku categories brand stock")
-        .then(products => {
-            // Sepetteki geçersiz ürünleri temizle
-            const validProductIds = products.map(p => p._id.toString());
-            const hasInvalidItems = this.cart.items.some(item => 
-                !validProductIds.includes(item.productId.toString())
+    return Promise.all([
+        Product.find({ _id: { $in: productIds } })
+            .select("name price imgUrl sku categories brand stock hasVariants")
+            .lean(),
+        variantIds.length > 0
+            ? ProductVariant.find({ _id: { $in: variantIds } })
+                .populate('attributes.attribute')
+                .lean()
+            : Promise.resolve([])
+    ]).then(([products, variants]) => {
+        // Sepetteki geçersiz ürünleri temizle (silinmiş ürün, veya artık var
+        // olmayan varyant).
+        const validProductIds = products.map(p => p._id.toString());
+        const validVariantIds = variants.map(v => v._id.toString());
+        const hasInvalidItems = this.cart.items.some(item =>
+            !validProductIds.includes(item.productId.toString()) ||
+            (item.variantId && !validVariantIds.includes(item.variantId.toString()))
+        );
+
+        if (hasInvalidItems) {
+            this.cart.items = this.cart.items.filter(item =>
+                validProductIds.includes(item.productId.toString()) &&
+                (!item.variantId || validVariantIds.includes(item.variantId.toString()))
             );
+            return this.save().then(() => ({ products, variants }));
+        }
 
-            if (hasInvalidItems) {
-                this.cart.items = this.cart.items.filter(item =>
-                    validProductIds.includes(item.productId.toString())
-                );
-                return this.save().then(() => products);
-            }
+        return { products, variants };
+    }).then(({ products, variants }) => {
+        const variantsById = new Map(variants.map(v => [v._id.toString(), v]));
 
-            return products;
-        })
-        .then(products => {
-            return products.map(p => {
-                return {
-                    _id: p._id,
-                    imgUrl: p.imgUrl,
-                    name: p.name,
-                    price: p.price,
-                    sku: p.sku,
-                    categories: p.categories,
-                    brand: p.brand,
-                    stock: p.stock,
-                    quantity: this.cart.items.find(i => {
-                        return i.productId.toString() === p._id.toString()
-                    }).quantity
-                }
-            })
+        return this.cart.items.map(item => {
+            const product = products.find(p => p._id.toString() === item.productId.toString());
+            const variant = item.variantId ? variantsById.get(item.variantId.toString()) : undefined;
+
+            const variantLabel = variant
+                ? variant.attributes.map(a => `${a.attribute.name}: ${a.value}`).join(', ')
+                : undefined;
+
+            return {
+                _id: product._id,
+                variantId: variant ? variant._id : undefined,
+                variantLabel,
+                imgUrl: variant?.imgUrl ?? product.imgUrl,
+                name: product.name,
+                price: variant?.priceOverride ?? product.price,
+                sku: variant?.sku ?? product.sku,
+                categories: product.categories,
+                brand: product.brand,
+                stock: variant ? variant.stock : product.stock,
+                quantity: item.quantity
+            };
         });
+    });
 }
 
-userSchema.methods.deleteCartItem = function(productid){
-    const cartItems = this.cart.items.filter(item => {
-        return item.productId.toString() !== productid.toString()
-    })
-    this.cart.items = cartItems;
+userSchema.methods.deleteCartItem = function(productid, variantId = undefined){
+    this.cart.items = this.cart.items.filter(item =>
+        !(item.productId.toString() === productid.toString() && sameOptionalId(item.variantId, variantId))
+    );
     return this.save();
 }
 

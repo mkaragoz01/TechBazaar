@@ -4,6 +4,8 @@ const router = express.Router()
 const adminController = require("../controllers/admin")
 const productImportController = require("../controllers/productImport")
 const logsController = require("../controllers/logs")
+const categoryAttributesController = require("../controllers/categoryAttributes")
+const productVariantsController = require("../controllers/productVariants")
 const apiIsAdmin = require("../middleware/apiIsAdmin")
 const upload = require("../middleware/upload")
 const uploadExcel = require("../middleware/uploadExcel")
@@ -36,11 +38,43 @@ router.get('/api/admin/products/:productid', apiIsAdmin, validateObjectId('produ
 router.put('/api/admin/products/:productid', apiIsAdmin, validateObjectId('productid'), upload.single('imgUrl'), handleUploadError, adminController.putEditProduct)
 router.delete('/api/admin/products/:productid', apiIsAdmin, validateObjectId('productid'), adminController.deleteProduct)
 
+router.get('/api/admin/products/:productid/variants', apiIsAdmin, validateObjectId('productid'), productVariantsController.getProductVariants)
+router.post(
+    '/api/admin/products/:productid/variants',
+    apiIsAdmin,
+    validateObjectId('productid'),
+    upload.single('imgUrl'),
+    handleUploadError,
+    productVariantsController.postAddProductVariant
+)
+router.put(
+    '/api/admin/products/:productid/variants/:variantid',
+    apiIsAdmin,
+    validateObjectId('productid'),
+    validateObjectId('variantid'),
+    upload.single('imgUrl'),
+    handleUploadError,
+    productVariantsController.putEditProductVariant
+)
+router.delete(
+    '/api/admin/products/:productid/variants/:variantid',
+    apiIsAdmin,
+    validateObjectId('productid'),
+    validateObjectId('variantid'),
+    productVariantsController.deleteProductVariant
+)
+
 router.get('/api/admin/categories', apiIsAdmin, adminController.getCategories)
 router.post('/api/admin/categories', apiIsAdmin, adminController.postAddCategory)
 router.get('/api/admin/categories/:categoryid', apiIsAdmin, validateObjectId('categoryid'), adminController.getCategory)
 router.put('/api/admin/categories/:categoryid', apiIsAdmin, validateObjectId('categoryid'), adminController.putEditCategory)
 router.delete('/api/admin/categories/:categoryid', apiIsAdmin, validateObjectId('categoryid'), adminController.deleteCategory)
+
+router.get('/api/admin/category-attributes', apiIsAdmin, categoryAttributesController.getCategoryAttributes)
+router.post('/api/admin/category-attributes', apiIsAdmin, categoryAttributesController.postAddCategoryAttribute)
+router.get('/api/admin/category-attributes/:attributeid', apiIsAdmin, validateObjectId('attributeid'), categoryAttributesController.getCategoryAttribute)
+router.put('/api/admin/category-attributes/:attributeid', apiIsAdmin, validateObjectId('attributeid'), categoryAttributesController.putEditCategoryAttribute)
+router.delete('/api/admin/category-attributes/:attributeid', apiIsAdmin, validateObjectId('attributeid'), categoryAttributesController.deleteCategoryAttribute)
 
 router.get('/api/admin/brands', apiIsAdmin, adminController.getBrands)
 router.post('/api/admin/brands', apiIsAdmin, adminController.postAddBrand)

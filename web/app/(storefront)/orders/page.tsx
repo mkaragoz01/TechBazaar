@@ -80,6 +80,9 @@ export default async function OrdersPage() {
                       </div>
                       <div className="flex-1">
                         <p className="font-body text-sm text-ink">{item.product.name}</p>
+                        {item.variant?.label ? (
+                          <p className="font-body text-xs text-ink-muted">{item.variant.label}</p>
+                        ) : null}
                         <p className="font-data text-xs text-ink-muted">
                           {item.quantity} adet
                         </p>

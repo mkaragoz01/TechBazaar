@@ -10,6 +10,11 @@ export type Brand = {
   description?: string;
 };
 
+export type ProductAttributeValue = {
+  attribute: string; // CategoryAttribute _id
+  value: string;
+};
+
 export type Product = {
   _id: string;
   name: string;
@@ -24,6 +29,39 @@ export type Product = {
   brand?: string;
   categories: string[];
   date?: string;
+  attributes?: ProductAttributeValue[];
+  hasVariants?: boolean;
+};
+
+export type CategoryAttribute = {
+  _id: string;
+  category: string;
+  name: string;
+  valueType: "select" | "text";
+  options: string[];
+  unit?: string;
+  isVariantAxis: boolean;
+  isFilterable: boolean;
+  sortOrder?: number;
+};
+
+// Populated form (attribute.name available) — what GET /api/cart and the
+// admin variant list return; the plain ProductAttributeValue shape (just an
+// id) is what gets submitted back to the server.
+export type PopulatedAttributeValue = {
+  attribute: { _id: string; name: string };
+  value: string;
+};
+
+export type ProductVariant = {
+  _id: string;
+  product: string;
+  sku?: string;
+  attributes: PopulatedAttributeValue[];
+  priceOverride?: number; // kuruş, absolute — not a delta
+  stock: number;
+  imgUrl?: string;
+  isActive: boolean;
 };
 
 export type CartItem = {
@@ -33,6 +71,8 @@ export type CartItem = {
   imgUrl?: string;
   quantity: number;
   stock?: number;
+  variantId?: string;
+  variantLabel?: string;
 };
 
 export type CartDiscount = {
@@ -107,6 +147,12 @@ export type OrderItemProduct = {
   imgUrl?: string;
 };
 
+export type OrderItemVariant = {
+  _id?: string;
+  sku?: string;
+  label?: string;
+};
+
 export type OrderStatus = "pending" | "processing" | "shipped" | "delivered";
 
 export type Order = {
@@ -131,6 +177,7 @@ export type Order = {
   campaignName?: string;
   items: {
     product: OrderItemProduct;
+    variant?: OrderItemVariant;
     quantity: number;
     date?: string;
   }[];

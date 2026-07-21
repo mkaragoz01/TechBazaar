@@ -7,6 +7,7 @@ const User = require("../models/user")
 const Role = require("../models/role")
 const Address = require("../models/address")
 const PaymentMethod = require("../models/paymentMethod")
+const CategoryAttribute = require("../models/categoryAttribute")
 const fs = require("fs")
 const XLSX = require("xlsx")
 const sanitizeDescription = require("../utility/sanitizeDescription")
@@ -46,6 +47,47 @@ function asOptionalTrimmed(value) {
     return trimmed === '' ? undefined : trimmed;
 }
 
+// The product form's own "specs" section — plain (non-variant-axis)
+// attribute values only. Variant-axis values are managed exclusively
+// through ProductVariant documents (see controllers/productVariants.js)
+// and denormalized onto Product.attributes from there, not here.
+async function parseProductAttributeValues(rawAttributes, categoryIds) {
+    if (!rawAttributes) return [];
+
+    let entries;
+    try {
+        entries = typeof rawAttributes === 'string' ? JSON.parse(rawAttributes) : rawAttributes;
+    } catch {
+        return { error: 'Geçersiz özellik verisi.' };
+    }
+    if (!Array.isArray(entries) || entries.length === 0) return [];
+
+    const attributeIds = entries.map(e => e.attribute);
+    const attributeDocs = await CategoryAttribute.find({
+        _id: { $in: attributeIds },
+        category: { $in: categoryIds },
+        isVariantAxis: false
+    }).lean();
+
+    if (attributeDocs.length !== new Set(attributeIds.map(String)).size) {
+        return { error: 'Geçersiz bir özellik seçildi.' };
+    }
+
+    const attributeById = new Map(attributeDocs.map(a => [a._id.toString(), a]));
+    for (const entry of entries) {
+        const value = typeof entry.value === 'string' ? entry.value.trim() : '';
+        if (!value) {
+            return { error: 'Özellik değeri boş olamaz.' };
+        }
+        const attribute = attributeById.get(String(entry.attribute));
+        if (attribute.valueType === 'select' && !attribute.options.includes(value)) {
+            return { error: `"${value}" geçerli bir seçenek değil.` };
+        }
+    }
+
+    return entries.map(e => ({ attribute: e.attribute, value: String(e.value).trim() }));
+}
+
 exports.getProducts = async (req, res, next) => {
     try {
         const products = await Product.find({ userId: req.user._id }).lean();
@@ -83,6 +125,12 @@ exports.postAddProduct = async (req, res, next) => {
     }
 
     try {
+        const attributes = await parseProductAttributeValues(req.body.attributes, categoryIds);
+        if (attributes.error) {
+            fs.unlink(`public/img/${image.filename}`, (unlinkErr) => { if (unlinkErr) console.log(unlinkErr); });
+            return res.status(400).json({ error: attributes.error });
+        }
+
         const product = new Product({
             name,
             price: priceInKurus,
@@ -95,7 +143,8 @@ exports.postAddProduct = async (req, res, next) => {
             isNewArrival: asBoolean(req.body.isNewArrival),
             isFeatured: asBoolean(req.body.isFeatured),
             userId: req.user._id,
-            isActive: req.body.isActive !== undefined ? asBoolean(req.body.isActive) : true
+            isActive: req.body.isActive !== undefined ? asBoolean(req.body.isActive) : true,
+            attributes
         });
         await product.save();
         res.status(201).json({ ok: true, product });
@@ -137,6 +186,12 @@ exports.putEditProduct = async (req, res, next) => {
             return res.status(400).json({ error: 'Lütfen geçerli bir fiyat girin.' });
         }
 
+        const attributes = await parseProductAttributeValues(req.body.attributes, categoryIds);
+        if (attributes.error) {
+            if (image) fs.unlink(`public/img/${image.filename}`, (err) => { if (err) console.log(err); });
+            return res.status(400).json({ error: attributes.error });
+        }
+
         product.name = name;
         product.price = priceInKurus;
         product.description = sanitizeDescription(description);
@@ -151,6 +206,17 @@ exports.putEditProduct = async (req, res, next) => {
         if (req.body.isActive !== undefined) {
             product.isActive = asBoolean(req.body.isActive);
         }
+
+        // attributes yalnızca düz (varyant-olmayan) özellik değerlerini
+        // taşıyor — varyant-ekseni değerleri utility/syncProductVariant
+        // Denormalization.js tarafından ayrıca yönetiliyor, burada silinmesinler.
+        const axisAttributeDocs = await CategoryAttribute.find({
+            category: { $in: categoryIds },
+            isVariantAxis: true
+        }).select('_id').lean();
+        const axisAttributeIds = new Set(axisAttributeDocs.map(a => a._id.toString()));
+        const preservedVariantEntries = product.attributes.filter(a => axisAttributeIds.has(a.attribute.toString()));
+        product.attributes = [...preservedVariantEntries, ...attributes];
 
         const oldImgUrl = product.imgUrl;
         if (image) {

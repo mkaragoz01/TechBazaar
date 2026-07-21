@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { clientFetch, ClientApiError } from "@/lib/client-api";
 import FormField from "@/components/FormField";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import AdminButton from "@/components/admin/AdminButton";
-import type { Category, Brand, Product } from "@/lib/types";
+import type { Category, Brand, Product, CategoryAttribute } from "@/lib/types";
 
 export default function ProductForm({
   categories,
@@ -32,6 +32,37 @@ export default function ProductForm({
   );
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const [specAttributes, setSpecAttributes] = useState<CategoryAttribute[]>([]);
+  const [attributeValues, setAttributeValues] = useState<Record<string, string>>(
+    Object.fromEntries((product?.attributes ?? []).map((a) => [a.attribute, a.value]))
+  );
+
+  // Ürünün "özellikler" (specs) bölümü seçilen kategorilere göre değişir —
+  // varyant ekseni olan özellikler burada gösterilmez, onlar sadece
+  // ProductVariantsForm üzerinden yönetilir.
+  useEffect(() => {
+    const fetchAttributes = selectedCategories.length === 0
+      ? Promise.resolve([])
+      : Promise.all(
+          selectedCategories.map((id) =>
+            clientFetch<{ attributes: CategoryAttribute[] }>(`/api/admin/category-attributes?category=${id}`)
+          )
+        ).then((results) => {
+          const byId = new Map<string, CategoryAttribute>();
+          for (const result of results) {
+            for (const attribute of result.attributes) {
+              if (!attribute.isVariantAxis) {
+                byId.set(attribute._id, attribute);
+              }
+            }
+          }
+          return [...byId.values()];
+        });
+
+    fetchAttributes.then(setSpecAttributes).catch(() => setSpecAttributes([]));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- comparing the joined id list on purpose, not array identity
+  }, [selectedCategories.join(",")]);
 
   function toggleCategory(id: string) {
     setSelectedCategories((prev) =>
@@ -155,6 +186,52 @@ export default function ProductForm({
         ))}
       </fieldset>
 
+      {specAttributes.length > 0 ? (
+        <fieldset className="flex flex-col gap-3">
+          <legend className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+            Özellikler
+          </legend>
+          <input type="hidden" name="attributes" value={JSON.stringify(
+            Object.entries(attributeValues)
+              .filter(([, value]) => value)
+              .map(([attribute, value]) => ({ attribute, value }))
+          )} />
+          {specAttributes.map((attribute) => (
+            <label key={attribute._id} className="flex flex-col gap-1">
+              <span className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+                {attribute.name}
+                {attribute.unit ? ` (${attribute.unit})` : ""}
+              </span>
+              {attribute.valueType === "select" ? (
+                <select
+                  value={attributeValues[attribute._id] ?? ""}
+                  onChange={(e) =>
+                    setAttributeValues((prev) => ({ ...prev, [attribute._id]: e.target.value }))
+                  }
+                  className="rounded-xl border border-border bg-surface px-4 py-3 font-body text-ink"
+                >
+                  <option value="">Seçilmedi</option>
+                  {attribute.options.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  value={attributeValues[attribute._id] ?? ""}
+                  onChange={(e) =>
+                    setAttributeValues((prev) => ({ ...prev, [attribute._id]: e.target.value }))
+                  }
+                  className="rounded-xl border border-border bg-surface px-4 py-3 font-body text-ink"
+                />
+              )}
+            </label>
+          ))}
+        </fieldset>
+      ) : null}
+
       <fieldset className="flex flex-col gap-2">
         <legend className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
           Vitrin Etiketleri
@@ -209,10 +286,10 @@ export default function ProductForm({
         />
       </label>
 
-      {error ? <p className="font-body text-sm text-accent">{error}</p> : null}
+      {error ? <p className="font-body text-sm text-danger">{error}</p> : null}
 
       <AdminButton type="submit" disabled={loading}>
-        {product ? "Kaydet" : "Ürünü Ekle"}
+        {loading ? "Kaydediliyor..." : product ? "Kaydet" : "Ürünü Ekle"}
       </AdminButton>
     </form>
   );

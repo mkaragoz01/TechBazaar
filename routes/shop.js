@@ -6,6 +6,7 @@ const apiAuthentication = require("../middleware/apiAuthentication")
 const validateObjectId = require("../middleware/validateObjectId")
 
 router.get('/api/categories', shopController.getCategoriesJson);
+router.get('/api/categories/:categoryid/attributes', validateObjectId('categoryid'), shopController.getCategoryAttributes);
 router.get('/api/brands', shopController.getBrandsJson);
 
 router.get('/api/home', shopController.getIndex);

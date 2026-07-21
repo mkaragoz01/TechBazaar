@@ -13,12 +13,18 @@ export default function ProductGrid({
   categories: Category[];
   selectedSort?: string | null;
   basePath: string;
-  extraParams?: Record<string, string>;
+  extraParams?: Record<string, string | string[]>;
 }) {
   const categoryNameById = new Map(categories.map((c) => [c._id, c.name]));
 
   function sortHref(sort: string) {
-    const params = new URLSearchParams({ ...extraParams, sort });
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(extraParams)) {
+      for (const v of Array.isArray(value) ? value : [value]) {
+        params.append(key, v);
+      }
+    }
+    params.set("sort", sort);
     return `${basePath}?${params.toString()}`;
   }
 

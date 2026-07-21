@@ -8,6 +8,7 @@ export default function ProductFilters({
   selectedMinPrice,
   selectedMaxPrice,
   selectedQuery,
+  selectedAttributes,
 }: {
   basePath: string;
   brands: Brand[];
@@ -16,6 +17,9 @@ export default function ProductFilters({
   selectedMinPrice?: string;
   selectedMaxPrice?: string;
   selectedQuery?: string;
+  // Carried forward as hidden fields so submitting this form doesn't drop
+  // FilterPanel's checkbox selections (they're two separate <form>s).
+  selectedAttributes?: Record<string, string | string[]>;
 }) {
   return (
     <form
@@ -24,6 +28,11 @@ export default function ProductFilters({
       className="mb-8 flex flex-wrap items-end gap-4 rounded-3xl bg-surface p-5 shadow-sm"
     >
       {selectedSort ? <input type="hidden" name="sort" value={selectedSort} /> : null}
+      {Object.entries(selectedAttributes ?? {}).flatMap(([attributeId, value]) =>
+        (Array.isArray(value) ? value : [value]).map((v, i) => (
+          <input key={`${attributeId}-${i}`} type="hidden" name={`attr[${attributeId}]`} value={v} />
+        ))
+      )}
 
       <label className="flex flex-1 flex-col gap-1" style={{ minWidth: "160px" }}>
         <span className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
