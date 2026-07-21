@@ -15,6 +15,7 @@ const accountRoutes = require('./routes/account')
 const checkoutRoutes = require('./routes/checkout')
 
 const User = require("./models/user")
+const ErrorLog = require("./models/errorLog")
 
 // Built as a factory (rather than a module-level singleton) so tests can
 // point the session store at an isolated in-memory MongoDB instance instead
@@ -76,6 +77,16 @@ function createApp(connectionString) {
 
     app.use((error, req, res, next) => {
         console.error(error);
+        // Fire-and-forget — a logging failure must never delay or break the
+        // error response itself.
+        ErrorLog.create({
+            message: error.message,
+            stack: error.stack,
+            method: req.method,
+            path: req.originalUrl,
+            statusCode: error.status || 500,
+            userId: req.user ? req.user._id : undefined
+        }).catch(logErr => console.error('Error log yazılamadı:', logErr));
         res.status(500).json({ error: 'Beklenmedik bir sunucu hatası oluştu.' });
     });
 

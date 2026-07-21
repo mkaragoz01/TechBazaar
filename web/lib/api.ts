@@ -10,9 +10,14 @@ import type {
   PaymentMethod,
   Campaign,
   DashboardData,
+  AdminUser,
+  Role,
+  AuditLogEntry,
+  ErrorLogEntry,
+  LogType,
 } from "./types";
 
-export type { Category, Brand, Product, CartItem, CartDiscount, Order, Address, PaymentMethod, Campaign, DashboardData };
+export type { Category, Brand, Product, CartItem, CartDiscount, Order, Address, PaymentMethod, Campaign, DashboardData, AdminUser, Role, AuditLogEntry, ErrorLogEntry, LogType };
 
 export type HomeData = {
   products: Product[];
@@ -134,4 +139,57 @@ export async function getAdminCampaigns(): Promise<{ campaigns: Campaign[] }> {
 
 export async function getAdminCampaign(campaignId: string): Promise<{ campaign: Campaign }> {
   return serverFetch(`/api/admin/campaigns/${campaignId}`);
+}
+
+export type AdminUsersData = {
+  users: AdminUser[];
+  total: number;
+  page: number;
+  pages: number;
+};
+
+export async function getAdminUsers(params: {
+  q?: string;
+  role?: string;
+  page?: number;
+}): Promise<AdminUsersData> {
+  const search = new URLSearchParams();
+  if (params.q) search.set("q", params.q);
+  if (params.role) search.set("role", params.role);
+  if (params.page) search.set("page", String(params.page));
+  const qs = search.toString();
+  return serverFetch(`/api/admin/users${qs ? `?${qs}` : ""}`);
+}
+
+export async function getAdminRoles(): Promise<{ roles: Role[] }> {
+  return serverFetch(`/api/admin/roles`);
+}
+
+export async function getAdminRole(roleId: string): Promise<{ role: Role }> {
+  return serverFetch(`/api/admin/roles/${roleId}`);
+}
+
+export type AdminLogsData<T> = {
+  logs: T[];
+  total: number;
+  page: number;
+  pages: number;
+};
+
+export async function getAdminLogs(params: {
+  type: LogType;
+  actor?: string;
+  action?: string;
+  from?: string;
+  to?: string;
+  page?: number;
+}): Promise<AdminLogsData<AuditLogEntry | ErrorLogEntry>> {
+  const search = new URLSearchParams();
+  search.set("type", params.type);
+  if (params.actor) search.set("actor", params.actor);
+  if (params.action) search.set("action", params.action);
+  if (params.from) search.set("from", params.from);
+  if (params.to) search.set("to", params.to);
+  if (params.page) search.set("page", String(params.page));
+  return serverFetch(`/api/admin/logs?${search.toString()}`);
 }

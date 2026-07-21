@@ -3,6 +3,7 @@ const router = express.Router()
 
 const adminController = require("../controllers/admin")
 const productImportController = require("../controllers/productImport")
+const logsController = require("../controllers/logs")
 const apiIsAdmin = require("../middleware/apiIsAdmin")
 const upload = require("../middleware/upload")
 const uploadExcel = require("../middleware/uploadExcel")
@@ -57,5 +58,20 @@ router.post('/api/admin/campaigns', apiIsAdmin, adminController.postAddCampaign)
 router.get('/api/admin/campaigns/:campaignid', apiIsAdmin, validateObjectId('campaignid'), adminController.getCampaign)
 router.put('/api/admin/campaigns/:campaignid', apiIsAdmin, validateObjectId('campaignid'), adminController.putEditCampaign)
 router.delete('/api/admin/campaigns/:campaignid', apiIsAdmin, validateObjectId('campaignid'), adminController.deleteCampaign)
+
+router.get('/api/admin/users', apiIsAdmin, adminController.getUsers)
+router.get('/api/admin/users/export', apiIsAdmin, adminController.getUsersExport)
+router.put('/api/admin/users/:userid/role', apiIsAdmin, validateObjectId('userid'), adminController.putUpdateUserRole)
+
+router.get('/api/admin/roles', apiIsAdmin, adminController.getRoles)
+router.post('/api/admin/roles', apiIsAdmin, adminController.postAddRole)
+router.get('/api/admin/roles/:roleid', apiIsAdmin, validateObjectId('roleid'), adminController.getRole)
+router.put('/api/admin/roles/:roleid', apiIsAdmin, validateObjectId('roleid'), adminController.putEditRole)
+router.delete('/api/admin/roles/:roleid', apiIsAdmin, validateObjectId('roleid'), adminController.deleteRole)
+
+// Must be registered before a future /:logid route (none exists yet, but
+// keeping the convention consistent with products/export above).
+router.get('/api/admin/logs/export', apiIsAdmin, logsController.getLogsExport)
+router.get('/api/admin/logs', apiIsAdmin, logsController.getLogs)
 
 module.exports = router;

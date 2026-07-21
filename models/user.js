@@ -24,6 +24,14 @@ const userSchema = mongoose.Schema({
         type: Boolean,
         default: false
     },
+    // Kept in sync with the assigned Role's `isAdminRole` (see
+    // controllers/admin.js's user-role update) — every admin gate still
+    // only ever checks this one boolean, `role` just carries the richer
+    // named-segment meaning (see models/role.js).
+    role: {
+        type: String,
+        default: 'customer'
+    },
     cart: {
         items:[
             {
@@ -40,7 +48,7 @@ const userSchema = mongoose.Schema({
         ]
     }
 
-})
+}, { timestamps: true })
 
 userSchema.methods.addToCart = function(product) {
     const index = this.cart.items.findIndex(cp => {

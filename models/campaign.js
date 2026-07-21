@@ -10,7 +10,11 @@ const mongoose = require('mongoose')
 const conditionSchema = new mongoose.Schema({
     type: {
         type: String,
-        enum: ['product', 'productName', 'user', 'cartTotal'],
+        // 'role' is schema-only for now — targeting a campaign at a named
+        // role (e.g. a future "vip" segment) is a planned follow-up;
+        // utility/evaluateCampaign.js has no 'role' branch yet, and the
+        // admin condition-builder UI doesn't expose it either.
+        enum: ['product', 'productName', 'user', 'cartTotal', 'role'],
         required: true
     },
     // Only meaningful for type: 'product'.

@@ -143,6 +143,46 @@ export type CurrentUser = {
   isAdmin: boolean;
 };
 
+export type AdminUser = {
+  _id: string;
+  name: string;
+  email: string;
+  role: string;
+  isAdmin: boolean;
+  createdAt?: string;
+};
+
+export type Role = {
+  _id: string;
+  name: string;
+  isAdminRole: boolean;
+  protected?: boolean;
+};
+
+export type AuditLogEntry = {
+  _id: string;
+  actor?: { id: string; name?: string; email?: string };
+  action: string;
+  targetType?: string;
+  targetId?: string;
+  before?: unknown;
+  after?: unknown;
+  createdAt: string;
+};
+
+export type ErrorLogEntry = {
+  _id: string;
+  message?: string;
+  stack?: string;
+  method?: string;
+  path?: string;
+  statusCode?: number;
+  userId?: string;
+  createdAt: string;
+};
+
+export type LogType = "audit" | "error";
+
 export type DashboardKpis = {
   totalRevenue: number; // kuruş
   totalRevenueDeltaPct: number | null;

@@ -3,15 +3,29 @@ const Brand = require("../models/brand");
 const Campaign = require("../models/campaign");
 const Product = require("../models/product")
 const Order = require("../models/order");
+const User = require("../models/user")
+const Role = require("../models/role")
 const fs = require("fs")
+const XLSX = require("xlsx")
 const sanitizeDescription = require("../utility/sanitizeDescription")
 const { parsePriceToKurus } = require("../utility/formatPrice")
 const { bucketOrders, computeKpis } = require("../utility/dashboardStats")
+const writeAuditLog = require("../utility/writeAuditLog")
 
 const LOW_STOCK_THRESHOLD = 3
 
 function validationMessage(err) {
     return Object.values(err.errors).map(e => e.message).join(' ');
+}
+
+function escapeRegex(value) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function paginationParams(query) {
+    const page = Math.max(1, parseInt(query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(query.limit) || 20));
+    return { page, limit };
 }
 
 function asArray(value) {
@@ -520,6 +534,202 @@ exports.deleteCampaign = async (req, res, next) => {
         if (result.deletedCount === 0) {
             return res.status(404).json({ error: 'Kampanya bulunamadı.' });
         }
+        res.json({ ok: true });
+    } catch (err) {
+        next(err);
+    }
+}
+
+function userListFilter(query) {
+    const filter = {};
+    if (query.role) {
+        filter.role = query.role;
+    }
+    if (query.q) {
+        const re = new RegExp(escapeRegex(String(query.q)), 'i');
+        filter.$or = [{ name: re }, { email: re }];
+    }
+    return filter;
+}
+
+exports.getUsers = async (req, res, next) => {
+    try {
+        const filter = userListFilter(req.query);
+        const { page, limit } = paginationParams(req.query);
+
+        const [users, total] = await Promise.all([
+            User.find(filter)
+                .select('name email role isAdmin createdAt')
+                .sort({ createdAt: -1 })
+                .skip((page - 1) * limit)
+                .limit(limit)
+                .lean(),
+            User.countDocuments(filter)
+        ]);
+
+        res.json({ users, total, page, pages: Math.max(1, Math.ceil(total / limit)) });
+    } catch (err) {
+        next(err);
+    }
+}
+
+exports.getUsersExport = async (req, res, next) => {
+    try {
+        const filter = userListFilter(req.query);
+        const users = await User.find(filter)
+            .select('name email role isAdmin createdAt')
+            .sort({ createdAt: -1 })
+            .lean();
+
+        const headers = ['Ad Soyad', 'E-posta', 'Rol', 'Yönetici', 'Kayıt Tarihi'];
+        const rows = users.map(u => ({
+            'Ad Soyad': u.name,
+            'E-posta': u.email,
+            'Rol': u.role,
+            'Yönetici': u.isAdmin ? 'TRUE' : 'FALSE',
+            'Kayıt Tarihi': u.createdAt ? new Date(u.createdAt).toLocaleDateString('tr-TR') : ''
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(rows, { header: headers });
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Kullanıcılar');
+        const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', 'attachment; filename="kullanicilar.xlsx"');
+        res.send(buffer);
+    } catch (err) {
+        next(err);
+    }
+}
+
+exports.putUpdateUserRole = async (req, res, next) => {
+    try {
+        const target = await User.findById(req.params.userid);
+        if (!target) {
+            return res.status(404).json({ error: 'Kullanıcı bulunamadı.' });
+        }
+
+        // Bir admin kendi hesabı üzerinde bu işlemi yapamaz — başka
+        // admin/kullanıcılar üzerinde yapabilir. Bu tek kural, sistemin hiç
+        // yöneticisiz kalamamasını da zaten garanti eder: son admin ancak
+        // kendi kendini düşürerek 0 admin'e düşürebilirdi, ki bu engellendi.
+        if (target._id.equals(req.user._id)) {
+            return res.status(400).json({ error: 'Kendi hesabınız üzerinde bu işlemi gerçekleştiremezsiniz.' });
+        }
+
+        const role = await Role.findOne({ name: req.body.role });
+        if (!role) {
+            return res.status(400).json({ error: 'Geçersiz rol.' });
+        }
+
+        const before = { role: target.role, isAdmin: target.isAdmin };
+        target.role = role.name;
+        target.isAdmin = role.isAdminRole;
+        await target.save();
+
+        await writeAuditLog({
+            actor: req.user,
+            action: 'user.role.update',
+            targetType: 'User',
+            targetId: target._id,
+            before,
+            after: { role: target.role, isAdmin: target.isAdmin }
+        });
+
+        res.json({
+            ok: true,
+            user: {
+                _id: target._id,
+                name: target.name,
+                email: target.email,
+                role: target.role,
+                isAdmin: target.isAdmin
+            }
+        });
+    } catch (err) {
+        if (err.name === "ValidationError") {
+            return res.status(400).json({ error: validationMessage(err) });
+        }
+        next(err);
+    }
+}
+
+exports.getRoles = async (req, res, next) => {
+    try {
+        const roles = await Role.find().sort({ createdAt: 1 }).lean();
+        res.json({ roles });
+    } catch (err) {
+        next(err);
+    }
+}
+
+exports.getRole = async (req, res, next) => {
+    try {
+        const role = await Role.findById(req.params.roleid).lean();
+        if (!role) {
+            return res.status(404).json({ error: 'Rol bulunamadı.' });
+        }
+        res.json({ role });
+    } catch (err) {
+        next(err);
+    }
+}
+
+exports.postAddRole = async (req, res, next) => {
+    try {
+        const role = new Role({ name: req.body.name, isAdminRole: asBoolean(req.body.isAdminRole) });
+        await role.save();
+        res.status(201).json({ ok: true, role });
+    } catch (err) {
+        if (err.name === "ValidationError") {
+            return res.status(400).json({ error: validationMessage(err) });
+        }
+        if (err.code === 11000) {
+            return res.status(409).json({ error: 'Bu isimde bir rol zaten var.' });
+        }
+        next(err);
+    }
+}
+
+exports.putEditRole = async (req, res, next) => {
+    try {
+        const role = await Role.findById(req.params.roleid);
+        if (!role) {
+            return res.status(404).json({ error: 'Rol bulunamadı.' });
+        }
+        if (role.protected) {
+            return res.status(409).json({ error: 'Bu rol düzenlenemez.' });
+        }
+        role.name = req.body.name;
+        role.isAdminRole = asBoolean(req.body.isAdminRole);
+        await role.save();
+        res.json({ ok: true, role });
+    } catch (err) {
+        if (err.name === "ValidationError") {
+            return res.status(400).json({ error: validationMessage(err) });
+        }
+        if (err.code === 11000) {
+            return res.status(409).json({ error: 'Bu isimde bir rol zaten var.' });
+        }
+        next(err);
+    }
+}
+
+exports.deleteRole = async (req, res, next) => {
+    try {
+        const role = await Role.findById(req.params.roleid);
+        if (!role) {
+            return res.status(404).json({ error: 'Rol bulunamadı.' });
+        }
+        if (role.protected) {
+            return res.status(409).json({ error: 'Bu rol silinemez.' });
+        }
+        const usersWithRole = await User.countDocuments({ role: role.name });
+        if (usersWithRole > 0) {
+            return res.status(409).json({ error: 'Bu role atanmış kullanıcılar var, önce onları başka bir role taşıyın.' });
+        }
+        await Role.deleteOne({ _id: role._id });
         res.json({ ok: true });
     } catch (err) {
         next(err);

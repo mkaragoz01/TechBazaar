@@ -63,7 +63,6 @@ exports.postLogin = (req, res, next) => {
 
                     req.session.user = user;
                     req.session.isAuthenticated = true;
-                    req.session.isAdmin = user.isAdmin;
                     return req.session.save(err => {
                         if (err) return next(err);
                         res.json({

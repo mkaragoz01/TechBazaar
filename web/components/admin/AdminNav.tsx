@@ -28,6 +28,14 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/admin/campaigns", label: "Kampanyalar" },
     ],
   },
+  {
+    label: "Yönetim",
+    items: [
+      { href: "/admin/users", label: "Kullanıcılar" },
+      { href: "/admin/roles", label: "Roller" },
+      { href: "/admin/logs", label: "Loglar" },
+    ],
+  },
 ];
 
 function isItemActive(pathname: string | null, href: string) {
