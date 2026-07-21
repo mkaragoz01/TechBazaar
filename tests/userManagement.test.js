@@ -2,6 +2,10 @@ const request = require('supertest');
 const { setupTestApp, teardownTestApp } = require('./helpers/testApp');
 const { createUser, xhr } = require('./helpers/fixtures');
 const Role = require('../models/role');
+const User = require('../models/user');
+const Address = require('../models/address');
+const PaymentMethod = require('../models/paymentMethod');
+const AuditLog = require('../models/auditLog');
 
 async function loginAgent(app, overrides) {
     const agent = request.agent(app);
@@ -115,6 +119,44 @@ describe('user & role management (controllers/admin.js)', () => {
 
             // Same session, no re-login — must be locked out immediately.
             expect((await targetSession.get('/api/admin/products')).status).toBe(403);
+        });
+    });
+
+    describe('DELETE /api/admin/users/:userid', () => {
+        it('blocks an admin from deleting their own account', async () => {
+            const { agent, user } = await loginAgent(app, { email: 'selfdelete@example.com', isAdmin: true });
+            const res = await agent.delete(`/api/admin/users/${user._id}`).set(xhr);
+            expect(res.status).toBe(400);
+        });
+
+        it('returns 404 for a non-existent user', async () => {
+            const { user: target } = await createUser({ email: 'todelete-missing@example.com' });
+            await User.deleteOne({ _id: target._id });
+            const res = await sharedAdmin.agent.delete(`/api/admin/users/${target._id}`).set(xhr);
+            expect(res.status).toBe(404);
+        });
+
+        it('deletes a user, cascades their addresses/payment methods, and writes an audit log entry', async () => {
+            const { user: target } = await createUser({ email: 'todelete@example.com', name: 'Silinecek Kullanıcı' });
+            await Address.create({
+                userId: target._id, title: 'Ev', fullName: 'Test', phone: '5550000000',
+                city: 'A', district: 'B', addressLine: 'C'
+            });
+            await PaymentMethod.create({
+                userId: target._id, cardHolderName: 'Test', last4: '4242', brand: 'Visa',
+                expiryMonth: 12, expiryYear: 2030
+            });
+
+            const res = await sharedAdmin.agent.delete(`/api/admin/users/${target._id}`).set(xhr);
+            expect(res.status).toBe(200);
+
+            expect(await User.findById(target._id)).toBeNull();
+            expect(await Address.countDocuments({ userId: target._id })).toBe(0);
+            expect(await PaymentMethod.countDocuments({ userId: target._id })).toBe(0);
+
+            const auditEntry = await AuditLog.findOne({ action: 'user.delete', targetId: target._id });
+            expect(auditEntry).not.toBeNull();
+            expect(auditEntry.before.email).toBe('todelete@example.com');
         });
     });
 

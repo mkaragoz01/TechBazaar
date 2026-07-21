@@ -62,6 +62,7 @@ router.delete('/api/admin/campaigns/:campaignid', apiIsAdmin, validateObjectId('
 router.get('/api/admin/users', apiIsAdmin, adminController.getUsers)
 router.get('/api/admin/users/export', apiIsAdmin, adminController.getUsersExport)
 router.put('/api/admin/users/:userid/role', apiIsAdmin, validateObjectId('userid'), adminController.putUpdateUserRole)
+router.delete('/api/admin/users/:userid', apiIsAdmin, validateObjectId('userid'), adminController.deleteUser)
 
 router.get('/api/admin/roles', apiIsAdmin, adminController.getRoles)
 router.post('/api/admin/roles', apiIsAdmin, adminController.postAddRole)

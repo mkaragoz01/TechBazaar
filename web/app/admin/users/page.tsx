@@ -2,6 +2,7 @@ import { getAdminUsers, getAdminRoles } from "@/lib/api";
 import { getCurrentUser } from "@/lib/server-api";
 import AdminButton from "@/components/admin/AdminButton";
 import UserRoleSelect from "@/components/admin/UserRoleSelect";
+import DeleteButton from "@/components/admin/DeleteButton";
 
 export default async function AdminUsersPage({
   searchParams,
@@ -73,26 +74,34 @@ export default async function AdminUsersPage({
               <th className="px-4 py-3 font-data text-xs uppercase tracking-widest text-ink-muted">E-posta</th>
               <th className="px-4 py-3 font-data text-xs uppercase tracking-widest text-ink-muted">Rol</th>
               <th className="px-4 py-3 font-data text-xs uppercase tracking-widest text-ink-muted">Kayıt Tarihi</th>
+              <th className="px-4 py-3"></th>
             </tr>
           </thead>
           <tbody>
-            {users.map((user) => (
-              <tr key={user._id} className="border-b border-border last:border-0">
-                <td className="px-4 py-3 text-ink">{user.name}</td>
-                <td className="px-4 py-3 text-ink-muted">{user.email}</td>
-                <td className="px-4 py-3">
-                  <UserRoleSelect
-                    userId={user._id}
-                    role={user.role}
-                    roles={roles}
-                    isSelf={user._id === currentUser?._id}
-                  />
-                </td>
-                <td className="px-4 py-3 text-ink-muted">
-                  {user.createdAt ? new Date(user.createdAt).toLocaleDateString("tr-TR") : "-"}
-                </td>
-              </tr>
-            ))}
+            {users.map((user) => {
+              const isSelf = user._id === currentUser?._id;
+              return (
+                <tr key={user._id} className="border-b border-border last:border-0">
+                  <td className="px-4 py-3 text-ink">{user.name}</td>
+                  <td className="px-4 py-3 text-ink-muted">{user.email}</td>
+                  <td className="px-4 py-3">
+                    <UserRoleSelect userId={user._id} role={user.role} roles={roles} isSelf={isSelf} />
+                  </td>
+                  <td className="px-4 py-3 text-ink-muted">
+                    {user.createdAt ? new Date(user.createdAt).toLocaleDateString("tr-TR") : "-"}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    {isSelf ? null : (
+                      <DeleteButton
+                        url={`/api/admin/users/${user._id}`}
+                        confirmMessage={`"${user.name}" kullanıcısını silmek istediğinize emin misiniz? Adresleri ve kartları da silinecek.`}
+                        itemLabel={user.name}
+                      />
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
         {users.length === 0 ? (

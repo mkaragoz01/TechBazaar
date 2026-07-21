@@ -5,6 +5,8 @@ const Product = require("../models/product")
 const Order = require("../models/order");
 const User = require("../models/user")
 const Role = require("../models/role")
+const Address = require("../models/address")
+const PaymentMethod = require("../models/paymentMethod")
 const fs = require("fs")
 const XLSX = require("xlsx")
 const sanitizeDescription = require("../utility/sanitizeDescription")
@@ -651,6 +653,46 @@ exports.putUpdateUserRole = async (req, res, next) => {
         if (err.name === "ValidationError") {
             return res.status(400).json({ error: validationMessage(err) });
         }
+        next(err);
+    }
+}
+
+exports.deleteUser = async (req, res, next) => {
+    try {
+        const target = await User.findById(req.params.userid);
+        if (!target) {
+            return res.status(404).json({ error: 'Kullanıcı bulunamadı.' });
+        }
+
+        // Aynı kural: bir admin kendi hesabını silemez, başkalarını silebilir.
+        if (target._id.equals(req.user._id)) {
+            return res.status(400).json({ error: 'Kendi hesabınız üzerinde bu işlemi gerçekleştiremezsiniz.' });
+        }
+
+        const before = { name: target.name, email: target.email, role: target.role, isAdmin: target.isAdmin };
+
+        // Siparişler zaten kendi user/shippingAddress/paymentDisplay
+        // anlık görüntüsünü taşıyor (bkz. models/order.js) — kullanıcı
+        // silinse de sipariş geçmişi bozulmaz. Ama adres/kart kayıtları
+        // sadece userId'ye referans veriyor, öksüz kalmasınlar diye
+        // onlar da birlikte silinir.
+        await Promise.all([
+            Address.deleteMany({ userId: target._id }),
+            PaymentMethod.deleteMany({ userId: target._id })
+        ]);
+        await User.deleteOne({ _id: target._id });
+
+        await writeAuditLog({
+            actor: req.user,
+            action: 'user.delete',
+            targetType: 'User',
+            targetId: target._id,
+            before,
+            after: null
+        });
+
+        res.json({ ok: true });
+    } catch (err) {
         next(err);
     }
 }
