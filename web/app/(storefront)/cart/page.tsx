@@ -4,6 +4,7 @@ import { getCart } from "@/lib/api";
 import { productImageUrl, ApiError } from "@/lib/server-api";
 import { formatPriceNumber } from "@/lib/formatPrice";
 import RemoveFromCartButton from "@/components/RemoveFromCartButton";
+import CartQuantityStepper from "@/components/CartQuantityStepper";
 import CampaignCodeForm from "@/components/CampaignCodeForm";
 import Button from "@/components/Button";
 import Card from "@/components/Card";
@@ -46,11 +47,10 @@ export default async function CartPage() {
               </div>
               <div className="flex-1">
                 <p className="font-display font-bold text-ink">{item.name}</p>
-                <p className="font-data text-xs text-ink-muted">
-                  {item.quantity} adet × {formatPriceNumber(item.price)} TL
-                </p>
+                <p className="font-data text-xs text-ink-muted">{formatPriceNumber(item.price)} TL / adet</p>
               </div>
-              <p className="font-data font-semibold tabular-nums text-ink">
+              <CartQuantityStepper productId={item._id} quantity={item.quantity} stock={item.stock} />
+              <p className="w-24 text-right font-data font-semibold tabular-nums text-ink">
                 {formatPriceNumber(item.price * item.quantity)} TL
               </p>
               <RemoveFromCartButton productId={item._id} />

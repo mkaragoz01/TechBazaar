@@ -5,7 +5,7 @@ import { getProduct } from "@/lib/api";
 import { productImageUrl, ApiError } from "@/lib/server-api";
 import { formatPrice } from "@/lib/formatPrice";
 import { stripHtml } from "@/lib/richText";
-import AddToCartButton from "@/components/AddToCartButton";
+import ProductDetailAddToCart from "@/components/ProductDetailAddToCart";
 import ProductCard from "@/components/ProductCard";
 
 export async function generateMetadata({
@@ -117,7 +117,7 @@ export default async function ProductDetailPage({
             {formatPrice(product.price)}
           </p>
           <div className="mt-6">
-            <AddToCartButton productId={product._id} outOfStock={outOfStock} />
+            <ProductDetailAddToCart productId={product._id} stock={product.stock} />
           </div>
         </div>
       </div>

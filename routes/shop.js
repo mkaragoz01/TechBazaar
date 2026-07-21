@@ -16,7 +16,9 @@ router.get('/api/products/search-suggestions', shopController.getProductSearchSu
 router.get('/api/products/:productid', validateObjectId('productid'), shopController.getProduct);
 
 router.get('/api/cart', apiAuthentication, shopController.getCart);
+router.get('/api/cart/count', apiAuthentication, shopController.getCartCount);
 router.post('/api/cart', apiAuthentication, shopController.postCart);
+router.put('/api/cart/item', apiAuthentication, shopController.putCartItemQuantity);
 router.post('/api/cart/delete-item', apiAuthentication, shopController.postCartItemDelete);
 router.post('/api/cart/apply-code', apiAuthentication, shopController.postApplyCampaignCode);
 router.post('/api/cart/remove-code', apiAuthentication, shopController.postRemoveCampaignCode);

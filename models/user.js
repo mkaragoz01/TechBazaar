@@ -50,18 +50,18 @@ const userSchema = mongoose.Schema({
 
 }, { timestamps: true })
 
-userSchema.methods.addToCart = function(product) {
+userSchema.methods.addToCart = function(product, addQuantity = 1) {
     const index = this.cart.items.findIndex(cp => {
         return cp.productId.toString() === product._id.toString()
     })
 
     const updatedCartItems = [...this.cart.items]
 
-    let itemQuantity = 1;
-    
-    
+    let itemQuantity = addQuantity;
+
+
     if(index >= 0){
-        itemQuantity = this.cart.items[index].quantity + 1;
+        itemQuantity = this.cart.items[index].quantity + addQuantity;
         updatedCartItems[index].quantity = itemQuantity;
     }
     else{
@@ -78,6 +78,23 @@ userSchema.methods.addToCart = function(product) {
     return this.save()
 }
 
+// Sets (not increments) a cart line's quantity — used by the +/- stepper
+// and the manual number input on the cart page. quantity<=0 removes the
+// line, matching deleteCartItem's own behavior for consistency.
+userSchema.methods.setCartItemQuantity = function(productId, quantity) {
+    if (quantity <= 0) {
+        return this.deleteCartItem(productId);
+    }
+
+    const index = this.cart.items.findIndex(cp => cp.productId.toString() === productId.toString());
+    if (index < 0) {
+        return this.save();
+    }
+
+    this.cart.items[index].quantity = quantity;
+    return this.save();
+}
+
 userSchema.methods.getCart = function() {
     const ids = this.cart.items.map(i => i.productId);
 
@@ -87,7 +104,7 @@ userSchema.methods.getCart = function() {
                 $in: ids
             }
         })
-        .select("name price imgUrl sku categories brand")
+        .select("name price imgUrl sku categories brand stock")
         .then(products => {
             // Sepetteki geçersiz ürünleri temizle
             const validProductIds = products.map(p => p._id.toString());
@@ -114,6 +131,7 @@ userSchema.methods.getCart = function() {
                     sku: p.sku,
                     categories: p.categories,
                     brand: p.brand,
+                    stock: p.stock,
                     quantity: this.cart.items.find(i => {
                         return i.productId.toString() === p._id.toString()
                     }).quantity

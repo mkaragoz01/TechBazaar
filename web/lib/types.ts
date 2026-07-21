@@ -32,6 +32,7 @@ export type CartItem = {
   price: number; // kuruş
   imgUrl?: string;
   quantity: number;
+  stock?: number;
 };
 
 export type CartDiscount = {

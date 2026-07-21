@@ -205,18 +205,26 @@ exports.postRemoveCampaignCode = (req, res) => {
 exports.postCart = async (req, res, next) => {
     try {
         const productId = req.body.productId;
+        // Optional — the listing-card "add" button never sends this, so it
+        // keeps behaving as a plain +1; the product-detail page's quantity
+        // input sends an explicit amount to add in one call.
+        const addQuantity = req.body.quantity !== undefined ? Number(req.body.quantity) : 1;
+        if (!Number.isInteger(addQuantity) || addQuantity < 1) {
+            return res.status(400).json({ error: 'Geçerli bir adet giriniz.' });
+        }
+
         const product = await Product.findById(productId);
         if (!product) {
             return res.status(404).json({ error: 'Ürün bulunamadı.' });
         }
 
         const existing = req.user.cart.items.find(i => i.productId.toString() === productId);
-        const nextQuantity = (existing ? existing.quantity : 0) + 1;
+        const nextQuantity = (existing ? existing.quantity : 0) + addQuantity;
         if (product.stock < nextQuantity) {
-            return res.status(409).json({ error: 'Ürün stokta yok.' });
+            return res.status(409).json({ error: 'Yeterli stok yok.' });
         }
 
-        await req.user.addToCart(product);
+        await req.user.addToCart(product, addQuantity);
         res.json({ ok: true });
     } catch (err) {
         next(err);
@@ -229,6 +237,35 @@ exports.postCartItemDelete = (req,res,next) => {
         .deleteCartItem(productid)
         .then(() => res.json({ ok: true }))
         .catch(err => next(err));
+}
+
+exports.putCartItemQuantity = async (req, res, next) => {
+    try {
+        const productId = req.body.productId;
+        const quantity = Number(req.body.quantity);
+        if (!Number.isInteger(quantity) || quantity < 0) {
+            return res.status(400).json({ error: 'Geçerli bir adet giriniz.' });
+        }
+
+        if (quantity > 0) {
+            const product = await Product.findById(productId);
+            if (!product) {
+                return res.status(404).json({ error: 'Ürün bulunamadı.' });
+            }
+            if (product.stock < quantity) {
+                return res.status(409).json({ error: 'Yeterli stok yok.' });
+            }
+        }
+
+        await req.user.setCartItemQuantity(productId, quantity);
+        res.json({ ok: true });
+    } catch (err) {
+        next(err);
+    }
+}
+
+exports.getCartCount = (req, res) => {
+    res.json({ count: req.user.cart.items.length });
 }
 
 exports.getOrders = (req,res,next) => {

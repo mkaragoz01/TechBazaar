@@ -148,6 +148,36 @@ describe('storefront (controllers/shop.js)', () => {
             expect(updated.stock).toBe(2);
         });
 
+        it('adds a specific quantity in one call and rejects one exceeding stock', async () => {
+            const agent = request.agent(app);
+            const { user, password } = await createUser({ email: 'qtyadder@example.com' });
+            await agent.post('/api/auth/login').set(xhr).send({ email: user.email, password });
+
+            const category = await createCategory('Adet Testi');
+            const product = await createProduct({ name: 'Adetli Ürün', stock: 5, categories: [category._id], userId: user._id });
+
+            const addThree = await agent.post('/api/cart').set(xhr).send({ productId: product._id.toString(), quantity: 3 });
+            expect(addThree.status).toBe(200);
+
+            const cartRes = await agent.get('/api/cart');
+            expect(cartRes.body.items[0].quantity).toBe(3);
+
+            const tooMany = await agent.post('/api/cart').set(xhr).send({ productId: product._id.toString(), quantity: 10 });
+            expect(tooMany.status).toBe(409);
+        });
+
+        it('rejects a non-positive quantity on add', async () => {
+            const agent = request.agent(app);
+            const { user, password } = await createUser({ email: 'qtybad@example.com' });
+            await agent.post('/api/auth/login').set(xhr).send({ email: user.email, password });
+
+            const category = await createCategory('Adet Testi 2');
+            const product = await createProduct({ name: 'Adetli Ürün 2', stock: 5, categories: [category._id], userId: user._id });
+
+            const res = await agent.post('/api/cart').set(xhr).send({ productId: product._id.toString(), quantity: 0 });
+            expect(res.status).toBe(400);
+        });
+
         it('rejects placing an order with a malformed address/payment id instead of crashing', async () => {
             const agent = request.agent(app);
             const { user, password } = await createUser({ email: 'badorder@example.com' });
@@ -162,6 +192,60 @@ describe('storefront (controllers/shop.js)', () => {
                 paymentMethodId: 'also-not-valid'
             });
             expect(res.status).toBe(400);
+        });
+    });
+
+    describe('PUT /api/cart/item', () => {
+        it('sets an exact quantity, rejects one exceeding stock, and removes the line at 0', async () => {
+            const agent = request.agent(app);
+            const { user, password } = await createUser({ email: 'qtysetter@example.com' });
+            await agent.post('/api/auth/login').set(xhr).send({ email: user.email, password });
+
+            const category = await createCategory('Adet Ayarlama');
+            const product = await createProduct({ name: 'Ayarlanan Ürün', stock: 4, categories: [category._id], userId: user._id });
+            await agent.post('/api/cart').set(xhr).send({ productId: product._id.toString() });
+
+            const setRes = await agent.put('/api/cart/item').set(xhr).send({ productId: product._id.toString(), quantity: 4 });
+            expect(setRes.status).toBe(200);
+            expect((await agent.get('/api/cart')).body.items[0].quantity).toBe(4);
+
+            const overStock = await agent.put('/api/cart/item').set(xhr).send({ productId: product._id.toString(), quantity: 5 });
+            expect(overStock.status).toBe(409);
+
+            const removeRes = await agent.put('/api/cart/item').set(xhr).send({ productId: product._id.toString(), quantity: 0 });
+            expect(removeRes.status).toBe(200);
+            expect((await agent.get('/api/cart')).body.items).toHaveLength(0);
+        });
+
+        it('rejects a negative or non-integer quantity', async () => {
+            const agent = request.agent(app);
+            const { user, password } = await createUser({ email: 'qtynegative@example.com' });
+            await agent.post('/api/auth/login').set(xhr).send({ email: user.email, password });
+
+            const category = await createCategory('Adet Ayarlama 2');
+            const product = await createProduct({ name: 'Ayarlanan Ürün 2', stock: 4, categories: [category._id], userId: user._id });
+            await agent.post('/api/cart').set(xhr).send({ productId: product._id.toString() });
+
+            const res = await agent.put('/api/cart/item').set(xhr).send({ productId: product._id.toString(), quantity: -1 });
+            expect(res.status).toBe(400);
+        });
+    });
+
+    describe('GET /api/cart/count', () => {
+        it('returns the number of distinct cart lines', async () => {
+            const agent = request.agent(app);
+            const { user, password } = await createUser({ email: 'counter@example.com' });
+            await agent.post('/api/auth/login').set(xhr).send({ email: user.email, password });
+
+            expect((await agent.get('/api/cart/count')).body.count).toBe(0);
+
+            const category = await createCategory('Sayac');
+            const productA = await createProduct({ name: 'Sayaç Ürün A', categories: [category._id], userId: user._id });
+            const productB = await createProduct({ name: 'Sayaç Ürün B', categories: [category._id], userId: user._id });
+            await agent.post('/api/cart').set(xhr).send({ productId: productA._id.toString() });
+            await agent.post('/api/cart').set(xhr).send({ productId: productB._id.toString() });
+
+            expect((await agent.get('/api/cart/count')).body.count).toBe(2);
         });
     });
 });

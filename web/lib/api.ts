@@ -72,6 +72,10 @@ export async function getCart(): Promise<{ items: CartItem[]; discount: CartDisc
   return serverFetch(`/api/cart`);
 }
 
+export async function getCartCount(): Promise<{ count: number }> {
+  return serverFetch(`/api/cart/count`);
+}
+
 export async function getOrders(): Promise<{ orders: Order[] }> {
   return serverFetch(`/api/orders`);
 }
