@@ -52,13 +52,13 @@ export default function ProductCard({
       </Link>
 
       <div className="mt-1 flex items-center justify-between gap-3">
-        <span className="font-display text-lg font-bold tabular-nums text-ink">
+        <span className="whitespace-nowrap font-display text-lg font-bold tabular-nums text-ink">
           {formatPriceNumber(product.price)} TL
         </span>
         {product.hasVariants ? (
           <Link
             href={`/products/${product._id}`}
-            className="rounded-full border border-border px-5 py-3.5 font-semibold text-ink transition-colors hover:border-ink"
+            className="shrink-0 whitespace-nowrap rounded-full border border-border px-4 py-2 text-xs font-semibold text-ink transition-colors hover:border-ink"
           >
             Seçenekleri Gör
           </Link>

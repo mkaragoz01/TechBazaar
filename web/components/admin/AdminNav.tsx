@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import LogoutButton from "@/components/LogoutButton";
@@ -44,12 +45,21 @@ function isItemActive(pathname: string | null, href: string) {
 
 function NavDropdown({ group, pathname }: { group: NavGroup; pathname: string | null }) {
   const groupActive = group.items.some((item) => isItemActive(pathname, item.href));
+  const detailsRef = useRef<HTMLDetailsElement>(null);
+
+  // AdminNav lives in a layout shared across /admin routes, so it never
+  // remounts on navigation — a <details> left open by clicking one of its
+  // own links would otherwise still show open on the page that link led
+  // to. Close it on every route change instead.
+  useEffect(() => {
+    if (detailsRef.current) detailsRef.current.open = false;
+  }, [pathname]);
 
   return (
     // name= makes the browser treat all group dropdowns as one exclusive
     // accordion — opening one natively closes any other that's open,
     // instead of every <details> staying open independently and stacking.
-    <details name="admin-nav-group" className="group relative">
+    <details ref={detailsRef} name="admin-nav-group" className="group relative">
       <summary
         className={`flex cursor-pointer list-none items-center gap-1 transition-colors hover:text-accent [&::-webkit-details-marker]:hidden ${
           groupActive ? "font-semibold text-accent" : ""
