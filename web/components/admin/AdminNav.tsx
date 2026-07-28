@@ -46,7 +46,10 @@ function NavDropdown({ group, pathname }: { group: NavGroup; pathname: string | 
   const groupActive = group.items.some((item) => isItemActive(pathname, item.href));
 
   return (
-    <details className="group relative">
+    // name= makes the browser treat all group dropdowns as one exclusive
+    // accordion — opening one natively closes any other that's open,
+    // instead of every <details> staying open independently and stacking.
+    <details name="admin-nav-group" className="group relative">
       <summary
         className={`flex cursor-pointer list-none items-center gap-1 transition-colors hover:text-accent [&::-webkit-details-marker]:hidden ${
           groupActive ? "font-semibold text-accent" : ""

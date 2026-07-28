@@ -22,11 +22,13 @@ export default function SiteHeader({
           Tech<span className="text-accent">Store</span>
         </Link>
 
-        <div className="order-3 w-full sm:order-none sm:w-auto sm:max-w-xs sm:flex-1">
-          <HeaderSearch />
+        <div className="order-3 w-full sm:order-none sm:flex sm:flex-1 sm:justify-center">
+          <div className="w-full sm:max-w-sm">
+            <HeaderSearch />
+          </div>
         </div>
 
-        <nav className="flex flex-wrap items-center gap-5 font-body text-sm">
+        <nav className="flex flex-wrap items-center gap-5 font-body text-sm shrink-0">
           {currentUser ? (
             <>
               <Link href="/orders" className="text-ink-muted transition-colors hover:text-ink">
